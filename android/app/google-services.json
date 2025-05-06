@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "132625858105",
+    "project_id": "mukhlis-bb51b",
+    "storage_bucket": "mukhlis-bb51b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132625858105:android:c97448d58821d3d62057e8",
+        "android_client_info": {
+          "package_name": "com.example.mukhliss"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHf0OB6zbmLoa7QWo67GpgGJF_xh9Lky8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

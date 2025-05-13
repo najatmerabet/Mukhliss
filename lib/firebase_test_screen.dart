@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/services/firebase_checker.dart';
 
 class FirebaseTestScreen extends StatelessWidget {
+  
   const FirebaseTestScreen({super.key});
 
   @override
@@ -19,7 +20,7 @@ class FirebaseTestScreen extends StatelessWidget {
                 final isConnected = await FirebaseChecker.checkFirebaseConnection();
                 Get.snackbar(
                   'Résultat du test',
-                  isConnected ? 'Connecté à Firebase ✅' : 'Échec de connexion ❌',
+                  isConnected ? 'Connectée à Firebase ✅' : 'Échec de connexion ❌',
                   backgroundColor: isConnected ? Colors.green : Colors.red,
                   colorText: Colors.white,
                 );
@@ -36,7 +37,7 @@ class FirebaseTestScreen extends StatelessWidget {
                 
                 final isConnected = snapshot.data ?? false;
                 return Text(
-                  'Statut: ${isConnected ? 'CONNECTÉ' : 'NON CONNECTÉ'}',
+                  'Statut: ${isConnected ? 'CONNECTÉE' : 'NON CONNECTÉ'}',
                   style: TextStyle(
                     color: isConnected ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,

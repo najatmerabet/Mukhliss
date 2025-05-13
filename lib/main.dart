@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mukhliss/firebase_test_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -13,19 +13,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp( // Remplacez MaterialApp par GetMaterialApp
-      title: 'Flutter Demo',
+      title: 'MUKHLISS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/', // Route initiale
-      getPages: [ // Configurez vos routes ici
-        GetPage(
-          name: '/',
-          page: () => const FirebaseTestScreen(),
-        ),
-      
-      ],
+     
     );
   }
 }

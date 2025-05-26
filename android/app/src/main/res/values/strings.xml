@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mukhliss</string>
+    <string name="facebook_app_id">1808721663026703</string>
+    <string name="fb_login_protocol_scheme">fb1808721663026703</string>
+    <string name="facebook_client_token">7948c96b01587ba064c076cfcbe6acdc</string>
+</resources>

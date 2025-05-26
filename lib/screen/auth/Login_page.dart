@@ -130,6 +130,36 @@ Future<void> _sendResetOtpEmail(String email) async {
     }
   }
 }
+Future<void> _loginWithGoogle() async {
+  setState(() => _isLoading = true);
+  try {
+    final authService = ref.read(authProvider);
+    await authService.nativeGoogleSignIn();
+    
+    // Après la connexion réussie, vérifiez le type d'utilisateur
+    final userType = await authService.getUserType();
+    
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+        context,
+        userType == 'client' ? AppRouter.clientHome : AppRouter.login,
+      );
+    }
+  } catch (e) {
+    debugPrint('❌ Erreur lors de l\'inscription Google: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur de connexion Google: ${e.toString()}')),
+      );
+     
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,6 +228,31 @@ Future<void> _sendResetOtpEmail(String email) async {
                       )
                     : const Text('Se connecter'),
               ),
+
+                const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: _isLoading ? null : _loginWithGoogle,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'images/google_logo.png', // Ajoutez une image Google dans vos assets
+                    height: 24,
+                    width: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Continuer avec Google'),
+                ],
+              ),
+            ),
+
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, AppRouter.signupClient);

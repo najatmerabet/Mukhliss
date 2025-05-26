@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
-
+import 'package:mukhliss/utils/validators.dart';
 
 class ClientSignup extends ConsumerStatefulWidget {
   const ClientSignup({Key? key}) : super(key: key);
@@ -189,7 +189,7 @@ Future<void> _handleFacebookSignIn() async {
               labelText: 'Prénom',
               prefixIcon: Icon(Icons.person),
             ),
-            validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+            validator: (value) => Validators.validateRequired(value,'Prénom'),
             textCapitalization: TextCapitalization.words,
           ),
         ),
@@ -201,7 +201,7 @@ Future<void> _handleFacebookSignIn() async {
               labelText: 'Nom',
               prefixIcon: Icon(Icons.person_outline),
             ),
-            validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+            validator: (value) => Validators.validateRequired(value,'Nom'),
             textCapitalization: TextCapitalization.words,
           ),
         ),
@@ -217,13 +217,7 @@ Future<void> _handleFacebookSignIn() async {
         prefixIcon: Icon(Icons.email),
       ),
       keyboardType: TextInputType.emailAddress,
-      validator: (value) {
-        if (value?.isEmpty ?? true) return 'Requis';
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-          return 'Email invalide';
-        }
-        return null;
-      },
+      validator: Validators.validateEmail,
     );
   }
 
@@ -239,11 +233,7 @@ Future<void> _handleFacebookSignIn() async {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(10),
       ],
-      validator: (value) {
-        if (value?.isEmpty ?? true) return 'Requis';
-        if (value!.length < 10) return 'Numéro invalide';
-        return null;
-      },
+      validator:Validators.validatePhone,
     );
   }
 
@@ -255,7 +245,7 @@ Future<void> _handleFacebookSignIn() async {
         prefixIcon: Icon(Icons.home),
       ),
       maxLines: 2,
-      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      validator: Validators.validateRequired,
     );
   }
 
@@ -273,11 +263,7 @@ Future<void> _handleFacebookSignIn() async {
             ),
           ),
           obscureText: _obscurePassword,
-          validator: (value) {
-            if (value?.isEmpty ?? true) return 'Requis';
-            if (value!.length < 6) return 'Minimum 6 caractères';
-            return null;
-          },
+          validator:(value)=>Validators.validatePassword(value),
         ),
         const SizedBox(height: 16),
         TextFormField(
@@ -291,12 +277,7 @@ Future<void> _handleFacebookSignIn() async {
             ),
           ),
           obscureText: _obscureConfirmPassword,
-          validator: (value) {
-            if (value != _passwordController.text) {
-              return 'Les mots de passe ne correspondent pas';
-            }
-            return null;
-          },
+          validator:(value)=> Validators.validateConfirmPassword(value, _passwordController.text),
         ),
       ],
     );

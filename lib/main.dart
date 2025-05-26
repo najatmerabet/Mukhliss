@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/routes/app_router.dart';
-import 'package:mukhliss/screen/auth/authchangeevent.dart';
-import 'package:mukhliss/screen/client/clienthome.dart';
+
 import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

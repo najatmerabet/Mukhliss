@@ -14,18 +14,10 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'najatelmrabet2001@gmail.com');
-  final _passwordController = TextEditingController(text: '12345678');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-
-  @override
-  void initState() {
-    super.initState();
-    // Set default values
-    _emailController.text = 'najatelmrabet2001@gmail.com';
-    _passwordController.text = '12345678';
-  }
 
   @override
   void dispose() {
@@ -45,7 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           );
       
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRouter.main);
+        Navigator.pushReplacementNamed(context, AppRouter.clientHome);
       }
     } catch (e) {
       if (mounted) {
@@ -541,6 +533,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: Colors.grey.shade200,
+          //     blurRadius: 8,
+          //     offset: const Offset(0, 2),
+          //   ),
+          // ],
         ),
         child: Center(
           child: Icon(

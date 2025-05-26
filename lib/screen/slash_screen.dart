@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mukhliss/screen/auth/Login_page.dart';
-
+import 'package:mukhliss/screen/auth/login_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -13,13 +12,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Redirection après 5 secondes
-    Future.delayed(const Duration(seconds: 5), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    });
+    _navigateToNextScreen();
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    await Future.delayed(const Duration(seconds: 5));
+    
+    // Vérifier que le widget est toujours monté avant la navigation
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
   @override
@@ -31,8 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-             Color(0xFF765EFF),
-              Color(0xFFC4BAFF),
+              const Color(0xFF765EFF),
+              const Color(0xFFC4BAFF),
             ],
           ),
         ),
@@ -41,15 +46,14 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                    'Bienvenue sur MUKHLISS',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                 
+                'Bienvenue sur MUKHLISS',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
               Image.asset(
                 'images/without background.png',
                 width: 200,

@@ -32,6 +32,7 @@ class ErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+    
       home: Scaffold(
         body: Center(
           child: Text(
@@ -56,7 +57,8 @@ class MyApp extends StatelessWidget {
       title: 'MUKHLISS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true
+        useMaterial3: true,
+        fontFamily: 'Poppins',
       ),
            debugShowCheckedModeBanner: false,
       home: const SplashScreen(), // Utilisez le widget de votre choix ici

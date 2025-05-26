@@ -3,7 +3,6 @@ import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/screen/auth/login_page.dart';
 import 'package:mukhliss/screen/auth/password_reset_page.dart';
 import 'package:mukhliss/screen/auth/signup_page.dart';
-import 'package:mukhliss/screen/client/clienthome.dart';
 import 'package:mukhliss/screen/client/profile.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 
@@ -30,7 +29,7 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
      if (settings.name?.contains('login-callback') ?? false) {
     return MaterialPageRoute(
-      builder: (_) => const ClientHome(), // Écran de chargement
+      builder: (_) =>  MainNavigationScreen(), // Écran de chargement
       settings: settings,
     );
   }
@@ -42,7 +41,7 @@ class AppRouter {
          case main:
         return MaterialPageRoute(builder: (_) =>  MainNavigationScreen());
       case clientHome:
-        return MaterialPageRoute(builder: (_) => const ClientHome());
+        return MaterialPageRoute(builder: (_) =>  MainNavigationScreen());
       case signupClient:
         return MaterialPageRoute(builder: (_) => const ClientSignup());
       case passwordReset:

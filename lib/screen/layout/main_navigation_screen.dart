@@ -163,8 +163,14 @@ Widget _buildModernHeader({
 }
 
 // QR Code Screen pour l'identification
-class QRCodeScreen extends StatelessWidget {
-  const QRCodeScreen({Key? key}) : super(key: key);
+class QRCodeScreen extends StatefulWidget {
+  const QRCodeScreen({super.key});
+
+  @override
+  State<QRCodeScreen> createState() => _QRCodeScreenState();
+}
+
+class _QRCodeScreenState extends State<QRCodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -447,9 +453,11 @@ class MyOffersScreen extends StatelessWidget {
     final activeOffers = receivedOffers.where((offer) => !offer['used']).toList();
     final usedOffers = receivedOffers.where((offer) => offer['used']).toList();
 
-    return Scaffold(
+    return 
+    Scaffold(
       backgroundColor: AppColors.surface,
-      body: CustomScrollView(
+      body:
+       CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 60,
@@ -475,6 +483,9 @@ class MyOffersScreen extends StatelessWidget {
               ),
             ),
           ),
+      
+      
+      
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -536,8 +547,14 @@ class MyOffersScreen extends StatelessWidget {
             ),
           ),
         ],
+    
+    
       ),
+    
+    
     );
+  
+  
   }
 
   Widget _buildStatCard(String value, String label, IconData icon, Color color) {

@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 8),
               Image.asset(
-                'images/without background.png',
+                'images/withoutbg.png',
                 width: 200,
                 height: 200,
                 errorBuilder: (context, error, stackTrace) {

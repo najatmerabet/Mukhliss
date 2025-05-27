@@ -1,15 +1,17 @@
-// lib/screens/profile_screen.dart
+// lib/screens/profile_screen.dart - Design moderne
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenstate();
 }
+
 class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
@@ -24,7 +26,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     try {
       setState(() => _isLoading = true);
       
-      // Utilisation du provider pour accéder au service d'authentification
       final authService = ref.read(authProvider);
       final user = authService.currentUser;
       
@@ -36,7 +37,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
         return;
       }
 
-
       final response = await authService.client
           .from("clients")
           .select()
@@ -46,7 +46,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
       if (mounted) {
         setState(() {
           _userData = response;
-          // _userData!['user_type'] = userType;
           _isLoading = false;
         });
       }
@@ -61,74 +60,33 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    // Utilisation du provider pour accéder au service d'authentification
-    await ref.read(authProvider).logout();
-    if (mounted) {
-      Navigator.pushNamed(context, AppRouter.login);
-    }
-  }
- @override
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 60,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                ),
-              ),
-            ),
-            title: const Text(
-              'Mon Profil',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 16),
-              
-                child: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.white),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Fonctionnalité de modification en cours de développement'),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+          _buildHeader(),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildProfileCard(),
-                  const SizedBox(height: 24),
-                  _buildPersonalInfoSection(),
-                  const SizedBox(height: 20),
-                  _buildStatsSection(),
-                  const SizedBox(height: 20),
-                  _buildAccountOptionsSection(context),
-                  const SizedBox(height: 24),
-                  _buildLogoutButton(context, ref),
+                  const SizedBox(height: 10),
+                  _buildProfileSection(),
+                  // const SizedBox(height: 30),
+                  // _buildProgressSection(),
+                  const SizedBox(height: 30),
+                  _buildActionButtons(),
+                  const SizedBox(height: 40),
+                  _buildMenuItems(),
                 ],
               ),
             ),
@@ -138,230 +96,485 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFF8FAFC)],
+  Widget _buildHeader() {
+    return SliverAppBar(
+      expandedHeight: 60,
+      floating: false,
+      pinned: true,
+      automaticallyImplyLeading: false,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.secondary],
+            ),
+          ),
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),),
-        ],
       ),
-      child: Column(
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.secondary],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+      title: const Text(
+        'PROFILE',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.5,
+        ),
+      ),
+      actions: [
+        Container(
+          margin: const EdgeInsets.only(right: 16),
+          child: IconButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Paramètres'),
+                  backgroundColor: AppColors.primary,
                 ),
-              ],
-            ),
-            child: const Icon(
-              Icons.person,
+              );
+            },
+            icon: const Icon(
+              Icons.settings_outlined,
               color: Colors.white,
-              size: 50,
+              size: 24,
             ),
           ),
-       
-       
-          const SizedBox(height: 20),
-          Text(
-          '${_userData?['nom']} ${_userData?['prenom']}',  
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-         
-          const SizedBox(height: 16),
-         
-       
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildPersonalInfoSection() {
+  Widget _buildProfileSection() {
+    return Column(
+      children: [
+        // Photo de profil avec bouton play
+        Stack(
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 60,
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Nom
+        Text(
+          '${_userData?['nom'] ?? ""} ${_userData?['prenom'] ?? ''}',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Sous-titre
+        Text(
+          _userData?['email'] ?? '',
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black54,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Widget _buildProgressSection() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey[50],
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: Colors.grey.withOpacity(0.2)),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             const Text(
+  //               'Complete Your Profile',
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.w600,
+  //                 color: Colors.black87,
+  //               ),
+  //             ),
+  //             Text(
+  //               '(4/5)',
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.w600,
+  //                 color: Colors.grey[600],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 12),
+  //         LinearProgressIndicator(
+  //           value: 0.8, // 4/5
+  //           backgroundColor: Colors.grey[300],
+  //           valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+  //           minHeight: 6,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionCard(
+            icon: Icons.person_outline,
+            title: 'Mes Informations',
+            subtitle: 'Voir détails',
+            buttonText: 'Voir',
+            onPressed: () => _showUserInfo(),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildActionCard(
+            icon: Icons.analytics_outlined,
+            title: 'Mes Statistiques',
+            subtitle: 'Activité',
+            buttonText: 'Voir',
+            onPressed: () => _showStats(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String buttonText,
+    required VoidCallback onPressed,
+  }) {
     return Container(
-      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'Informations Personnelles',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
+          Icon(
+            icon,
+            size: 40,
+            color: AppColors.primary,
           ),
-          _buildInfoItem(Icons.email_outlined, 'Email', '${_userData?['email'] ?? '' }'),
-          _buildInfoItem(Icons.phone_outlined, 'Téléphone', '${_userData?['telephone'] ?? '' }  '),
-          _buildInfoItem(Icons.location_on_outlined, 'Adresse', '${_userData?['adresse'] ?? '' } ' ),
-          _buildInfoItem(Icons.calendar_today_outlined, 'Membre depuis', 
-              _userData?['created_at'] != null ? DateTime.parse(_userData!['created_at']).toLocal().toString().split(' ')[0] : ''),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoItem(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.textSecondary, size: 20),
-          const SizedBox(width: 16),
+          const SizedBox(height: 12),
           Text(
-            label,
+            title,
             style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
+            textAlign: TextAlign.center,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.analytics_outlined,
-                    color: AppColors.warning,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'Mes Statistiques',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(child: _buildStatItem('1,270', 'Points Totaux', AppColors.warning)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildStatItem('15', 'Offres Utilisées', AppColors.success)),
-              ],
-            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(child: _buildStatItem('8', 'Magasins Visités', AppColors.accent)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildStatItem('245€', 'Économies Totales', AppColors.primary)),
-              ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                buttonText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String value, String label, Color color) {
+  Widget _buildMenuItems() {
+    return Column(
+      children: [
+        _buildMenuItem(
+          icon: Icons.timeline_outlined,
+          title: 'Mon Activité',
+          onTap: () => _showActivity(),
+        ),
+        _buildMenuItem(
+          icon: Icons.location_on_outlined,
+          title: 'Ma Localisation',
+          onTap: () => _showLocation(),
+        ),
+        _buildMenuItem(
+          icon: Icons.notifications_outlined,
+          title: 'Paramètres de Notification',
+          onTap: () => _showNotificationSettings(),
+        ),
+        _buildMenuItem(
+          icon: Icons.help_outline,
+          title: 'Aide et Support',
+          onTap: () => _showSupport(),
+        ),
+        _buildMenuItem(
+          icon: Icons.info_outline,
+          title: 'À propos',
+          onTap: () => _showAbout(),
+        ),
+        const SizedBox(height: 10),
+        _buildMenuItem(
+          icon: Icons.logout,
+          title: 'Se Déconnecter',
+          isLogout: true,
+          onTap: () => _showLogoutDialog(context, ref),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isLogout = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isLogout ? Colors.red.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isLogout 
+                ? Colors.red.withOpacity(0.1) 
+                : Colors.grey.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: isLogout ? Colors.red : Colors.grey[700],
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: isLogout ? Colors.red : Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey[400],
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  // Méthodes pour afficher les informations
+  void _showUserInfo() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Mes Informations',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildInfoRow(Icons.email_outlined, _userData?['email'] ?? ''),
+            _buildInfoRow(Icons.phone_outlined, _userData?['telephone'] ?? ''),
+            _buildInfoRow(Icons.location_on_outlined, _userData?['adresse'] ?? ''),
+            _buildInfoRow(
+              Icons.calendar_today_outlined,
+              _userData?['created_at'] != null 
+                ? DateTime.parse(_userData!['created_at']).toLocal().toString().split(' ')[0] 
+                : ''
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStats() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Mes Statistiques',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(child: _buildStatCard('1,270', 'Points', AppColors.warning)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildStatCard('15', 'Offres', AppColors.success)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildStatCard('8', 'Magasins', AppColors.accent)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildStatCard('245€', 'Économies', AppColors.primary)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String value, String label, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -378,167 +591,43 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: Colors.black54,
               fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAccountOptionsSection(context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildOptionItem(
-            Icons.security_outlined,
-            'Sécurité et Confidentialité',
-            AppColors.primary,
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Paramètres de sécurité'),
-                  backgroundColor: AppColors.primary,
-                ),
-              );
-            },
-          ),
-          _buildOptionItem(
-            Icons.notifications_outlined,
-            'Notifications',
-            AppColors.accent,
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Paramètres de notifications'),
-                  backgroundColor: AppColors.accent,
-                ),
-              );
-            },
-          ),
-          _buildOptionItem(
-            Icons.help_outline,
-            'Aide et Support',
-            AppColors.warning,
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Centre d\'aide'),
-                  backgroundColor: AppColors.warning,
-                ),
-              );
-            },
-          ),
-          _buildOptionItem(
-            Icons.info_outline,
-            'À propos de l\'application',
-            AppColors.success,
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('MUKHLISS v1.0.0'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+  // Méthodes pour les autres actions
+  void _showActivity() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Mon Activité'), backgroundColor: AppColors.primary),
     );
   }
 
-  Widget _buildOptionItem(IconData icon, String title, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
+  void _showLocation() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ma Localisation'), backgroundColor: AppColors.accent),
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.error, Color(0xFFDC2626)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.error.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),)
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () => _showLogoutDialog(context, ref),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.logout, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Se Déconnecter',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+  void _showNotificationSettings() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Paramètres de Notification'), backgroundColor: AppColors.warning),
+    );
+  }
+
+  void _showSupport() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Aide et Support'), backgroundColor: AppColors.success),
+    );
+  }
+
+  void _showAbout() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('MUKHLISS v1.0.0'), backgroundColor: AppColors.primary),
     );
   }
 
@@ -548,37 +637,31 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           title: const Row(
             children: [
-              Icon(Icons.logout, color: AppColors.error),
-              SizedBox(width: 8),
+              Icon(Icons.logout, color: Colors.red),
+              SizedBox(width: 12),
               Text(
                 'Déconnexion',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  fontSize: 18,
                 ),
               ),
             ],
           ),
           content: const Text(
             'Êtes-vous sûr de vouloir vous déconnecter ?',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 16,
-            ),
+            style: TextStyle(fontSize: 16),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'Annuler',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(color: Colors.grey),
               ),
             ),
             ElevatedButton(
@@ -591,24 +674,21 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Erreur de déconnexion: ${e.toString()}'),
-                      backgroundColor: AppColors.error,
+                      content: Text('Erreur: ${e.toString()}'),
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
+                backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: const Text(
                 'Déconnecter',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],

@@ -99,7 +99,7 @@ class _ProfileState extends ConsumerState<Profile> {
                     radius: 50,
                     backgroundImage: _userData?['avatar_url'] != null
                         ? NetworkImage(_userData!['avatar_url'])
-                        : const AssetImage('images/without background.png')
+                        : const AssetImage('images/withoutbg.png')
                             as ImageProvider,
                     child: _userData?['avatar_url'] == null
                         ? const Icon(Icons.person, size: 50)

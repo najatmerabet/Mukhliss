@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart'; // Pour kIsWeb
@@ -84,38 +85,81 @@ class AuthService {
 
 
 Future<void> nativeGoogleSignIn() async {
+  // ⚠️ IMPORTANT: Utilisez le WEB CLIENT ID ici, pas l'Android Client ID
   const webClientId = '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
  
   final GoogleSignIn googleSignIn = GoogleSignIn(
-    // clientId: androidClientId,
-    serverClientId: webClientId,
+    // ⚠️ IMPORTANT: Utilisez l'ANDROID CLIENT ID ici
+    clientId: "175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com",
+    serverClientId: webClientId, // Web Client ID
+    scopes: ['email', 'profile'], // Ajoutez les scopes nécessaires
   );
-  final googleUser = await googleSignIn.signIn();
-  final googleAuth = await googleUser!.authentication;
-  final accessToken = googleAuth.accessToken;
-  final idToken = googleAuth.idToken;
-  if (accessToken == null) {
-    throw 'No Access Token found.'; 
+
+  try {
+    // Déconnectez d'abord pour éviter les tokens en cache
+    await googleSignIn.signOut();
+    
+    print('🔄 Tentative de connexion Google...');
+    final googleUser = await googleSignIn.signIn();
+    
+    if (googleUser == null) {
+      print('❌ Connexion annulée par l\'utilisateur');
+      return;
+    }
+
+    print('✅ Utilisateur Google connecté: ${googleUser.email}');
+    
+    final googleAuth = await googleUser.authentication;
+    final accessToken = googleAuth.accessToken;
+    final idToken = googleAuth.idToken;
+    
+    print('🔑 Access Token: ${accessToken != null ? "✅" : "❌"}');
+    print('🔑 ID Token: ${idToken != null ? "✅" : "❌"}');
+    
+    if (accessToken == null) {
+      throw 'No Access Token found.'; 
+    }
+    if (idToken == null) {
+      throw 'No ID Token found.';
+    }
+    
+    print('🔄 Connexion avec Supabase...');
+    await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken, 
+    );
+    
+    print('✅ Connexion Supabase réussie !');
+    
+  } catch (error) {
+    print('❌ Erreur lors de l\'inscription Google: $error');
+    
+    // Debug supplémentaire
+    if (error.toString().contains('ApiException: 10')) {
+      print('💡 Erreur DEVELOPER_ERROR - Vérifiez:');
+      print('   - SHA-1 dans Google Console');
+      print('   - Package name correct');
+      print('   - Client IDs corrects');
+    }
+    
+    rethrow;
   }
-  if (idToken == null) {
-    throw 'No ID Token found.';
-  }
-  await _client.auth.signInWithIdToken(
-    provider: OAuthProvider.google,
-    idToken: idToken,
-    accessToken: accessToken, 
-  );
 }
+
+
 Future<void> signUpWithFacebook() async {
   try {
     debugPrint('🚀 Début de l\'authentification Facebook...');
     // Lance l'authentification Facebook
-   await _client.auth.signInWithOAuth(
-    OAuthProvider.facebook,
-    authScreenLaunchMode:
-        kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication, // Launch the auth screen in a new webview on mobile.
-  );
-
+    var result = await  FacebookAuth.i.login(
+      permissions: ['public_profile' ,'email'],
+    );
+if(result.status != LoginStatus.success) {
+      throw Exception('Échec de l\'authentification Facebook: ${result.message}');
+    }else{
+      debugPrint('✅ Authentification Facebook réussie: ${result.accessToken}');
+    }
     // Crée le profil client après l'authentification
     // final user = _client.auth.currentUser!;
     // await _createClientProfile(
@@ -124,7 +168,6 @@ Future<void> signUpWithFacebook() async {
     //   user.phone ?? '',
     //   (user.userMetadata?['full_name'] ?? user.userMetadata?['name']) as String?,
     // );
-    
     debugPrint('✅ Inscription Facebook réussie');
   } catch (e) {
     debugPrint('❌ Erreur lors de l\'inscription Facebook: $e');

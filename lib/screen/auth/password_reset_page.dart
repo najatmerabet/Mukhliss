@@ -48,7 +48,7 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Mot de passe mis à jour avec succès')),
         );
-        Navigator.pushReplacementNamed(context, AppRouter.clientHome);
+        Navigator.pushReplacementNamed(context, AppRouter.main);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

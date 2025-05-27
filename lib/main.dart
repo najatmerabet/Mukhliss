@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/routes/app_router.dart';
-import 'package:mukhliss/screen/auth/authchangeevent.dart';
-import 'package:mukhliss/screen/client/clienthome.dart';
+
 import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -95,7 +94,7 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
       try {
         final initialSession = Supabase.instance.client.auth.currentSession;
         if (initialSession != null && mounted) {
-          navigatorKey.currentState?.pushReplacementNamed(AppRouter.clientHome);
+          navigatorKey.currentState?.pushReplacementNamed(AppRouter.main);
         } else if (mounted) {
           navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
         }
@@ -112,7 +111,7 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
             print('Utilisateur connecté, redirection vers home');
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
-                navigatorKey.currentState?.pushReplacementNamed(AppRouter.clientHome);
+                navigatorKey.currentState?.pushReplacementNamed(AppRouter.main);
               }
             });
           } else if (session == null && data.event == AuthChangeEvent.signedOut) {

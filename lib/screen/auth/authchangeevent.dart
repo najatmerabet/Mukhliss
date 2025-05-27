@@ -70,7 +70,7 @@ class _AuthStateListenerState extends ConsumerState<AuthStateListener> {
       if (mounted) {
         if (userType == 'client') {
           print('Redirection vers client home');
-          Navigator.pushReplacementNamed(context, AppRouter.clientHome);
+          Navigator.pushReplacementNamed(context, AppRouter.main);
         } else if (userType == 'magasin') {
           print('Redirection vers magasin home');
           Navigator.pushReplacementNamed(context, AppRouter.signupClient);

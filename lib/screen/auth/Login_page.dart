@@ -31,13 +31,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(authProvider).login(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
-      
+      await ref
+          .read(authProvider)
+          .login(_emailController.text.trim(), _passwordController.text.trim());
+
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRouter.clientHome);
+        Navigator.pushReplacementNamed(context, AppRouter.main);
       }
     } catch (e) {
       if (mounted) {
@@ -67,96 +66,111 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Réinitialisation par email',
-          style: TextStyle(
-            color: AppColors.purpleDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                hintText: 'votre@email.com',
-                prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.purpleDark),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.purpleDark, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-              ),
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty || !value.contains('@')) {
-                  return 'Email invalide';
-                }
-                return null;
-              },
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 16),
-            Row(
+            title: Text(
+              'Réinitialisation par email',
+              style: TextStyle(
+                color: AppColors.purpleDark,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.info_outline, size: 16, color: AppColors.purpleDark.withOpacity(0.7)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Un code OTP vous sera envoyé par email',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'votre@email.com',
+                    prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.purpleDark),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: AppColors.purpleDark,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
                   ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@')) {
+                      return 'Email invalide';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: AppColors.purpleDark.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Un code OTP vous sera envoyé par email',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Annuler',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (emailController.text.trim().isEmpty || 
-                  !emailController.text.contains('@')) {
-                Navigator.pop(context);
-                _showErrorSnackbar('Veuillez entrer un email valide');
-                return;
-              }
-
-              Navigator.pop(context);
-              await _sendResetOtpEmail(emailController.text.trim());
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.purpleDark,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Annuler',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
               ),
-            ),
-            child: const Text(
-              'Envoyer le code',
-              style: TextStyle(fontSize: 16, color: Colors.white),
-            ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (emailController.text.trim().isEmpty ||
+                      !emailController.text.contains('@')) {
+                    Navigator.pop(context);
+                    _showErrorSnackbar('Veuillez entrer un email valide');
+                    return;
+                  }
+
+                  Navigator.pop(context);
+                  await _sendResetOtpEmail(emailController.text.trim());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.purpleDark,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Envoyer le code',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -164,7 +178,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authProvider).sendPasswordResetOtpEmail(email);
-      
+
       if (mounted) {
         Navigator.push(
           context,
@@ -191,12 +205,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
               Colors.white,
               Colors.grey.shade50,
-              Colors.grey.shade100,
+              AppColors.purpleDark.withOpacity(0.02),
             ],
           ),
         ),
@@ -208,47 +222,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 40),
-                  
+
                   // Logo et titre
                   Center(
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.purpleDark.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.lock_open_rounded,
-                            size: 60,
-                            color: AppColors.purpleDark,
+                          child:
+                          // Fully circular for logo
+                          Image.asset(
+                            'images/withoutbg.png', // Path to your logo asset
+                            width: 250, // Same size as the previous icon
+                            height: 250,
+                            fit: BoxFit.contain, // Preserve aspect ratio
                           ),
                         ),
-                        const SizedBox(height: 24),
+
                         Text(
                           'Bienvenue',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.purpleDark,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.purpleDark,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Connectez-vous pour continuer',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.grey.shade600,
-                              ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: Colors.grey.shade600),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Formulaire de connexion
                   Form(
                     key: _formKey,
+
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -268,7 +282,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             hintText: 'votre@email.com',
-                            prefixIcon: Icon(Icons.email_outlined, color: AppColors.purpleDark),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: AppColors.purpleDark,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -281,15 +298,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.purpleDark, width: 1.5),
+                              borderSide: BorderSide(
+                                color: AppColors.purpleDark,
+                                width: 1.5,
+                              ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.redAccent.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent.shade200,
+                              ),
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
@@ -303,9 +327,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Label Mot de passe
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -323,7 +347,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             hintText: '••••••••',
-                            prefixIcon: Icon(Icons.lock_outline, color: AppColors.purpleDark),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: AppColors.purpleDark,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -349,15 +376,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.purpleDark, width: 1.5),
+                              borderSide: BorderSide(
+                                color: AppColors.purpleDark,
+                                width: 1.5,
+                              ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.redAccent.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent.shade200,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -370,12 +404,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             return null;
                           },
                         ),
-                        
+
                         // Mot de passe oublié
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: _isLoading ? null : _showEmailResetDialog,
+                            onPressed:
+                                _isLoading ? null : _showEmailResetDialog,
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.only(top: 4, bottom: 8),
                               visualDensity: VisualDensity.compact,
@@ -390,9 +425,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Bouton de connexion
                         SizedBox(
                           width: double.infinity,
@@ -406,36 +441,46 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              shadowColor: AppColors.purpleDark.withOpacity(0.4),
+                              shadowColor: AppColors.purpleDark.withOpacity(
+                                0.4,
+                              ),
                             ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      strokeWidth: 2.5,
+                            child:
+                                _isLoading
+                                    ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'Se connecter',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'Se connecter',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Séparateur
                         Row(
                           children: [
-                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                            Expanded(
+                              child: Divider(color: Colors.grey.shade300),
+                            ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 'ou',
                                 style: TextStyle(
@@ -444,38 +489,46 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 ),
                               ),
                             ),
-                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                            Expanded(
+                              child: Divider(color: Colors.grey.shade300),
+                            ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Boutons de connexion sociale
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _socialButton(
-                              icon: Icons.g_mobiledata_rounded,
-                              iconColor: Colors.red,
-                              backgroundColor: Colors.white,
-                              onTap: () {
-                                // Implémenter la connexion avec Google
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            _socialButton(
-                              icon: Icons.facebook_rounded,
-                              iconColor: Colors.blue.shade800,
-                              backgroundColor: Colors.white,
-                              onTap: () {
-                                // Implémenter la connexion avec Facebook
-                              },
-                            ),
-                          ],
+                        Center(
+                          child: _buildSocialButton(
+                            imagePath: 'images/google_logo.png',
+                            label: 'Se connecter avec Google',
+                            onPressed: () async {
+                              setState(() => _isLoading = true);
+                              try {
+                                await ref.read(authProvider).signUpWithGoogle();
+                                if (mounted) {
+                                  Navigator.pushReplacementNamed(
+                                    // ignore: use_build_context_synchronously
+                                    context,
+                                    AppRouter.main,
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  _showErrorSnackbar(
+                                    'Erreur de connexion: ${e.toString()}',
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _isLoading = false);
+                                }
+                              }
+                            },
+                          ),
                         ),
-                        
                         const SizedBox(height: 32),
-                        
+
                         // Inscription
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -489,7 +542,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, AppRouter.signupClient);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRouter.signupClient,
+                                );
                               },
                               style: TextButton.styleFrom(
                                 visualDensity: VisualDensity.compact,
@@ -516,39 +572,48 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     );
   }
-  
-  Widget _socialButton({
-    required IconData icon,
-    required Color iconColor,
-    required Color backgroundColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: backgroundColor,
+
+ Widget _buildSocialButton({
+  required String imagePath,
+  required String label,
+  required Function() onPressed, // Accepts both sync and async functions
+  Color? backgroundColor,
+}) {
+  return SizedBox(
+    height: 50,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor ?? Colors.white,
+        foregroundColor: Colors.grey.shade800,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: Colors.grey.shade200,
-          //     blurRadius: 8,
-          //     offset: const Offset(0, 2),
-          //   ),
-          // ],
+          side: BorderSide(color: Colors.grey.shade300),
         ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: 28,
-            color: iconColor,
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
       ),
-    );
-  }
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            imagePath,
+            width: 24,
+            height: 24,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+  
+
 }

@@ -87,7 +87,7 @@ Future<void> nativeGoogleSignIn() async {
   const webClientId = '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
  
   final GoogleSignIn googleSignIn = GoogleSignIn(
-    // clientId: androidClientId,
+    clientId: "175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com",
     serverClientId: webClientId,
   );
   final googleUser = await googleSignIn.signIn();

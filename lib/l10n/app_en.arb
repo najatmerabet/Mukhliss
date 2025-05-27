@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "Mukhliss",
+  "hello": "Welcome to MUKHLISS",
+  "address":"Address",
+  "membredepuis":"Member since",
+  "informationperso":"Personal Information",
+  "phone":"Phone",
+  "email":"e-mail",
+  "identificationTitleqrcode":"My Identification",
+  "qrCodeInstructions":"Show this QR code to benefit from your offer",
+  "welcome": "Welcome",
+  "logout":"Log out",
+  "identificationTitleprofile":"My Profile"
+}

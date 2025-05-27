@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/theme/app_theme.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenstate();
 }
+
 class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
-
+  
   @override
   void initState() {
     super.initState();
@@ -36,7 +39,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
         return;
       }
 
-
       final response = await authService.client
           .from("clients")
           .select()
@@ -46,7 +48,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
       if (mounted) {
         setState(() {
           _userData = response;
-          // _userData!['user_type'] = userType;
           _isLoading = false;
         });
       }
@@ -68,8 +69,19 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
       Navigator.pushNamed(context, AppRouter.login);
     }
   }
- @override
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: CustomScrollView(
@@ -90,9 +102,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ),
-            title: const Text(
-              'Mon Profil',
-              style: TextStyle(
+            title: Text(
+              l10n?.identificationTitleprofile ?? 'Mon Profil',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
@@ -100,7 +112,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
             actions: [
               Container(
                 margin: const EdgeInsets.only(right: 16),
-              
                 child: IconButton(
                   icon: const Icon(Icons.edit, color: Colors.white),
                   onPressed: () {
@@ -120,15 +131,15 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
-                  _buildProfileCard(),
+                  _buildProfileCard(l10n),
                   const SizedBox(height: 24),
-                  _buildPersonalInfoSection(),
+                  _buildPersonalInfoSection(l10n),
                   const SizedBox(height: 20),
-                  _buildStatsSection(),
+                  _buildStatsSection(l10n),
                   const SizedBox(height: 20),
-                  _buildAccountOptionsSection(context),
+                  _buildAccountOptionsSection(context, l10n),
                   const SizedBox(height: 24),
-                  _buildLogoutButton(context, ref),
+                  _buildLogoutButton(context, ref, l10n),
                 ],
               ),
             ),
@@ -138,7 +149,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(AppLocalizations? l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -153,7 +164,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           BoxShadow(
             color: AppColors.primary.withOpacity(0.1),
             blurRadius: 20,
-            offset: const Offset(0, 4),),
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -180,11 +192,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
               size: 50,
             ),
           ),
-       
-       
           const SizedBox(height: 20),
           Text(
-          '${_userData?['nom']} ${_userData?['prenom']}',  
+            '${_userData?['nom'] ?? ''} ${_userData?['prenom'] ?? ''}',  
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -192,16 +202,12 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 8),
-         
-          const SizedBox(height: 16),
-         
-       
         ],
       ),
     );
   }
 
-  Widget _buildPersonalInfoSection() {
+  Widget _buildPersonalInfoSection(AppLocalizations? l10n) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -235,9 +241,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Text(
-                  'Informations Personnelles',
-                  style: TextStyle(
+                Text(
+                  l10n?.informationperso ?? 'Informations Personnelles',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -246,11 +252,28 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-          _buildInfoItem(Icons.email_outlined, 'Email', '${_userData?['email'] ?? '' }'),
-          _buildInfoItem(Icons.phone_outlined, 'Téléphone', '${_userData?['telephone'] ?? '' }  '),
-          _buildInfoItem(Icons.location_on_outlined, 'Adresse', '${_userData?['adresse'] ?? '' } ' ),
-          _buildInfoItem(Icons.calendar_today_outlined, 'Membre depuis', 
-              _userData?['created_at'] != null ? DateTime.parse(_userData!['created_at']).toLocal().toString().split(' ')[0] : ''),
+          _buildInfoItem(
+            Icons.email_outlined, 
+            l10n?.email ?? 'Email', 
+            '${_userData?['email'] ?? ''}'
+          ),
+          _buildInfoItem(
+            Icons.phone_outlined, 
+            l10n?.phone ?? 'Téléphone', 
+            '${_userData?['telephone'] ?? ''}'
+          ),
+          _buildInfoItem(
+            Icons.location_on_outlined, 
+            l10n?.address ?? 'Adresse', 
+            '${_userData?['adresse'] ?? ''}'
+          ),
+          _buildInfoItem(
+            Icons.calendar_today_outlined, 
+            l10n?.membredepuis ?? 'Membre depuis', 
+            _userData?['created_at'] != null 
+                ? DateTime.parse(_userData!['created_at']).toLocal().toString().split(' ')[0] 
+                : ''
+          ),
         ],
       ),
     );
@@ -272,12 +295,15 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
             ),
           ),
           const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
@@ -285,7 +311,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildStatsSection() {
+  Widget _buildStatsSection(AppLocalizations? l10n) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -295,7 +321,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
-            offset: const Offset(0, 5),),
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Column(
@@ -388,7 +415,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildAccountOptionsSection(context) {
+  Widget _buildAccountOptionsSection(BuildContext context, AppLocalizations? l10n) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -398,7 +425,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
-            offset: const Offset(0, 5),),
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: Column(
@@ -498,7 +526,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
+  Widget _buildLogoutButton(BuildContext context, WidgetRef ref, AppLocalizations? l10n) {
     return Container(
       width: double.infinity,
       height: 56,
@@ -511,11 +539,12 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           BoxShadow(
             color: AppColors.error.withOpacity(0.3),
             blurRadius: 10,
-            offset: const Offset(0, 4),)
+            offset: const Offset(0, 4),
+          )
         ],
       ),
       child: ElevatedButton(
-        onPressed: () => _showLogoutDialog(context, ref),
+        onPressed: () => _showLogoutDialog(context, ref, l10n),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -523,14 +552,14 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, color: Colors.white, size: 20),
-            SizedBox(width: 8),
+            const Icon(Icons.logout, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
             Text(
-              'Se Déconnecter',
-              style: TextStyle(
+              l10n?.logout ?? 'Se Déconnecter',
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -542,7 +571,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref, AppLocalizations? l10n) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -603,9 +632,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Déconnecter',
-                style: TextStyle(
+              child: Text(
+                l10n?.logout ?? 'Déconnecter',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),

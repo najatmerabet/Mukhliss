@@ -1,0 +1,12 @@
+{
+  "hello": "Bienvenue sur MUKHLISS",
+  "qrCodeInstructions":"Montrez ce QR code pour bénéficier de vos offres",
+  "identificationTitleqrcode": "Mon Identification",
+  "informationperso":"Informations Personnelles",
+  "phone":"Téléphone",
+   "address":"Adresse",
+  "email":"email",
+  "membredepuis":"Membre depuis",
+  "logout":"تسجيل الخروج",
+  "identificationTitleprofile":"Mon Profil"
+}

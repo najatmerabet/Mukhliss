@@ -3,6 +3,7 @@ import 'package:mukhliss/screen/client/location.dart';
 import 'package:mukhliss/screen/client/offres.dart';
 import 'package:mukhliss/screen/client/profile_new.dart';
 import 'package:mukhliss/screen/client/qr_code_screen.dart';
+
 // Couleurs modernes
 class AppColors {
   static const primary = Color(0xFF6366F1);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
  // Assurez-vous d'importer votre router
 
 class ClientHome extends StatefulWidget {
@@ -14,9 +15,7 @@ class _ClientHomeState extends State<ClientHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Accueil Client'),
-       
-      ),
+      title: Text(AppLocalizations.of(context)!.hello),),
       body: Center(
          child: ElevatedButton(
         child: const Text('Aller à la page de test'),

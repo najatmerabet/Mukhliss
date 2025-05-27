@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/routes/app_router.dart';
 
 import 'package:mukhliss/screen/slash_screen.dart';
@@ -47,6 +50,9 @@ class ErrorApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
+      supportedLocales: L10n.all,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      locale: const Locale('en'), 
     );
   }
 }
@@ -64,6 +70,10 @@ class AuthWrapper extends StatelessWidget {
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
+      supportedLocales: L10n.all,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      locale: const Locale('en'),
+      
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
@@ -156,6 +166,9 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
+      supportedLocales: L10n.all,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      locale: const Locale('en'),
       onGenerateRoute: (settings) {
         print('Route demandée: ${settings.name}');
         

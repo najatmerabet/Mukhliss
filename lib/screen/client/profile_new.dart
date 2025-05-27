@@ -15,7 +15,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
-
+  
   @override
   void initState() {
     super.initState();

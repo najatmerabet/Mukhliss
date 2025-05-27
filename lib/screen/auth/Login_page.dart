@@ -4,6 +4,7 @@ import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:mukhliss/utils/validators.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -317,15 +318,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez entrer un email';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Email invalide';
-                            }
-                            return null;
-                          },
+                          validator: (value)=>Validators.validateEmaillogin(value),
                         ),
 
                         const SizedBox(height: 24),
@@ -394,15 +387,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez entrer un mot de passe';
-                            }
-                            if (value.length < 6) {
-                              return 'Le mot de passe doit contenir au moins 6 caractères';
-                            }
-                            return null;
-                          },
+                          validator:(value)=> Validators.validatePassword(value)
                         ),
 
                         // Mot de passe oublié

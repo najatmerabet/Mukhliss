@@ -1,11 +1,18 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/theme/app_theme.dart';
+
+import 'package:mukhliss/utils/validators.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
+
 
 class ClientSignup extends ConsumerStatefulWidget {
   const ClientSignup({Key? key}) : super(key: key);
@@ -102,6 +109,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
 
   @override
   Widget build(BuildContext context) {
+     final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Container(
@@ -164,6 +172,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 ),
 
                                 Text(
+                                  l10n?.creecompte ??
                                   'Créer un compte',
                                   style: Theme.of(
                                     context,
@@ -174,6 +183,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
+                                l10n?.regoinez??
                                   'Rejoignez notre communauté',
                                   style: Theme.of(context).textTheme.bodyLarge
                                       ?.copyWith(color: Colors.grey.shade600),
@@ -195,13 +205,10 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                       child: AppFormFields.buildModernTextField(
                                         context: context,
                                         controller: _firstNameController,
-                                        label: 'Prénom',
+                                        label:l10n?.prenom ?? 'Prénom',
                                         icon: Icons.person_outline_rounded,
                                         validator:
-                                            (value) =>
-                                                value?.isEmpty ?? true
-                                                    ? 'Requis'
-                                                    : null,
+                                            (value) =>Validators.validateRequired(value,context)
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -209,13 +216,11 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                       child: AppFormFields.buildModernTextField(
                                         context: context,
                                         controller: _lastNameController,
-                                        label: 'Nom',
+                                        label:l10n?.nom ?? 'Nom',
                                         icon: Icons.badge_outlined,
                                         validator:
-                                            (value) =>
-                                                value?.isEmpty ?? true
-                                                    ? 'Requis'
-                                                    : null,
+                                            (value) => Validators.validateRequired(value,context)
+                                                
                                       ),
                                     ),
                                   ],
@@ -227,18 +232,18 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 AppFormFields.buildModernTextField(
                                   context: context,
                                   controller: _emailController,
-                                  label: 'Adresse email',
+                                  label:l10n?.adresseemail ?? 'Adresse email',
                                   icon: Icons.alternate_email_rounded,
                                   keyboardType: TextInputType.emailAddress,
-                                  validator: (value) {
-                                    if (value?.isEmpty ?? true) return 'Requis';
-                                    if (!RegExp(
-                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                    ).hasMatch(value!)) {
-                                      return 'Email invalide';
-                                    }
-                                    return null;
-                                  },
+                                 validator: (value) {
+                                 final requiredError = Validators.validateRequired(value, context);
+                                 if (requiredError != null) return requiredError; // Affiche l'erreur si vide
+
+                                 final emailError = Validators.validateEmail(value, context);
+                                 if (emailError != null) return emailError; // Affiche l'erreur si email invalide
+
+                                     return null; // ✅ Valide
+                                    },
                                 ),
 
                                 const SizedBox(height: 24),
@@ -247,7 +252,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 AppFormFields.buildModernTextField(
                                   context: context,
                                   controller: _phoneController,
-                                  label: 'Numéro de téléphone',
+                                  label:l10n?.numphone ?? 'Numéro de téléphone',
                                   icon: Icons.phone_outlined,
                                   keyboardType: TextInputType.phone,
                                   inputFormatters: [
@@ -255,9 +260,10 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                     LengthLimitingTextInputFormatter(10),
                                   ],
                                   validator: (value) {
-                                    if (value?.isEmpty ?? true) return 'Requis';
-                                    if (value!.length < 10)
-                                      return 'Numéro invalide';
+                                  final requiredError=  Validators.validateRequired(value,context);
+                                   if (requiredError != null) return requiredError;
+                                  final phoneError = Validators.validatePhone(value,context);
+                                    if (phoneError != null) return phoneError;
                                     return null;
                                   },
                                 ),
@@ -268,14 +274,13 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 AppFormFields.buildModernTextField(
                                   context: context,
                                   controller: _addressController,
-                                  label: 'Adresse complète',
+                                  label:l10n?.adressecomplet ?? 'Adresse complète',
                                   icon: Icons.location_on_outlined,
                                   maxLines: 2,
                                   validator:
-                                      (value) =>
-                                          value?.isEmpty ?? true
-                                              ? 'Requis'
-                                              : null,
+                                      (value){final requirederror=Validators.validateRequired(value,context);
+                                        if (requirederror != null) return requirederror;
+                                    return null;} 
                                 ),
 
                                 const SizedBox(height: 24),
@@ -284,7 +289,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 AppFormFields.buildModernPasswordField(
                                   context: context,
                                   controller: _passwordController,
-                                  label: 'Mot de passe',
+                                  label:l10n?.password ?? 'Mot de passe',
                                   isObscure: _obscurePassword,
                                   onToggleVisibility:
                                       () => setState(
@@ -293,9 +298,10 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                                 !_obscurePassword,
                                       ),
                                   validator: (value) {
-                                    if (value?.isEmpty ?? true) return 'Requis';
-                                    if (value!.length < 6)
-                                      return 'Minimum 6 caractères';
+                           final  errorrequired= Validators.validateRequired(value,context);
+                           if(errorrequired!=null)return errorrequired;
+                                final errorpassword=    Validators.validatePassword(value,context);
+                                if(errorpassword !=null) return errorpassword;
                                     return null;
                                   },
                                 ),
@@ -306,7 +312,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 AppFormFields.buildModernPasswordField(
                                   context: context,
                                   controller: _confirmPasswordController,
-                                  label: 'Confirmer le mot de passe',
+                                  label:l10n?.confirmepassword ??  'Confirmer le mot de passe',
                                   isObscure: _obscureConfirmPassword,
                                   onToggleVisibility:
                                       () => setState(
@@ -315,9 +321,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                                 !_obscureConfirmPassword,
                                       ),
                                   validator: (value) {
-                                    if (value != _passwordController.text) {
-                                      return 'Les mots de passe ne correspondent pas';
-                                    }
+                                final errorvalidatepassword=    Validators.validateConfirmPassword(value, _passwordController.text,context);
+                                if(errorvalidatepassword !=null)return errorvalidatepassword;
                                     return null;
                                   },
                                 ),
@@ -351,7 +356,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                         strokeWidth: 2.5,
                                       )
                                       : Text(
-                                        'Créer mon compte',
+                                       l10n?.creecompte ?? 'Créer mon compte',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -368,7 +373,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Vous avez déjà un compte ?',
+                             l10n?.vousavezcompte ??   'Vous avez déjà un compte ?',
                                 style: TextStyle(color: Colors.grey.shade600),
                               ),
                               TextButton(
@@ -378,7 +383,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                       AppRouter.login,
                                     ),
                                 child: Text(
-                                  'Se connecter',
+                              l10n?.connecter ??    'Se connecter',
                                   style: TextStyle(
                                     color: AppColors.purpleDark,
                                     fontWeight: FontWeight.bold,

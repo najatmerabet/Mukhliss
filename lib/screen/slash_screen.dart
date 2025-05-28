@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mukhliss/screen/auth/login_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -29,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+     final l10n = AppLocalizations.of(context);
     return Scaffold(
      
       body: Container(
@@ -47,6 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
+                l10n?.hello ??
                 'Bienvenue sur MUKHLISS',
                 style: TextStyle(
                   fontSize: 24,

@@ -4,6 +4,8 @@ import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:mukhliss/utils/form_field_helpers.dart';
+import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/utils/validators.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -41,25 +43,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackbar('Erreur de connexion: ${e.toString()}');
+        showErrorSnackbar(
+          context: context,
+          message: 'Erreur de connexion: ${e.toString()}',
+        );
       }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.redAccent.shade200,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
   }
 
   void _showEmailResetDialog() {
@@ -147,7 +140,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   if (emailController.text.trim().isEmpty ||
                       !emailController.text.contains('@')) {
                     Navigator.pop(context);
-                    _showErrorSnackbar('Veuillez entrer un email valide');
+                    showErrorSnackbar(
+                      context: context,
+                      message: 'Veuillez entrer un email valide',
+                    );
                     return;
                   }
 
@@ -178,7 +174,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _sendResetOtpEmail(String email) async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(authProvider).sendPasswordResetOtpEmail(email);
+      await ref.read(authProvider).sendPasswordResetOtp(email);
 
       if (mounted) {
         Navigator.push(
@@ -190,7 +186,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackbar('Erreur: ${e.toString()}');
+        showErrorSnackbar(context: context, message: 'Erreur: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -268,128 +264,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Label Email
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 8),
-                          child: Text(
-                            'Email',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                        ),
-                        // Champ Email
-                        TextFormField(
+                        AppFormFields.buildModernTextField(
+                          context: context,
                           controller: _emailController,
-                          decoration: InputDecoration(
-                            hintText: 'votre@email.com',
-                            prefixIcon: Icon(
-                              Icons.email_outlined,
-                              color: AppColors.purpleDark,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 16,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade200,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.purpleDark,
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.redAccent.shade200,
-                              ),
-                            ),
-                          ),
+                          label: 'Email',
+                          icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          validator: (value)=>Validators.validateEmaillogin(value),
+                          validator:
+                              (value) => Validators.validateEmaillogin(value),
+                          hintText: 'votre@email.com',
                         ),
-
                         const SizedBox(height: 24),
 
-                        // Label Mot de passe
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 8),
-                          child: Text(
-                            'Mot de passe',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                        ),
-                        // Champ Mot de passe
-                        TextFormField(
+                        AppFormFields.buildModernPasswordField(
+                          context: context,
                           controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            prefixIcon: Icon(
-                              Icons.lock_outline,
-                              color: AppColors.purpleDark,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey.shade600,
+                          label: 'Mot de passe',
+                          isObscure: _obscurePassword,
+                          onToggleVisibility:
+                              () => setState(
+                                () => _obscurePassword = !_obscurePassword,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 16,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade200,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.purpleDark,
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.redAccent.shade200,
-                              ),
-                            ),
-                          ),
-                          validator:(value)=> Validators.validatePassword(value)
+                          validator:
+                              (value) => Validators.validatePassword(value),
+                          hintText: '••••••••',
                         ),
-
                         // Mot de passe oublié
                         Align(
                           alignment: Alignment.centerRight,
@@ -490,7 +389,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             onPressed: () async {
                               setState(() => _isLoading = true);
                               try {
-                                await ref.read(authProvider).signUpWithGoogle();
+                                await ref.read(authProvider).signInWithGoogle();
                                 if (mounted) {
                                   Navigator.pushReplacementNamed(
                                     // ignore: use_build_context_synchronously
@@ -500,8 +399,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 }
                               } catch (e) {
                                 if (mounted) {
-                                  _showErrorSnackbar(
-                                    'Erreur de connexion: ${e.toString()}',
+                                  showErrorSnackbar(
+                                    // ignore: use_build_context_synchronously
+                                    context: context,
+                                    message:
+                                        'Erreur de connexion: ${e.toString()}',
                                   );
                                 }
                               } finally {
@@ -558,47 +460,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
- Widget _buildSocialButton({
-  required String imagePath,
-  required String label,
-  required Function() onPressed, // Accepts both sync and async functions
-  Color? backgroundColor,
-}) {
-  return SizedBox(
-    height: 50,
-    child: ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? Colors.white,
-        foregroundColor: Colors.grey.shade800,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey.shade300),
+  Widget _buildSocialButton({
+    required String imagePath,
+    required String label,
+    required Function() onPressed, // Accepts both sync and async functions
+    Color? backgroundColor,
+  }) {
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor ?? Colors.white,
+          foregroundColor: Colors.grey.shade800,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade300),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            imagePath,
-            width: 24,
-            height: 24,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade700,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(imagePath, width: 24, height: 24),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade700,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-  
-
+    );
+  }
 }

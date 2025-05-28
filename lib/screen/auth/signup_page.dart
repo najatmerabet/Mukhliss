@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/theme/app_theme.dart';
+import 'package:mukhliss/utils/form_field_helpers.dart';
+import 'package:mukhliss/utils/snackbar_helper.dart';
 
 class ClientSignup extends ConsumerStatefulWidget {
   const ClientSignup({Key? key}) : super(key: key);
@@ -79,103 +81,23 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         phone: _phoneController.text.trim(),
-        adr: _addressController.text.trim(),
+        address: _addressController.text.trim(),
       );
 
       if (mounted) {
-        _showSuccessSnackbar('Inscription réussie!');
+        showSuccessSnackbar(
+          context: context, // N'oubliez pas le contexte
+          message: 'Inscription réussie!',
+        );
         Navigator.pushReplacementNamed(context, AppRouter.main);
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackbar('Erreur d\'inscription: ${e.toString()}');
+        (context: context, message: 'Erreur d\'inscription: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final authService = ref.read(authProvider);
-      await authService.signUpWithGoogle();
-      // ignore: use_build_context_synchronously
-      Navigator.pushReplacementNamed(context, AppRouter.main);
-    } catch (e) {
-      if (mounted) {
-        _showErrorSnackbar('Erreur lors de la connexion Google: $e');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleFacebookSignIn() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final authService = ref.read(authProvider);
-      await authService.signUpWithFacebook();
-      Navigator.pushReplacementNamed(context, AppRouter.main);
-    } catch (e) {
-      if (mounted) {
-        _showErrorSnackbar('Erreur Facebook: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red.shade600,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 8,
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
-
-  void _showSuccessSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.green.shade600,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 8,
-        duration: const Duration(seconds: 3),
-      ),
-    );
   }
 
   @override
@@ -270,7 +192,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: _buildModernTextField(
+                                      child: AppFormFields.buildModernTextField(
+                                        context: context,
                                         controller: _firstNameController,
                                         label: 'Prénom',
                                         icon: Icons.person_outline_rounded,
@@ -283,7 +206,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
-                                      child: _buildModernTextField(
+                                      child: AppFormFields.buildModernTextField(
+                                        context: context,
                                         controller: _lastNameController,
                                         label: 'Nom',
                                         icon: Icons.badge_outlined,
@@ -300,7 +224,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 const SizedBox(height: 24),
 
                                 // Email
-                                _buildModernTextField(
+                                AppFormFields.buildModernTextField(
+                                  context: context,
                                   controller: _emailController,
                                   label: 'Adresse email',
                                   icon: Icons.alternate_email_rounded,
@@ -319,7 +244,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 const SizedBox(height: 24),
 
                                 // Phone
-                                _buildModernTextField(
+                                AppFormFields.buildModernTextField(
+                                  context: context,
                                   controller: _phoneController,
                                   label: 'Numéro de téléphone',
                                   icon: Icons.phone_outlined,
@@ -339,7 +265,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 const SizedBox(height: 24),
 
                                 // Address
-                                _buildModernTextField(
+                                AppFormFields.buildModernTextField(
+                                  context: context,
                                   controller: _addressController,
                                   label: 'Adresse complète',
                                   icon: Icons.location_on_outlined,
@@ -354,7 +281,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 const SizedBox(height: 24),
 
                                 // Password
-                                _buildModernPasswordField(
+                                AppFormFields.buildModernPasswordField(
+                                  context: context,
                                   controller: _passwordController,
                                   label: 'Mot de passe',
                                   isObscure: _obscurePassword,
@@ -375,7 +303,8 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                                 const SizedBox(height: 24),
 
                                 // Confirm Password
-                                _buildModernPasswordField(
+                                AppFormFields.buildModernPasswordField(
+                                  context: context,
                                   controller: _confirmPasswordController,
                                   label: 'Confirmer le mot de passe',
                                   isObscure: _obscureConfirmPassword,
@@ -434,47 +363,6 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                           ),
 
                           const SizedBox(height: 32),
-
-                          // Divider with "ou"
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Divider(color: Colors.grey.shade300),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  'ou',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Divider(color: Colors.grey.shade300),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Google Sign-In Button
-                          _buildSocialButton(
-                            imagePath: 'images/google_logo.png',
-                            label: 'Continuer avec Google',
-                            onPressed:  _handleGoogleSignIn,
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Facebook Sign-In Button (optionnel)
-                    
-
-                          const SizedBox(height: 24),
-
                           // Lien vers la connexion
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -507,347 +395,6 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
               },
             ),
           ),
-        ),
-      ),
-    );
-  }
-Widget _buildSocialButton({
-  required String imagePath,
-  required String label,
-  required Function() onPressed, // Accepts both sync and async functions
-  Color? backgroundColor,
-}) {
-  return SizedBox(
-    height: 50,
-    child: ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? Colors.white,
-        foregroundColor: Colors.grey.shade800,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey.shade300),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            imagePath,
-            width: 24,
-            height: 24,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-  
-  
-  Widget _buildModernTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0, bottom: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          maxLines: maxLines,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade900,
-          ),
-          decoration: InputDecoration(
-            prefixIcon: Icon(
-              icon,
-              color: AppColors.purpleDark.withOpacity(0.7),
-            ),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.7),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 16,
-              horizontal: 16,
-            ),
-            errorStyle: TextStyle(color: Colors.red.shade600, fontSize: 13),
-          ),
-          validator: validator,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildModernPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool isObscure,
-    required VoidCallback onToggleVisibility,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0, bottom: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        TextFormField(
-          controller: controller,
-          obscureText: isObscure,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade900,
-          ),
-          decoration: InputDecoration(
-            prefixIcon: Icon(
-              Icons.lock_outline,
-              color: AppColors.purpleDark.withOpacity(0.7),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                isObscure
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: Colors.grey.shade600,
-              ),
-              onPressed: onToggleVisibility,
-            ),
-            filled: true,
-            fillColor: Colors.white.withOpacity(0.7),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 16,
-              horizontal: 16,
-            ),
-            errorStyle: TextStyle(color: Colors.red.shade600, fontSize: 13),
-          ),
-          validator: validator,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFloatingTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      maxLines: maxLines,
-      textCapitalization:
-          maxLines == 1 ? TextCapitalization.words : TextCapitalization.none,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        color: Colors.grey.shade800,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Container(
-          margin: const EdgeInsets.only(right: 12),
-          child: Icon(icon, color: AppColors.purpleDark, size: 22),
-        ),
-        labelStyle: TextStyle(
-          color: Colors.grey.shade600,
-          fontWeight: FontWeight.w500,
-        ),
-        floatingLabelStyle: TextStyle(
-          color: AppColors.purpleDark,
-          fontWeight: FontWeight.w600,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.purpleDark, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.red.shade400, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
-          horizontal: 16,
-        ),
-      ),
-      validator: validator,
-    );
-  }
-
-  Widget _buildFloatingPasswordField({
-    required TextEditingController controller,
-    required String label,
-    required bool isObscure,
-    required VoidCallback onToggleVisibility,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isObscure,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        color: Colors.grey.shade800,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Container(
-          margin: const EdgeInsets.only(right: 12),
-          child: Icon(
-            Icons.lock_outline_rounded,
-            color: AppColors.purpleDark,
-            size: 22,
-          ),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            isObscure
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            color: Colors.grey.shade600,
-            size: 22,
-          ),
-          onPressed: onToggleVisibility,
-        ),
-        labelStyle: TextStyle(
-          color: Colors.grey.shade600,
-          fontWeight: FontWeight.w500,
-        ),
-        floatingLabelStyle: TextStyle(
-          color: AppColors.purpleDark,
-          fontWeight: FontWeight.w600,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.purpleDark, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.red.shade400, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
-          horizontal: 16,
-        ),
-      ),
-      validator: validator,
-    );
-  }
-
-  Widget _modernSocialButton({
-    required IconData icon,
-    required String label,
-    required Color iconColor,
-    required VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: iconColor),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-                fontSize: 15,
-              ),
-            ),
-          ],
         ),
       ),
     );

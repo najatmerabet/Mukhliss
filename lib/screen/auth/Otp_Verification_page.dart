@@ -94,7 +94,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
     });
     
     try {
-      await ref.read(authProvider).sendPasswordResetOtpEmail(widget.email);
+      await ref.read(authProvider).sendPasswordResetOtp(widget.email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Nouveau code envoyé')),

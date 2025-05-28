@@ -1,50 +1,60 @@
-import 'dart:io';
-
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart'; // Pour kIsWeb
 
+/// Service d'authentification gérant les connexions et inscriptions
 class AuthService {
+  static const String _webClientId = 
+      '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
+  static const String _androidClientId = 
+      '175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com';
+  
+  static const List<String> _googleScopes = ['email', 'profile'];
+  static const List<String> _facebookPermissions = ['public_profile', 'email'];
+  
   final SupabaseClient _client = Supabase.instance.client;
   SupabaseClient get client => _client;
+  
+  User? get currentUser => _client.auth.currentUser;
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
+  // ============= AUTHENTICATION METHODS =============
+  
+  /// Inscription d'un nouveau client avec email et mot de passe
   Future<AuthResponse> signUpClient({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
     String? phone,
-    required String adr,
+    required String address,
   }) async {
     try {
-      // 1. Inscription avec email et mot de passe
-      final AuthResponse authResponse = await _client.auth.signUp(
+      final authResponse = await _client.auth.signUp(
         email: email,
         password: password,
       );
 
-      // 2. Si l'inscription est réussie, créer le profil client dans la table 'clients'
       if (authResponse.user != null) {
-        await _client.from('clients').insert({
-          'id': authResponse.user!.id,
-          'email': email,
-          'prenom': firstName,
-          'nom': lastName,
-          'telephone': phone,
-          'adresse':adr,
-          'created_at': DateTime.now().toIso8601String(),
-        });
+        await _createClientProfile(
+          userId: authResponse.user!.id,
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          address: address,
+        );
       }
 
       return authResponse;
     } catch (e) {
-      print('Erreur lors de l\'inscription du client: $e');
+      _logError('Erreur inscription client', e);
       rethrow;
     }
   }
 
+  /// Connexion avec email et mot de passe
   Future<AuthResponse> login(String email, String password) async {
     return await _client.auth.signInWithPassword(
       email: email,
@@ -52,175 +62,86 @@ class AuthService {
     );
   }
 
-
- Future<String> getUserType() async {
-  final userId = _client.auth.currentUser?.id;
-  if (userId == null) throw Exception('Utilisateur non connecté');
-
-  try {
-    // Vérifie d'abord dans clients
-    final clientResponse = await _client
-        .from('clients')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (clientResponse != null) return 'client';
-
-    // Si pas client, vérifie dans magasins
-    final magasinResponse = await _client
-        .from('magasins')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (magasinResponse != null) return 'magasin';
-
-    throw Exception('Type d\'utilisateur inconnu');
-  } catch (e) {
-   print('Erreur getUserType: $e');
-    rethrow;
-  }
-}
-
-
-Future<void> nativeGoogleSignIn() async {
-  // ⚠️ IMPORTANT: Utilisez le WEB CLIENT ID ici, pas l'Android Client ID
-  const webClientId = '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
- 
-  final GoogleSignIn googleSignIn = GoogleSignIn(
-    // ⚠️ IMPORTANT: Utilisez l'ANDROID CLIENT ID ici
-    clientId: "175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com",
-    serverClientId: webClientId, // Web Client ID
-    scopes: ['email', 'profile'], // Ajoutez les scopes nécessaires
-  );
-
-  try {
-    // Déconnectez d'abord pour éviter les tokens en cache
-    await googleSignIn.signOut();
-    
-    print('🔄 Tentative de connexion Google...');
-    final googleUser = await googleSignIn.signIn();
-    
-    if (googleUser == null) {
-      print('❌ Connexion annulée par l\'utilisateur');
-      return;
-    }
-
-    print('✅ Utilisateur Google connecté: ${googleUser.email}');
-    
-    final googleAuth = await googleUser.authentication;
-    final accessToken = googleAuth.accessToken;
-    final idToken = googleAuth.idToken;
-    
-    print('🔑 Access Token: ${accessToken != null ? "✅" : "❌"}');
-    print('🔑 ID Token: ${idToken != null ? "✅" : "❌"}');
-    
-    if (accessToken == null) {
-      throw 'No Access Token found.'; 
-    }
-    if (idToken == null) {
-      throw 'No ID Token found.';
-    }
-    
-    print('🔄 Connexion avec Supabase...');
-    await _client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: accessToken, 
-    );
-    
-    print('✅ Connexion Supabase réussie !');
-    
-  } catch (error) {
-    print('❌ Erreur lors de l\'inscription Google: $error');
-    
-    // Debug supplémentaire
-    if (error.toString().contains('ApiException: 10')) {
-      print('💡 Erreur DEVELOPER_ERROR - Vérifiez:');
-      print('   - SHA-1 dans Google Console');
-      print('   - Package name correct');
-      print('   - Client IDs corrects');
-    }
-    
-    rethrow;
-  }
-}
-
-
-Future<void> signUpWithFacebook() async {
-  try {
-    debugPrint('🚀 Début de l\'authentification Facebook...');
-    // Lance l'authentification Facebook
-    var result = await  FacebookAuth.i.login(
-      permissions: ['public_profile' ,'email'],
-    );
-if(result.status != LoginStatus.success) {
-      throw Exception('Échec de l\'authentification Facebook: ${result.message}');
-    }else{
-      debugPrint('✅ Authentification Facebook réussie: ${result.accessToken}');
-    }
-    // Crée le profil client après l'authentification
-    // final user = _client.auth.currentUser!;
-    // await _createClientProfile(
-    //   user.id,
-    //   user.email ?? '',
-    //   user.phone ?? '',
-    //   (user.userMetadata?['full_name'] ?? user.userMetadata?['name']) as String?,
-    // );
-    debugPrint('✅ Inscription Facebook réussie');
-  } catch (e) {
-    debugPrint('❌ Erreur lors de l\'inscription Facebook: $e');
-    rethrow;
-  }
-}
-
- Future<void> signUpWithGoogle() async {
-  try {
-    debugPrint('🚀 Début de l\'authentification Google...');
-    if(!kIsWeb && (Platform.isAndroid || Platform.isIOS)){
-      await  nativeGoogleSignIn();
+  /// Connexion/Inscription avec Google
+  Future<void> signInWithGoogle() async {
+    try {
+      _log('Début connexion Google...');
       
+      await _authenticateWithGoogle();
+      await _ensureClientProfileExists();
+      
+      _log('Connexion Google réussie ✅');
+    } catch (e) {
+      _logError('Erreur Google Auth', e);
+      rethrow;
     }
-  
-    // 1. Lance l'authentification Google
-await _createClientProfile(_client.auth.currentUser!.id, _client.auth.currentUser!.email ?? '',_client.auth.currentUser!.phone ?? '',_client.auth.currentUser!.userMetadata?['full_name'],);
-      
-      
-  } catch (e) {
-    debugPrint('❌ Erreur lors de l\'inscription Google: $e');
-    rethrow;
   }
-}
 
-
-
-
-
-Future<void> _createClientProfile(String userId, String email, String ? phone ,String? full_name ) async {
-  
-  try {
-    await _client.from('clients').upsert({
-      'id': userId,
-      'email': email,
-      'nom':full_name,
-      'telephone':phone,
-     
-    });
-  } catch (e) {
-    debugPrint('❌ Erreur création profil client: $e');
-    throw AuthException('Échec création du profil client');
-  }
-}
-
-
-
+  /// Déconnexion
   Future<void> logout() async {
     await _client.auth.signOut();
   }
 
-  // Envoyer OTP par email pour réinitialisation
-  Future<void> sendPasswordResetOtpEmail(String email) async {
+  // ============= USER MANAGEMENT =============
+  
+  /// Détermine le type d'utilisateur (client ou magasin)
+  Future<UserType> getUserType() async {
+    final userId = _validateCurrentUser();
+    
+    try {
+      // Vérifier si c'est un client
+      if (await _isUserInTable(userId, 'clients')) {
+        return UserType.client;
+      }
+      
+      // Vérifier si c'est un magasin
+      if (await _isUserInTable(userId, 'magasins')) {
+        return UserType.magasin;
+      }
+      
+      throw AuthException('Type utilisateur inconnu');
+    } catch (e) {
+      _logError('Erreur getUserType', e);
+      rethrow;
+    }
+  }
+
+  /// Met à jour le profil utilisateur
+  Future<void> updateUserProfile({
+    required String userId,
+    String? email,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? address,
+  }) async {
+    try {
+      final updates = <String, dynamic>{};
+      
+      if (email != null) updates['email'] = email;
+      if (firstName != null) updates['prenom'] = firstName;
+      if (lastName != null) updates['nom'] = lastName;
+      if (phone != null) updates['telephone'] = phone;
+      if (address != null) updates['adresse'] = address;
+      
+      if (updates.isNotEmpty) {
+        await _client.from('clients').update(updates).eq('id', userId);
+      }
+
+      // Mettre à jour l'email dans Auth si modifié
+      if (email != null) {
+        await _client.auth.updateUser(UserAttributes(email: email));
+      }
+    } catch (e) {
+      _logError('Erreur mise à jour profil', e);
+      rethrow;
+    }
+  }
+
+  // ============= PASSWORD RESET =============
+  
+  /// Envoie un OTP par email pour réinitialisation du mot de passe
+  Future<void> sendPasswordResetOtp(String email) async {
     await _client.auth.signInWithOtp(
       email: email,
       shouldCreateUser: false,
@@ -228,25 +149,188 @@ Future<void> _createClientProfile(String userId, String email, String ? phone ,S
     );
   }
 
-  // Vérifier l'OTP
+  /// Vérifie l'OTP reçu par email
   Future<void> verifyEmailOtp(String email, String token) async {
     final response = await _client.auth.verifyOTP(
       email: email,
       token: token,
       type: OtpType.recovery,
     );
-    
+
     if (response.session == null) {
-      throw Exception('Échec de la vérification');
+      throw AuthException('Échec de la vérification OTP');
     }
   }
 
+  /// Met à jour le mot de passe
   Future<void> updatePassword(String newPassword) async {
     await _client.auth.updateUser(
       UserAttributes(password: newPassword),
     );
   }
+/// Met à jour le mot de passe avec vérification de l'ancien mot de passe
+Future<void> updatePasswordWithVerify({
+  required String currentPassword,
+  required String newPassword,
+}) async {
+  // First verify current password by signing in again
+  final user = currentUser;
+  if (user == null) throw AuthException('Utilisateur non connecté');
+  
+  if (user.email == null) throw AuthException('Email utilisateur non disponible');
+  
+  // Verify current password
+  try {
+    await _client.auth.signInWithPassword(
+      email: user.email!,
+      password: currentPassword,
+    );
+  } catch (e) {
+    throw AuthException('Mot de passe actuel incorrect');
+  }
 
-  User? get currentUser => _client.auth.currentUser;
-  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+  // If verification succeeds, update password
+  await _client.auth.updateUser(
+    UserAttributes(password: newPassword),
+  );
+}
+  // ============= PRIVATE METHODS =============
+  
+  /// Authentification native avec Google
+  Future<void> _authenticateWithGoogle() async {
+    final googleSignIn = GoogleSignIn(
+      clientId: _androidClientId,
+      serverClientId: _webClientId,
+      scopes: _googleScopes,
+    );
+
+    try {
+      // Nettoyer les tokens en cache
+      await googleSignIn.signOut();
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw AuthException('Connexion annulée par l\'utilisateur');
+      }
+
+      _log('Utilisateur Google: ${googleUser.email}');
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null || accessToken == null) {
+        throw AuthException('Tokens manquants');
+      }
+
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+    } catch (error) {
+      if (error.toString().contains('ApiException: 10')) {
+        _log('💡 DEVELOPER_ERROR - Vérifiez SHA-1 et configuration Google');
+      }
+      rethrow;
+    }
+  }
+
+  /// Crée le profil client s'il n'existe pas déjà
+  Future<void> _ensureClientProfileExists() async {
+    final user = currentUser;
+    if (user == null) return;
+
+    try {
+      final exists = await _isUserInTable(user.id, 'clients');
+      if (exists) {
+        _log('Profil client existe déjà');
+        return;
+      }
+
+      await _createClientProfile(
+        userId: user.id,
+        email: user.email ?? '',
+        lastName: _extractFullName(user),
+        phone: user.phone,
+      );
+    } catch (e) {
+      _logError('Erreur création profil', e);
+      rethrow;
+    }
+  }
+
+  /// Crée un profil client dans la base de données
+  Future<void> _createClientProfile({
+    required String userId,
+    required String email,
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? address,
+  }) async {
+    await _client.from('clients').insert({
+      'id': userId,
+      'email': email,
+      'prenom': firstName,
+      'nom': lastName,
+      'telephone': phone,
+      'adresse': address,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    _log('Profil client créé ✅');
+  }
+
+  /// Vérifie si un utilisateur existe dans une table
+  Future<bool> _isUserInTable(String userId, String tableName) async {
+    final response = await _client
+        .from(tableName)
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+    
+    return response != null;
+  }
+
+  /// Valide que l'utilisateur est connecté et retourne son ID
+  String _validateCurrentUser() {
+    final userId = currentUser?.id;
+    if (userId == null) {
+      throw AuthException('Utilisateur non connecté');
+    }
+    return userId;
+  }
+
+  /// Extrait le nom complet des métadonnées utilisateur
+  String? _extractFullName(User user) {
+    final metadata = user.userMetadata;
+    if (metadata == null) return null;
+    
+    return metadata['full_name'] as String? ?? 
+           metadata['name'] as String?;
+  }
+
+  /// Log un message en mode debug
+  void _log(String message) {
+    debugPrint('🔹 [AuthService] $message');
+  }
+
+  /// Log une erreur
+  void _logError(String context, dynamic error) {
+    debugPrint('❌ [AuthService] $context: $error');
+  }
+}
+
+// ============= CUSTOM TYPES =============
+
+/// Types d'utilisateurs supportés
+enum UserType { client, magasin }
+
+/// Exception personnalisée pour les erreurs d'authentification
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+  
+  @override
+  String toString() => 'AuthException: $message';
 }

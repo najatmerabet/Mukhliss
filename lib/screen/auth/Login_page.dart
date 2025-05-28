@@ -5,7 +5,8 @@ import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/utils/validators.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -104,11 +105,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null ||
-                        value.isEmpty ||
-                        !value.contains('@')) {
-                      return 'Email invalide';
-                    }
+                    Validators.validateEmaillogin(value,context);
                     return null;
                   },
                 ),
@@ -201,6 +198,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+     final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -240,6 +238,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
 
                         Text(
+                          l10n?.welcome ??
                           'Bienvenue',
                           style: Theme.of(
                             context,
@@ -250,6 +249,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
+                          l10n?.connectezvous ??
                           'Connectez-vous pour continuer',
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(color: Colors.grey.shade600),
@@ -271,6 +271,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
+                            l10n?.email ??
                             'Email',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
@@ -318,7 +319,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
-                          validator: (value)=>Validators.validateEmaillogin(value),
+                          validator: (value)=>Validators.validateEmaillogin(value,context),
                         ),
 
                         const SizedBox(height: 24),
@@ -327,6 +328,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
+                            l10n?.password??
                             'Mot de passe',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
@@ -387,7 +389,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           ),
-                          validator:(value)=> Validators.validatePassword(value)
+                          validator:(value)=> Validators.validatePassword(value,context)
                         ),
 
                         // Mot de passe oublié
@@ -401,6 +403,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               visualDensity: VisualDensity.compact,
                             ),
                             child: Text(
+                              l10n?.forgetpassword ??
                               'Mot de passe oublié ?',
                               style: TextStyle(
                                 color: AppColors.purpleDark,
@@ -443,7 +446,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                         strokeWidth: 2.5,
                                       ),
                                     )
-                                    : const Text(
+                                    :  Text(
+                                      l10n?.connecter ??
                                       'Se connecter',
                                       style: TextStyle(
                                         fontSize: 16,
@@ -467,6 +471,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 horizontal: 16,
                               ),
                               child: Text(
+                                l10n?.ou ??
                                 'ou',
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
@@ -486,7 +491,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Center(
                           child: _buildSocialButton(
                             imagePath: 'images/google_logo.png',
-                            label: 'Se connecter avec Google',
+                            label:l10n?.connecteravecgoogle ?? 'Se connecter avec Google',
                             onPressed: () async {
                               setState(() => _isLoading = true);
                               try {
@@ -519,6 +524,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
+                              l10n?.pasdecompte ??
                               'Pas encore de compte ?',
                               style: TextStyle(
                                 color: Colors.grey.shade700,
@@ -536,6 +542,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 visualDensity: VisualDensity.compact,
                               ),
                               child: Text(
+                                l10n?.creecompte ??
                                 'Créer un compte',
                                 style: TextStyle(
                                   color: AppColors.purpleDark,

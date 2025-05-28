@@ -121,26 +121,6 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           letterSpacing: 1.5,
         ),
       ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          child: IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Paramètres'),
-                  backgroundColor: AppColors.primary,
-                ),
-              );
-            },
-            icon: const Icon(
-              Icons.settings_outlined,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -380,8 +360,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
           onTap: () => _showLocation(),
         ),
         _buildMenuItem(
-          icon: Icons.notifications_outlined,
-          title: 'Paramètres de Notification',
+          icon: Icons.settings_outlined,
+          title: 'Paramètres',
           onTap: () => _showNotificationSettings(),
         ),
         _buildMenuItem(

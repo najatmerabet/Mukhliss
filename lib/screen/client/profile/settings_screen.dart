@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -15,7 +15,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProviderStateMixin {
   bool _isLoading = false;
-  bool _isDarkMode = false;
+
   bool _notificationsEnabled = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -289,6 +289,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
       final l10n = AppLocalizations.of(context);
+        final themeMode = ref.watch(themeProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
@@ -402,11 +403,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: 'Thème sombre',
-                          subtitle: _isDarkMode ? 'Activé' : 'Désactivé',
+                          subtitle: themeMode == ThemeMode.dark ? 'Activé' : 'Désactivé',
                           trailing: Switch.adaptive(
-                            value: _isDarkMode,
+                            value: themeMode == ThemeMode.dark,
                             onChanged: (value) {
-                              setState(() => _isDarkMode = value);
+                               ref.read(themeProvider.notifier).toggleTheme();
                             },
                             activeColor: const Color(0xFF6366F1),
                           ),

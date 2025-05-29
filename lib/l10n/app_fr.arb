@@ -1,5 +1,10 @@
 {
   "@@locale": "fr",
+   "cancel": "Annuler",
+  "selectLanguage": "Choisir la langue",
+  "languageSubtitle": "Sélectionnez votre langue préférée",
+    "languageAlreadySet": "Langue déjà définie sur Français",
+   "languageChanged": "Langue changée vers Français",
   "language": "Langue",
   "french": "Français",
   "english": "Anglais",
@@ -10,7 +15,7 @@
   "informationperso":"Informations Personnelles",
   "phone":"Téléphone",
    "address":"Adresse",
-  "email":"email",
+  "email":"Email",
   "membredepuis":"Membre depuis",
   "logout":"تسجيل الخروج",
   "identificationTitleprofile":"Mon Profil",
@@ -39,5 +44,7 @@
    "emailinvalide":"Veuillez entrer un email valide",
    "lesmotspassnecorresponspas":"Les mots de passe ne correspondent pas",
   "entrzpassword": "Veuillez entrer votre mot de passe",
-  "entrzemail":"Le mot de passe doit contenir au moins 6 caractères"
+  "entrzemail":"Le mot de passe doit contenir au moins 6 caractères",
+  "parametre":"Paramètres",
+  "compte":"COMPTE"
 }

@@ -1,5 +1,10 @@
 {
   "@@locale": "en",
+   "cancel": "Cancel",
+   "selectLanguage": "Select language",
+    "languageChanged": "Language changed to English",
+    "languageSubtitle": "Select your preferred language",
+     "languageAlreadySet": "Language already set to English",
    "language": "Langue",
   "french": "Français",
   "english": "Anglais",
@@ -40,5 +45,7 @@
    "emailinvalide":"Please enter a valid email address",
    "lesmotspassnecorresponspas":"Passwords do not match",
    "entrzpassword": "Please enter your password",
-   "entrzemail":"Password must contain at least 6 characters"
+   "entrzemail":"Password must contain at least 6 characters",
+   "parametre":"Settings",
+   "compte":"COMPTE"
 }

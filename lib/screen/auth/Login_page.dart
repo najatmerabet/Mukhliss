@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
@@ -8,7 +9,7 @@ import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/utils/validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mukhliss/providers/langue_provider.dart';
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -55,10 +56,50 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
     }
   }
+Widget _buildLanguageDropdown(BuildContext context) {
+  final currentLanguage = ref.watch(languageProvider.notifier).currentLanguageOption;
 
+  return PopupMenuButton<LanguageOption>(
+    icon: Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        currentLanguage.flag,
+        style: const TextStyle(fontSize: 20),
+      ),
+    ),
+    onSelected: (LanguageOption option) {
+      ref.read(languageProvider.notifier).changeLanguage(option.locale);
+    },
+    itemBuilder: (BuildContext context) {
+      return LanguageNotifier.supportedLanguages.map((LanguageOption option) {
+        return PopupMenuItem<LanguageOption>(
+          value: option,
+          child: Row(
+            children: [
+              Text(option.flag, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Text(option.name),
+            ],
+          ),
+        );
+      }).toList();
+    },
+  );
+}
   void _showEmailResetDialog() {
     final emailController = TextEditingController(text: _emailController.text);
-
+ final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder:
@@ -79,7 +120,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    labelText:l10n?.email ?? 'Email',
                     hintText: 'votre@email.com',
                     prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
                     border: OutlineInputBorder(
@@ -216,6 +257,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Padding(
+                   padding: const EdgeInsets.only(top: 16.0),
+                     child: Align(
+                 alignment: Alignment.topRight,
+                     child: _buildLanguageDropdown(context),
+                    ),
+                    ),
                   const SizedBox(height: 40),
 
                   // Logo et titre
@@ -268,11 +316,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         AppFormFields.buildModernTextField(
                           context: context,
                           controller: _emailController,
-                          label: 'Email',
+                          label:l10n?.email ?? 'Email',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator:
-                              (value) => Validators.validateEmaillogin(value),
+                              (value) => Validators.validateEmaillogin(value,context),
                           hintText: 'votre@email.com',
                         ),
                         const SizedBox(height: 24),
@@ -280,14 +328,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         AppFormFields.buildModernPasswordField(
                           context: context,
                           controller: _passwordController,
-                          label: 'Mot de passe',
+                          label:l10n?.password ?? 'Mot de passe',
                           isObscure: _obscurePassword,
                           onToggleVisibility:
                               () => setState(
                                 () => _obscurePassword = !_obscurePassword,
                               ),
                           validator:
-                              (value) => Validators.validatePassword(value),
+                              (value) => Validators.validatePassword(value,context),
                           hintText: '••••••••',
 
                         ),
@@ -420,41 +468,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-
                         // Inscription
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              l10n?.pasdecompte ??
-                              'Pas encore de compte ?',
-                              style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontSize: 15,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRouter.signupClient,
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              child: Text(
-                                l10n?.creecompte ??
-                                'Créer un compte',
-                                style: TextStyle(
-                                  color: AppColors.purpleDark,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                       Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    Expanded(  // Add this
+      child: Text(
+        l10n?.pasdecompte ?? 'Pas encore de compte ?',
+        style: TextStyle(
+          color: Colors.grey.shade700,
+          fontSize: 15,
+        ),
+        textAlign: TextAlign.center,  // Add this to center the text
+      ),
+    ),
+    TextButton(
+      onPressed: () {
+        Navigator.pushNamed(
+          context,
+          AppRouter.signupClient,
+        );
+      },
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+      ),
+      child: Text(
+        l10n?.creecompte ?? 'Créer un compte',
+        style: TextStyle(
+          color: AppColors.purpleDark,
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+        ),
+      ),
+    ),
+  ],
+),
                       ],
                     ),
                   ),
@@ -463,6 +511,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
+        
       ),
     );
   }

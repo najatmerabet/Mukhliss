@@ -1,14 +1,14 @@
+// main.dart - Version corrigée
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/routes/app_router.dart';
-
 import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:mukhliss/services/device_management_service.dart';
+import 'package:mukhliss/providers/langue_provider.dart'; // Ajoutez cette import
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -55,11 +55,14 @@ class ErrorApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+// Modifiez AuthWrapper pour écouter le languageProvider
+class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) { 
+    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    
     return MaterialApp(
       title: 'MUKHLISS',
       theme: ThemeData(
@@ -70,24 +73,26 @@ class AuthWrapper extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('en'),
-
+      locale: currentLocale, // Utilise la langue actuelle du provider
+      
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
 
-class AuthStateHandler extends StatefulWidget {
+// Modifiez aussi AuthStateHandler pour écouter le languageProvider
+class AuthStateHandler extends ConsumerStatefulWidget {
   const AuthStateHandler({super.key});
 
   @override
-  State<AuthStateHandler> createState() => _AuthStateHandlerState();
+  ConsumerState<AuthStateHandler> createState() => _AuthStateHandlerState();
 }
 
-class _AuthStateHandlerState extends State<AuthStateHandler> {
+class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
+    bool _initialized = false;
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;
 
@@ -294,6 +299,18 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    
+    if (_initialized) {
+      return MaterialApp(
+        locale: currentLocale,
+        supportedLocales: L10n.all,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+        debugShowCheckedModeBanner: false,
+      );
+    }
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'MUKHLISS',
@@ -304,9 +321,21 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('en'),
+      locale: currentLocale, // Utilise la langue actuelle du provider
+      onGenerateRoute: (settings) {
+        print('Route demandée: ${settings.name}');
+        
+        if (settings.name != null && settings.name!.contains('code=')) {
+          print('Callback d\'authentification détecté avec code');
+          return MaterialPageRoute(
+            builder: (_) => const SplashScreen(),
+            settings: settings,
+          );
+        }
+        
+        return AppRouter.generateRoute(settings);
+      },
       home: const SplashScreen(),
-      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

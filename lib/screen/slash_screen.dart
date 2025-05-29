@@ -1,15 +1,19 @@
+// splash_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/screen/auth/login_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -19,7 +23,6 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateToNextScreen() async {
     await Future.delayed(const Duration(seconds: 5));
     
-    // Vérifier que le widget est toujours monté avant la navigation
     if (!mounted) return;
 
     Navigator.pushReplacement(
@@ -30,16 +33,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-     final l10n = AppLocalizations.of(context);
+   final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+    final isDarkMode = themeMode == AppThemeMode.dark;
+    
     return Scaffold(
-     
+    backgroundColor: isDarkMode 
+          ? AppColors.darkBackground 
+          : AppColors.lightBackground,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF765EFF),
+             colors: [
+              const Color.fromARGB(255, 42, 41, 48),
               const Color(0xFFC4BAFF),
             ],
           ),
@@ -49,8 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                l10n?.hello ??
-                'Bienvenue sur MUKHLISS',
+                l10n?.hello ?? 'Bienvenue sur MUKHLISS',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -63,16 +70,22 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 200,
                 height: 200,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
+                  return Icon(
                     Icons.image_not_supported,
                     size: 100,
-                    color: Colors.white,
+                    color: themeMode == AppThemeMode.dark
+                        ? Colors.grey[400]
+                        : Colors.white,
                   );
                 },
               ),
               const SizedBox(height: 20),
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  themeMode == AppThemeMode.dark
+                      ? Colors.grey[400]!
+                      : Colors.white,
+                ),
               ),
             ],
           ),

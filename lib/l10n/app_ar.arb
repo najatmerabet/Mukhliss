@@ -46,5 +46,20 @@
           "entrzpassword": "يرجى إدخال كلمة المرور",
           "entrzemail":"يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
            "parametre":"الإعدادات",
-           "compte":"COMPTE"
+ "compte":"COMPTE",
+"renetialisation":"إعادة التعيين عبر البريد الإلكتروني",
+ "codeotp":"سيصلك رمز OTP عبر البريد الإلكتروني",
+   "envoyeremail":"إرسال الرمز",
+  "verification":"التحقق من رمز OTP",
+  "verifiecatioduotp":"التحقق من الرمز المرسل",
+     "codeenvoyeparemail":"Un code a été envoyé à",
+     "codeotp":"Code OTP",
+   "verifier":"تحقق",
+  "unnouveaucode":"الحصول على رمز جديد",
+  "succes":"تم تحديث كلمة المرور بنجاح",
+  "reinitialisation":"إعادة تعيين كلمة المرور",
+  "renetiallisationpour":"إعادة تعيين لـ",
+   "nouveaupassword":"كلمة مرور جديدة",
+    "minimum":"يجب أن تتكون من 6 أحرف على الأقل",
+     "miseajour":"تحديث كلمة المرور"
 }

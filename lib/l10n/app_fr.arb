@@ -46,5 +46,20 @@
   "entrzpassword": "Veuillez entrer votre mot de passe",
   "entrzemail":"Le mot de passe doit contenir au moins 6 caractères",
   "parametre":"Paramètres",
-  "compte":"COMPTE"
+  "compte":"COMPTE",
+  "renetialisation":"Réinitialisation par email",
+  "codeotp":"Un code OTP vous sera envoyé par email",
+  "envoyeremail":"Envoyer le code",
+  "verification":"Vérification OTP",
+  "verifiecatioduotp":"Vérification du code OTP",
+  "codeenvoyeparemail":"Un code a été envoyé à",
+  "codeotp":"Code OTP",
+  "verifier":"VÉRIFIER",
+  "unnouveaucode":"Obtenir un nouveau code",
+  "succes":"Mot de passe mis à jour avec succès",
+  "reinitialisation":"Réinitialisation du mot de passe",
+  "renetiallisationpour":"Réinitialisation pour",
+  "nouveaupassword":"Nouveau mot de passe",
+  "minimum":"Minimum 6 caractères",
+  "miseajour":"Mettre à jour le mot de passe"
 }

@@ -47,5 +47,21 @@
    "entrzpassword": "Please enter your password",
    "entrzemail":"Password must contain at least 6 characters",
    "parametre":"Settings",
-   "compte":"COMPTE"
+   "compte":"COMPTE",
+    "renetialisation":"Reset by email",
+     "codeotp":"An OTP code will be sent to you by email.",
+     "envoyeremail":"Send code",
+      "verification":"OTP Verification",
+       "verifiecatioduotp":"OTP Code Verification",
+         "codeenvoyeparemail":"A code has been sent to",
+         "codeotp":"Code OTP",
+           "verifier":"CHECK",
+            "unnouveaucode":"Get a new code",
+              "succes":"Password updated successfully",
+               "reinitialisation":"Password Reset",
+               "renetiallisationpour":"Reset for",
+                "nouveaupassword":"New Password",
+                 "minimum":"Minimum 6 characters",
+                  "miseajour":"Update password"
+                 
 }

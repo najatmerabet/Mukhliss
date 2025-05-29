@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
-
+import 'package:mukhliss/providers/langue_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
@@ -287,6 +288,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
 
   @override
   Widget build(BuildContext context) {
+      final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
@@ -310,8 +312,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Paramètres',
+              title:  Text(
+                l10n?.parametre ??
+               'Paramètres',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -527,164 +530,175 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
     );
   }
 
-  void _showLanguageDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.5),
-      isScrollControlled: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAFAFC),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+ void _showLanguageDialog(BuildContext context) {
+  final currentLanguage = ref.read(languageProvider.notifier).currentLanguageOption;
+  final localizations = AppLocalizations.of(context)!;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withOpacity(0.5),
+    isScrollControlled: true,
+    builder: (context) => Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 20),
-              
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.language,
-                      color: Color(0xFF10B981),
-                      size: 24,
-                    ),
+            ),
+            const SizedBox(height: 20),
+            
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Changer la langue',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
+                  child: const Icon(
+                    Icons.language,
+                    color: Color(0xFF10B981),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        localizations.selectLanguage,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
                         ),
-                        Text(
-                          'Sélectionnez votre langue préférée',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6B7280),
-                          ),
+                      ),
+                      Text(
+                        localizations.languageSubtitle,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
+              child: Column(
+                children: LanguageNotifier.supportedLanguages.map((lang) {
+                  final isSelected = lang.locale.languageCode == currentLanguage.locale.languageCode;
+                  return Column(
+                    children: [
+                      _buildLanguageOption(
+                         context,
+                        language: lang.name,
+                        flag: lang.flag,
+                        selected: isSelected,
+                        locale: lang.locale,
+                      ),
+                      if (lang != LanguageNotifier.supportedLanguages.last)
+                        _buildModernDivider(),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(color: Colors.grey.shade300),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Column(
-                  children: [
-                    _buildLanguageOption(
-                      context,
-                      language: 'Français',
-                      flag: '🇫🇷',
-                      selected: true,
-                    ),
-                    _buildModernDivider(),
-                    _buildLanguageOption(
-                      context,
-                      language: 'English',
-                      flag: '🇺🇸',
-                    ),
-                    _buildModernDivider(),
-                    _buildLanguageOption(
-                      context,
-                      language: 'العربية',
-                      flag: '🇲🇦',
-                    ),
-                  ],
+                minimumSize: const Size(double.infinity, 0),
+              ),
+              child: Text(
+                localizations.cancel,
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 20),
-              
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.grey.shade300),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  minimumSize: const Size(double.infinity, 0),
-                ),
-                child: Text(
-                  'Annuler',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-            ],
-          ),
+            ),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLanguageOption(
     BuildContext context, {
     required String language,
     required String flag,
     bool selected = false,
+    required Locale locale,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onTap: () {
+        // Fermer le dialog d'abord
         Navigator.of(context).pop();
-        showSuccessSnackbar(
-          context: context,
-          message: selected
-              ? 'Langue déjà définie sur Français'
-              : language == 'English'
-                  ? 'Language changed to English'
-                  : 'تم تغيير اللغة إلى العربية',
-        );
+        
+        // Changer la langue
+        ref.read(languageProvider.notifier).changeLanguage(locale);
+        
+        // Attendre un petit délai pour que le changement de langue soit effectif
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            final newLocalizations = AppLocalizations.of(context)!;
+            
+            // Afficher le message de confirmation dans la nouvelle langue
+            if (!selected) {
+              showSuccessSnackbar(
+                context: context,
+                message: newLocalizations.languageChanged,
+              );
+            }
+          }
+        });
       },
       leading: Text(
         flag,

@@ -1,11 +1,17 @@
 {
     "@@locale": "ar",
+   "selectLanguage": "اختر اللغة",
+    "languageSubtitle": "اختر لغتك المفضلة",
+   "cancel": "إلغاء",
+     "languageChanged": "تم تغيير اللغة إلى العربية ",
+     "languageAlreadySet": "اللغة مضبوطة بالفعل على العربية",
   "language": "اللغة",
   "french": "الفرنسية",
   "english": "الإنجليزية",
   "arabic": "العربية",
-  "hello": "MUKHLISS مرحبًا بك في ",
+  "hello": "مرحبًا بك في MUKHLISS",
   "identificationTitleqrcode":"هويتي",
+  "qrCodeInstructions":"أظهر هذا الرمز للاستفادة من العرض",
   "phone":" رقم الهاتف",
   "email":"بريد إلكتروني",
   "address":"العنوان",
@@ -38,5 +44,7 @@
           "emailinvalide":"يرجى إدخال بريد إلكتروني صحيحح",
           "lesmotspassnecorresponspas":"كلمتا المرور غير متطابقتين، يرجى التأكد",
           "entrzpassword": "يرجى إدخال كلمة المرور",
-          "entrzemail":"يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل"
+          "entrzemail":"يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
+           "parametre":"الإعدادات",
+           "compte":"COMPTE"
 }

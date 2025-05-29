@@ -1,13 +1,13 @@
+// main.dart - Version corrigée
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/routes/app_router.dart';
-
 import 'package:mukhliss/screen/slash_screen.dart';
+import 'package:mukhliss/providers/langue_provider.dart'; // Ajoutez cette import
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -39,7 +39,6 @@ class ErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-    
       home: Scaffold(
         body: Center(
           child: Text(
@@ -57,13 +56,16 @@ class ErrorApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+// Modifiez AuthWrapper pour écouter le languageProvider
+class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context, WidgetRef ref) { 
+    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    
     return MaterialApp(
-       title: 'MUKHLISS',
+      title: 'MUKHLISS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -72,7 +74,7 @@ class AuthWrapper extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('en'),
+      locale: currentLocale, // Utilise la langue actuelle du provider
       
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
@@ -80,14 +82,15 @@ class AuthWrapper extends StatelessWidget {
   }
 }
 
-class AuthStateHandler extends StatefulWidget {
+// Modifiez aussi AuthStateHandler pour écouter le languageProvider
+class AuthStateHandler extends ConsumerStatefulWidget {
   const AuthStateHandler({super.key});
 
   @override
-  State<AuthStateHandler> createState() => _AuthStateHandlerState();
+  ConsumerState<AuthStateHandler> createState() => _AuthStateHandlerState();
 }
 
-class _AuthStateHandlerState extends State<AuthStateHandler> {
+class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
   bool _initialized = false;
@@ -99,7 +102,6 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
   }
 
   Future<void> _initializeAuth() async {
-    // Vérifier l'état d'authentification initial
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         final initialSession = Supabase.instance.client.auth.currentSession;
@@ -109,7 +111,6 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
           navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
         }
 
-        // Écouter les changements d'état d'authentification
         _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
           if (!mounted) return;
           
@@ -117,7 +118,6 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
           
           final session = data.session;
           if (session != null && data.event == AuthChangeEvent.signedIn) {
-            // Utilisateur vient de se connecter - rediriger vers la page d'accueil
             print('Utilisateur connecté, redirection vers home');
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
@@ -125,7 +125,6 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
               }
             });
           } else if (session == null && data.event == AuthChangeEvent.signedOut) {
-            // Utilisateur déconnecté - rediriger vers login
             print('Utilisateur déconnecté, redirection vers login');
             navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
           }
@@ -151,9 +150,14 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    
     if (!_initialized) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      return MaterialApp(
+        locale: currentLocale,
+        supportedLocales: L10n.all,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
         debugShowCheckedModeBanner: false,
       );
     }
@@ -168,11 +172,10 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('en'),
+      locale: currentLocale, // Utilise la langue actuelle du provider
       onGenerateRoute: (settings) {
         print('Route demandée: ${settings.name}');
         
-        // Gérer les callbacks d'authentification (Google, etc.)
         if (settings.name != null && settings.name!.contains('code=')) {
           print('Callback d\'authentification détecté avec code');
           return MaterialPageRoute(
@@ -181,7 +184,6 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
           );
         }
         
-        // Routes normales
         return AppRouter.generateRoute(settings);
       },
       home: const SplashScreen(),

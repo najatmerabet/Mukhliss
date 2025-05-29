@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
@@ -68,38 +69,48 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
     super.dispose();
   }
 
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _submitForm() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final authService = ref.read(authProvider);
-      await authService.signUpClient(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
+  try {
+    final authService = ref.read(authProvider);
+    
+    // 1. Envoyer l'OTP d'abord
+    await authService.sendSignupOtp(_emailController.text.trim());
+
+    // 2. Naviguer vers la page de vérification OTP
+    if (mounted) {
+      Navigator.pushNamed(
+        context,
+        AppRouter.otpVerification,
+        arguments: {
+          'email': _emailController.text.trim(),
+          'type': OtpVerificationType.signup,
+          // Passer les autres données nécessaires pour la création du compte
+          'password': _passwordController.text,
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'address': _addressController.text.trim(),
+        },
       );
-
-      if (mounted) {
-        showSuccessSnackbar(
-          context: context, // N'oubliez pas le contexte
-          message: 'Inscription réussie!',
-        );
-        Navigator.pushReplacementNamed(context, AppRouter.main);
-      }
-    } catch (e) {
-      if (mounted) {
-        (context: context, message: 'Erreur d\'inscription: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+  } catch (e) {
+    if (mounted) {
+      print('Erreur lors de l\'envoi du code: ${e.toString()}');
+      showErrorSnackbar(
+        context: context,
+        message: 'Erreur lors de l\'envoi du code: ${e.toString()}',
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
-
+}
+ 
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mukhliss/models/user_device.dart';
+import 'package:mukhliss/services/device_management_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service d'authentification gérant les connexions et inscriptions
@@ -9,78 +13,167 @@ class AuthService {
       '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
   static const String _androidClientId = 
       '175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com';
-  
+    String? get currentDeviceId => _deviceService.currentDeviceId;
+
   static const List<String> _googleScopes = ['email', 'profile'];
-  static const List<String> _facebookPermissions = ['public_profile', 'email'];
   
   final SupabaseClient _client = Supabase.instance.client;
   SupabaseClient get client => _client;
   
   User? get currentUser => _client.auth.currentUser;
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
-
+  // Ajoutez cette propriété
+  final DeviceManagementService _deviceService = DeviceManagementService();
+  Timer? _activityTimer;
   // ============= AUTHENTICATION METHODS =============
   
   /// Inscription d'un nouveau client avec email et mot de passe
-  Future<AuthResponse> signUpClient({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    String? phone,
-    required String address,
-  }) async {
-    try {
-      final authResponse = await _client.auth.signUp(
-        email: email,
-        password: password,
-      );
-
-      if (authResponse.user != null) {
-        await _createClientProfile(
-          userId: authResponse.user!.id,
-          email: email,
-          firstName: firstName,
-          lastName: lastName,
-          phone: phone,
-          address: address,
-        );
-      }
-
-      return authResponse;
-    } catch (e) {
-      _logError('Erreur inscription client', e);
-      rethrow;
-    }
-  }
-
-  /// Connexion avec email et mot de passe
-  Future<AuthResponse> login(String email, String password) async {
-    return await _client.auth.signInWithPassword(
+ /// Inscription d'un nouveau client avec email et mot de passe
+Future<AuthResponse> signUpClient({
+  required String email,
+  required String password,
+  required String firstName,
+  required String lastName,
+  String? phone,
+  required String address,
+}) async {
+  try {
+    final authResponse = await _client.auth.signUp(
       email: email,
       password: password,
     );
-  }
 
-  /// Connexion/Inscription avec Google
-  Future<void> signInWithGoogle() async {
-    try {
-      _log('Début connexion Google...');
+    if (authResponse.user != null) {
+      await _createClientProfile(
+        userId: authResponse.user!.id,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        address: address,
+      );
+
+      // Enregistrer automatiquement l'appareil
+      await _deviceService.registerCurrentDevice();
       
-      await _authenticateWithGoogle();
-      await _ensureClientProfileExists();
+      // Démarrer le suivi d'activité
+      _startActivityTracking();
       
-      _log('Connexion Google réussie ✅');
-    } catch (e) {
-      _logError('Erreur Google Auth', e);
-      rethrow;
+      _log('Inscription réussie avec enregistrement appareil ✅');
     }
-  }
 
-  /// Déconnexion
-  Future<void> logout() async {
-    await _client.auth.signOut();
+    return authResponse;
+  } catch (e) {
+    _logError('Erreur inscription client', e);
+    rethrow;
   }
+}
+  /// Connexion avec email et mot de passe
+/// Connexion avec email et mot de passe
+Future<AuthResponse> login(String email, String password) async {
+  try {
+    final response = await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+
+    if (response.user != null) {
+      // Enregistrer automatiquement l'appareil
+      await _deviceService.registerCurrentDevice();
+      
+      // Démarrer le suivi d'activité
+      _startActivityTracking();
+      
+      _log('Connexion réussie avec enregistrement appareil ✅');
+    }
+
+    return response;
+  } catch (e) {
+    _logError('Erreur connexion', e);
+    rethrow;
+  }
+}
+// ============= DEVICE MANAGEMENT =============
+
+/// Démarre le suivi automatique d'activité
+void _startActivityTracking() {
+  _stopActivityTracking(); // S'assurer qu'il n'y a qu'un seul timer
+  _activityTimer = _deviceService.startActivityUpdater();
+}
+
+/// Arrête le suivi d'activité
+void _stopActivityTracking() {
+  _activityTimer?.cancel();
+  _activityTimer = null;
+}
+/// Déconnecte un appareil à distance
+Future<bool> disconnectDeviceRemotely(String deviceId) async {
+  return await _deviceService.disconnectDeviceRemotely(deviceId);
+}
+
+/// Récupère la liste des appareils de l'utilisateur
+Future<List<UserDevice>> getUserDevices() async {
+  return await _deviceService.getUserDevices();
+}
+
+/// Supprime un appareil
+Future<bool> removeDevice(String deviceId) async {
+  return await _deviceService.removeDevice(deviceId);
+}
+
+/// Désactive un appareil
+Future<bool> deactivateDevice(String deviceId) async {
+  return await _deviceService.deactivateDevice(deviceId);
+}
+
+/// Obtient les statistiques des appareils
+Future<Map<String, dynamic>> getDeviceStats() async {
+  return await _deviceService.getDeviceStats();
+}
+
+/// Enregistre manuellement l'appareil actuel
+Future<UserDevice?> registerCurrentDevice({String? customName}) async {
+  return await _deviceService.registerCurrentDevice(
+    customDeviceName: customName,
+  );
+}
+  /// Connexion/Inscription avec Google
+/// Connexion/Inscription avec Google
+Future<void> signInWithGoogle() async {
+  try {
+    _log('Début connexion Google...');
+    
+    await _authenticateWithGoogle();
+    await _ensureClientProfileExists();
+    
+    // Enregistrer automatiquement l'appareil
+    await _deviceService.registerCurrentDevice();
+    
+    // Démarrer le suivi d'activité
+    _startActivityTracking();
+    
+    _log('Connexion Google réussie avec enregistrement appareil ✅');
+  } catch (e) {
+    _logError('Erreur Google Auth', e);
+    rethrow;
+  }
+}
+  /// Déconnexion
+/// Déconnexion
+Future<void> logout() async {
+  try {
+    // Arrêter le suivi d'activité
+    _stopActivityTracking();
+    
+    // Déconnecter
+    await _client.auth.signOut();
+    
+    _log('Déconnexion réussie ✅');
+  } catch (e) {
+    _logError('Erreur déconnexion', e);
+    rethrow;
+  }
+}
 
   // ============= USER MANAGEMENT =============
   
@@ -137,6 +230,42 @@ class AuthService {
       rethrow;
     }
   }
+  
+// ============== Signup With OTP =============
+
+/// Envoie un OTP pour la vérification d'email lors de l'inscription
+Future<void> sendSignupOtp(String email) async {
+    try {
+      await _client.auth.signInWithOtp(
+        email: email,
+        shouldCreateUser: true, // Critical for security
+        emailRedirectTo: kIsWeb ? null : 'yourapp://auth-callback',
+      );
+    } on AuthException catch (e) {
+      if (e.message.contains('already registered')) {
+        throw AuthException('Email already registered');
+      }
+      rethrow;
+    }
+  }
+
+/// Vérifie l'OTP pour l'inscription
+Future<AuthResponse> verifySignupOtp({
+  required String email, 
+  required String token,
+}) async {
+  final response = await _client.auth.verifyOTP(
+    email: email,
+    token: token,
+    type: OtpType.signup,
+  );
+
+  if (response.session == null) {
+    throw AuthException('Échec de la vérification OTP');
+  }
+  
+  return response;
+}
 
   // ============= PASSWORD RESET =============
   
@@ -148,7 +277,64 @@ class AuthService {
       emailRedirectTo: 'yourapp://reset-password',
     );
   }
+Future<void> completeSignupAfterOtpVerification({
+  required String email,
+  required String password,
+  required String firstName,
+  required String lastName,
+  String? phone,
+  String? address,
+}) async {
+  try {
+    // Get the current user (created during OTP verification)
+    final user = _client.auth.currentUser;
+    
+    if (user == null) {
+      throw AuthException('No authenticated user found');
+    }
 
+    // Update the user with password if needed
+    if (password.isNotEmpty) {
+      await _client.auth.updateUser(
+        UserAttributes(password: password),
+      );
+    }
+
+    // Create or update client profile
+    await _createClientProfile(
+      userId: user.id,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
+      address: address,
+    );
+    
+    _log('Profile completed successfully for ${user.email}');
+  } catch (e) {
+    _logError('Error completing signup', e);
+    rethrow;
+  }
+}
+
+
+/// Vérifie l'OTP pour la réinitialisation de mot de passe
+Future<AuthResponse> verifyPasswordResetOtp({
+  required String email, 
+  required String token,
+}) async {
+  final response = await _client.auth.verifyOTP(
+    email: email,
+    token: token,
+    type: OtpType.recovery,
+  );
+
+  if (response.session == null) {
+    throw AuthException('Échec de la vérification OTP');
+  }
+  
+  return response;
+}
   /// Vérifie l'OTP reçu par email
   Future<void> verifyEmailOtp(String email, String token) async {
     final response = await _client.auth.verifyOTP(

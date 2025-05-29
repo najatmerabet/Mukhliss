@@ -8,14 +8,15 @@ import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/routes/app_router.dart';
 
 import 'package:mukhliss/screen/slash_screen.dart';
+import 'package:mukhliss/services/device_management_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
- 
+
   try {
     await dotenv.load(fileName: '.env');
-    
+
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
       anonKey: dotenv.env['SUPABASE_KEY']!,
@@ -23,10 +24,8 @@ void main() async {
         authFlowType: AuthFlowType.pkce,
       ),
     );
-    
-    runApp(ProviderScope(
-      child: AuthWrapper(),
-    ));
+
+    runApp(ProviderScope(child: AuthWrapper()));
   } catch (e) {
     print('Erreur d\'initialisation: $e');
     runApp(const ErrorApp());
@@ -39,7 +38,6 @@ class ErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-    
       home: Scaffold(
         body: Center(
           child: Text(
@@ -52,7 +50,7 @@ class ErrorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('en'), 
+      locale: const Locale('en'),
     );
   }
 }
@@ -61,9 +59,9 @@ class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     return MaterialApp(
-       title: 'MUKHLISS',
+      title: 'MUKHLISS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -73,7 +71,7 @@ class AuthWrapper extends StatelessWidget {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: const Locale('en'),
-      
+
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
@@ -90,74 +88,212 @@ class AuthStateHandler extends StatefulWidget {
 class _AuthStateHandlerState extends State<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
-  bool _initialized = false;
+  final DeviceManagementService _deviceService = DeviceManagementService();
+  Timer? _activityTimer;
 
   @override
   void initState() {
     super.initState();
-    _initializeAuth();
+    
+    // Configuration des callbacks temps réel
+    _setupRealtimeCallbacks();
+    
+    // Initialiser la surveillance des appareils
+    _initializeDeviceMonitoring();
+    
+    // Écoute des changements d'authentification
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      _handleAuthChange,
+    );
   }
 
-  Future<void> _initializeAuth() async {
-    // Vérifier l'état d'authentification initial
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        final initialSession = Supabase.instance.client.auth.currentSession;
-        if (initialSession != null && mounted) {
-          navigatorKey.currentState?.pushReplacementNamed(AppRouter.main);
-        } else if (mounted) {
-          navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
-        }
+  void _setupRealtimeCallbacks() {
+    // Callback pour déconnexion forcée
+    _deviceService.onForceLogout = () {
+      debugPrint('🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate');
+      
+      // Afficher une notification à l'utilisateur
+      _showForceLogoutNotification();
+      
+      // Déconnecter immédiatement
+      Supabase.instance.client.auth.signOut();
+      
+      // Redirection vers login
+      if (mounted && navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          AppRouter.login,
+          (route) => false,
+        );
+      }
+    };
 
-        // Écouter les changements d'état d'authentification
-        _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-          if (!mounted) return;
-          
-          print('Changement d\'état auth: ${data.event}');
-          
-          final session = data.session;
-          if (session != null && data.event == AuthChangeEvent.signedIn) {
-            // Utilisateur vient de se connecter - rediriger vers la page d'accueil
-            print('Utilisateur connecté, redirection vers home');
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted) {
-                navigatorKey.currentState?.pushReplacementNamed(AppRouter.main);
-              }
-            });
-          } else if (session == null && data.event == AuthChangeEvent.signedOut) {
-            // Utilisateur déconnecté - rediriger vers login
-            print('Utilisateur déconnecté, redirection vers login');
-            navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
-          }
-        });
+    // Callback pour notification de déconnexion d'un autre appareil
+    _deviceService.onRemoteDisconnect = (deviceId, deviceName) {
+      debugPrint('🔔 [Main] Appareil déconnecté à distance: $deviceName');
+      _showRemoteDisconnectNotification(deviceName);
+    };
+  }
 
-        if (mounted) {
-          setState(() => _initialized = true);
-        }
-      } catch (e) {
-        print('Erreur lors de l\'initialisation de l\'auth: $e');
-        if (mounted) {
-          navigatorKey.currentState?.pushReplacementNamed(AppRouter.login);
-        }
+  Future<void> _initializeDeviceMonitoring() async {
+    // Attendre que l'authentification soit prête
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser != null) {
+      debugPrint('🔹 [Main] Initialisation surveillance temps réel');
+      await _deviceService.initCurrentDeviceFromSession();
+      await _deviceService.initializeRealtimeMonitoring();
+      
+      // Démarrer le timer d'activité
+      _startActivityTimer();
+    }
+  }
+
+  void _startActivityTimer() {
+    _activityTimer?.cancel();
+    _activityTimer = Timer.periodic(const Duration(minutes: 2), (timer) async {
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser != null) {
+        await _deviceService.updateDeviceActivity();
+      } else {
+        timer.cancel();
       }
     });
+  }
+
+  void _showForceLogoutNotification() {
+    // Afficher un SnackBar ou un Dialog pour informer l'utilisateur
+    if (mounted && navigatorKey.currentContext != null) {
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Vous avez été déconnecté à distance depuis un autre appareil',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  void _showRemoteDisconnectNotification(String deviceName) {
+    if (mounted && navigatorKey.currentContext != null) {
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'L\'appareil "$deviceName" a été déconnecté',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _handleAuthChange(AuthState data) {
+    if (!mounted) return;
+
+    debugPrint('🔹 [Main] Auth event: ${data.event}');
+    debugPrint('🔹 [Main] Session: ${data.session?.user.email ?? 'null'}');
+
+    switch (data.event) {
+      case AuthChangeEvent.initialSession:
+        if (data.session != null) {
+          debugPrint('🔹 [Main] Session initiale trouvée, redirection vers main');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && navigatorKey.currentState != null) {
+              navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
+              // Initialiser le monitoring après la navigation
+              _initializeDeviceMonitoring();
+            }
+          });
+        } else {
+          debugPrint('🔹 [Main] Pas de session initiale, redirection vers login');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && navigatorKey.currentState != null) {
+              navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
+            }
+          });
+        }
+        break;
+
+      case AuthChangeEvent.signedIn:
+        if (data.session != null) {
+          debugPrint('🔹 [Main] Connexion réussie, redirection vers main');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && navigatorKey.currentState != null) {
+              navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
+              // Initialiser le monitoring après la navigation
+              _initializeDeviceMonitoring();
+            }
+          });
+        }
+        break;
+
+      case AuthChangeEvent.signedOut:
+        debugPrint('🔹 [Main] Déconnexion, nettoyage et redirection vers login');
+        _cleanupOnSignOut();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && navigatorKey.currentState != null) {
+            navigatorKey.currentState!.pushNamedAndRemoveUntil(
+              AppRouter.login,
+              (route) => false,
+            );
+          }
+        });
+        break;
+
+      case AuthChangeEvent.passwordRecovery:
+      case AuthChangeEvent.tokenRefreshed:
+      case AuthChangeEvent.userUpdated:
+        debugPrint('🔹 [Main] Événement ${data.event} - pas de redirection');
+        break;
+      
+      case AuthChangeEvent.userDeleted:
+        _cleanupOnSignOut();
+        break;
+      case AuthChangeEvent.mfaChallengeVerified:
+        break;
+    }
+  }
+
+  void _cleanupOnSignOut() {
+    // Nettoyer les timers et subscriptions
+    _activityTimer?.cancel();
+    _activityTimer = null;
+    
+    // Nettoyer le service des appareils
+    _deviceService.dispose();
   }
 
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _activityTimer?.cancel();
+    _deviceService.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-        debugShowCheckedModeBanner: false,
-      );
-    }
-
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'MUKHLISS',
@@ -169,22 +305,8 @@ class _AuthStateHandlerState extends State<AuthStateHandler> {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: const Locale('en'),
-      onGenerateRoute: (settings) {
-        print('Route demandée: ${settings.name}');
-        
-        // Gérer les callbacks d'authentification (Google, etc.)
-        if (settings.name != null && settings.name!.contains('code=')) {
-          print('Callback d\'authentification détecté avec code');
-          return MaterialPageRoute(
-            builder: (_) => const SplashScreen(),
-            settings: settings,
-          );
-        }
-        
-        // Routes normales
-        return AppRouter.generateRoute(settings);
-      },
       home: const SplashScreen(),
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

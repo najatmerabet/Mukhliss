@@ -865,7 +865,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   void _showNotificationSettings() {
-    Navigator.pushReplacementNamed(context, AppRouter.setting);
+    Navigator.pushNamed(context, AppRouter.setting);
   }
 
   void _showSupport() {

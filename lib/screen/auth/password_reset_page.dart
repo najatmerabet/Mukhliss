@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:mukhliss/utils/error_handler.dart';
+import 'package:mukhliss/utils/snackbar_helper.dart';
 
 class PasswordResetPage extends ConsumerStatefulWidget {
   final String email;
@@ -34,7 +36,9 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
 
     if (_newPasswordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Le mot de passe doit contenir au moins 6 caractères')),
+        const SnackBar(
+          content: Text('Le mot de passe doit contenir au moins 6 caractères'),
+        ),
       );
       return;
     }
@@ -43,17 +47,18 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
     try {
       final authService = ref.read(authProvider);
       await authService.updatePassword(_newPasswordController.text);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mot de passe mis à jour avec succès')),
+        showSuccessSnackbar(
+          context: context,
+          message: "Mot de passe mis à jour avec succès",
         );
         Navigator.pushReplacementNamed(context, AppRouter.main);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: ${e.toString()}')),
-      );
+      final errorMessage = AuthErrorHandler(context).handle(e);
+
+      showErrorSnackbar(context: context, message: errorMessage);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -96,9 +101,10 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Mettre à jour le mot de passe'),
+              child:
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Mettre à jour le mot de passe'),
             ),
           ],
         ),

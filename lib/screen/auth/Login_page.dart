@@ -4,6 +4,7 @@ import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/routes/app_router.dart';
+import 'package:mukhliss/utils/error_handler.dart';
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/utils/validators.dart';
@@ -29,31 +30,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _login() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-    try {
-      await ref
-          .read(authProvider)
-          .login(_emailController.text.trim(), _passwordController.text.trim());
+  setState(() => _isLoading = true);
+  try {
+    await ref
+      .read(authProvider)
+      .login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRouter.main);
-      }
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackbar(
-          context: context,
-          message: 'Erreur de connexion: ${e.toString()}',
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, AppRouter.main);
     }
+  } catch (e) {
+    // Delegate *all* errors (AuthException, PostgrestException,
+    // SocketException, TimeoutException, anything else) to your handler:
+    final errorMessage = AuthErrorHandler(context).handle(e);
+    if (mounted) {
+      showErrorSnackbar(
+        context: context,
+        message: errorMessage,
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   void _showEmailResetDialog() {
     final emailController = TextEditingController(text: _emailController.text);
@@ -171,30 +176,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Future<void> _sendResetOtpEmail(String email) async {
-    setState(() => _isLoading = true);
-    try {
-      await ref.read(authProvider).sendPasswordResetOtp(email);
+Future<void> _sendResetOtpEmail(String email) async {
+  setState(() => _isLoading = true);
+  try {
+    await ref.read(authProvider).sendPasswordResetOtp(email);
 
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpVerificationPage(email: email),
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpVerificationPage(
+            email: email,
+            type: OtpVerificationType.passwordReset, // Add this parameter
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackbar(context: context, message: 'Erreur: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      showErrorSnackbar(context: context, message: 'Erreur: ${e.toString()}');
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

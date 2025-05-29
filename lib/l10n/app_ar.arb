@@ -1,11 +1,35 @@
 {
   "hello": "MUKHLISS مرحبًا بك في ",
-  "identificationTitleqrcode":"هويتي",
-  "phone":" رقم الهاتف",
-  "email":"بريد إلكتروني",
-  "address":"العنوان",
-  "membredepuis":"عضو منذ",
-  "logout":"Log out",
-  "identificationTitleprofile":"ملفي الشخصي",
-  "informationperso":"المعلومات الشخصية"
+  "identificationTitleqrcode": "هويتي",
+  "phone": " رقم الهاتف",
+  "email": "بريد إلكتروني",
+  "address": "العنوان",
+  "membredepuis": "عضو منذ",
+  "logout": "Log out",
+  "identificationTitleprofile": "ملفي الشخصي",
+  "informationperso": "المعلومات الشخصية",
+  "errorsAuthInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+  "errorsAuthEmailNotConfirmed": "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول",
+  "errorsAuthTooManyRequests": "محاولات كثيرة جدًا. يرجى المحاولة مرة أخرى لاحقًا",
+  "errorsAuthUserNotFound": "المستخدم غير موجود",
+  "errorsAuthWeakPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+  "errorsAuthEmailExists": "البريد الإلكتروني مستخدم بالفعل",
+  "errorsAuthPhoneExists": "رقم الهاتف مستخدم بالفعل",
+  "errorsAuthUserBanned": "الحساب معلق",
+  "errorsAuthUnexpected": "خطأ غير متوقع في المصادقة",
+  
+  "errorsHttp403": "تم الرفض",
+  "errorsHttp422": "بيانات غير قابلة للمعالجة",
+  "errorsHttp429": "طلبات كثيرة جدًا",
+  "errorsHttp500": "خطأ في الخادم",
+  "errorsHttp501": "ميزة غير مطبقة",
+  "errorsHttpUnknown": "خطأ HTTP غير معروف",
+  
+  "errorsNetworkNoConnection": "لا يوجد اتصال بالإنترنت",
+  "errorsUnexpected": "خطأ غير متوقع",
+       "errorAuthSamePassword": "يجب أن تكون كلمة المرور الجديدة مختلفة عن القديمة",
+         "successSignup": "تم التسجيل بنجاح!"
+
+
+
 }

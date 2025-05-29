@@ -2,14 +2,39 @@
   "@@locale": "en",
   "appTitle": "Mukhliss",
   "hello": "Welcome to MUKHLISS",
-  "address":"Address",
-  "membredepuis":"Member since",
-  "informationperso":"Personal Information",
-  "phone":"Phone",
-  "email":"e-mail",
-  "identificationTitleqrcode":"My Identification",
-  "qrCodeInstructions":"Show this QR code to benefit from your offer",
+  "address": "Address",
+  "membredepuis": "Member since",
+  "informationperso": "Personal Information",
+  "phone": "Phone",
+  "email": "e-mail",
+  "identificationTitleqrcode": "My Identification",
+  "qrCodeInstructions": "Show this QR code to benefit from your offer",
   "welcome": "Welcome",
-  "logout":"Log out",
-  "identificationTitleprofile":"My Profile"
+  "logout": "Log out",
+  "identificationTitleprofile": "My Profile",
+  "genericError": "An unexpected error occurred. Please try again.",
+
+  "errorAuthInvalidCredentials": "Invalid email or password",
+  "errorAuthEmailNotConfirmed": "Please confirm your email before logging in",
+  "errorAuthTooManyRequests": "Too many attempts. Please try again later",
+  "errorAuthUserNotFound": "User not found",
+  "errorAuthWeakPassword": "Password must be at least 6 characters",
+  "errorAuthEmailExists": "Email already in use",
+  "errorAuthPhoneExists": "Phone number already in use",
+  "errorAuthUserBanned": "Account suspended",
+  "errorAuthUnexpected": "Unexpected authentication error",
+  "errorHttp403": "Access denied",
+  "errorHttp422": "Unprocessable data",
+  "errorHttp429": "Too many requests",
+  "errorHttp500": "Server error",
+  "errorHttp501": "Feature not implemented",
+  "errorHttpUnknown": "Unknown HTTP error",
+  "errorNetworkNoConnection": "No internet connection",
+  "errorUnexpected": "Unexpected error",
+
+  "errorAuthSamePassword": "The new password must be different from the old one",
+    "successSignup": "Signup successful!"
+
+
+
 }

@@ -569,6 +569,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
                     color: const Color(0xFF10B981).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),

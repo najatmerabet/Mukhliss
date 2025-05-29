@@ -1,4 +1,4 @@
-// main.dart - Version corrigée
+// main.dart - Version avec gestion du thème
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,8 +9,12 @@ import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:mukhliss/services/device_management_service.dart';
 import 'package:mukhliss/providers/langue_provider.dart'; // Ajoutez cette import
+import 'package:mukhliss/providers/langue_provider.dart';
+import 'package:mukhliss/providers/theme_provider.dart'; // Nouveau import
+import 'package:mukhliss/theme/app_theme.dart'; // Nouveau import
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:flutter/material.dart' as flutter_material show ThemeMode;
+typedef flutter_ThemeMode = flutter_material.ThemeMode;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -51,37 +55,53 @@ class ErrorApp extends StatelessWidget {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: const Locale('en'),
+      theme: AppColors.lightTheme, // Thème par défaut
     );
   }
 }
 
-// Modifiez AuthWrapper pour écouter le languageProvider
+// AuthWrapper modifié pour écouter le thème ET la langue
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) { 
-    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    final currentLocale = ref.watch(languageProvider);
+    final currentThemeMode = ref.watch(themeProvider);
     
     return MaterialApp(
       title: 'MUKHLISS',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-        fontFamily: 'Poppins',
-      ),
+      
+      // Configuration des thèmes
+      theme: AppColors.lightTheme,
+      darkTheme: AppColors.darkTheme,
+      themeMode: _convertToFlutterThemeMode(currentThemeMode),
+      
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: currentLocale, // Utilise la langue actuelle du provider
+      locale: currentLocale,
       
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
   }
+
+  // Convertir notre ThemeMode vers celui de Flutter
+ // Correction de la méthode _getFlutterThemeMode
+ ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
+    switch (appThemeMode) {
+      case AppThemeMode.light:
+        return ThemeMode.light;
+      case AppThemeMode.dark:
+        return ThemeMode.dark;
+      case AppThemeMode.system:
+        return ThemeMode.system;
+    }
+  }
 }
 
-// Modifiez aussi AuthStateHandler pour écouter le languageProvider
+// AuthStateHandler modifié pour écouter le thème ET la langue
 class AuthStateHandler extends ConsumerStatefulWidget {
   const AuthStateHandler({super.key});
 
@@ -299,13 +319,17 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
   @override
   Widget build(BuildContext context) {
-    final currentLocale = ref.watch(languageProvider); // Écoute les changements de langue
+    final currentLocale = ref.watch(languageProvider);
+    final currentThemeMode = ref.watch(themeProvider);
     
     if (_initialized) {
       return MaterialApp(
         locale: currentLocale,
         supportedLocales: L10n.all,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
+        theme: AppColors.lightTheme,
+        darkTheme: AppColors.darkTheme,
+        themeMode: _convertToFlutterThemeMode(currentThemeMode),
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
         debugShowCheckedModeBanner: false,
       );
@@ -314,14 +338,16 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'MUKHLISS',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      
+      // Configuration des thèmes
+      theme: AppColors.lightTheme,
+      darkTheme: AppColors.darkTheme,
+      themeMode: _convertToFlutterThemeMode(currentThemeMode),
+      
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: currentLocale, // Utilise la langue actuelle du provider
+      locale: currentLocale,
       onGenerateRoute: (settings) {
         print('Route demandée: ${settings.name}');
         
@@ -338,4 +364,18 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       home: const SplashScreen(),
     );
   }
+
+  // Convertir notre ThemeMode vers celui de Flutter
+ ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
+    switch (appThemeMode) {
+      case AppThemeMode.light:
+        return ThemeMode.light;
+      case AppThemeMode.dark:
+        return ThemeMode.dark;
+      case AppThemeMode.system:
+        return ThemeMode.system;
+    }
+  }
 }
+
+

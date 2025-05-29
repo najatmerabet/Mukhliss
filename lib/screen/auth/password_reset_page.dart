@@ -90,8 +90,8 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
             TextField(
               controller: _confirmPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirmer le mot de passe',
+              decoration:  InputDecoration(
+                labelText:'Confirmer le mot de passe',
                 border: OutlineInputBorder(),
               ),
             ),

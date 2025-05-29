@@ -174,7 +174,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Annuler',
+                  l10n?.cancel ?? 'Annuler',
                   style: TextStyle(color: Colors.grey.shade700),
                 ),
               ),
@@ -185,7 +185,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                     Navigator.pop(context);
                     showErrorSnackbar(
                       context: context,
-                      message: 'Veuillez entrer un email valide',
+                      message:l10n?.emailinvalide ?? 'Veuillez entrer un email valide',
                     );
                     return;
                   }
@@ -204,8 +204,8 @@ Widget _buildLanguageDropdown(BuildContext context) {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Envoyer le code',
+                child:  Text(
+                 l10n?.address ?? 'Envoyer le code',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

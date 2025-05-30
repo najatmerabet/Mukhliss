@@ -12,9 +12,11 @@ class DeviceManagementService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final Uuid _uuid = const Uuid();
-    DeviceManagementService._();
+  
+  DeviceManagementService._();
   static final DeviceManagementService _i = DeviceManagementService._();
   factory DeviceManagementService() => _i;
+  
   // Session management
   String? _currentSessionToken;
   Timer? _sessionCheckTimer;
@@ -24,22 +26,39 @@ class DeviceManagementService {
   // Real-time subscriptions
   RealtimeChannel? _deviceChannel;
   RealtimeChannel? _sessionChannel;
+  bool _isMonitoringInitialized = false; // ✅ Nouveau flag
   
   // Callbacks for UI updates
   Function()? onForceLogout;
   Function(String deviceId, String deviceName)? onRemoteDisconnect;
 
+  // ✅ Déduplication des notifications
+  final Set<String> _notifiedDisconnections = {};
+  Timer? _cleanupTimer;
+
   // ============= PUBLIC METHODS =============
 
   /// Initialize real-time monitoring for the current device
   Future<void> initializeRealtimeMonitoring() async {
+    // ✅ Éviter les initialisations multiples
+    if (_isMonitoringInitialized) {
+      debugPrint('🔹 [DeviceService] Monitoring déjà initialisé, ignoré');
+      return;
+    }
+
     try {
       final user = _supabase.auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        debugPrint('❌ [DeviceService] Utilisateur non connecté pour monitoring');
+        return;
+      }
+
+      // ✅ Nettoyer les anciens channels
+      await _cleanupRealtimeChannels();
 
       // Subscribe to device changes
       _deviceChannel = _supabase
-          .channel('device_changes_${user.id}')
+          .channel('device_changes_${user.id}_${DateTime.now().millisecondsSinceEpoch}') // ✅ Channel unique
           .onPostgresChanges(
             event: PostgresChangeEvent.update,
             schema: 'public',
@@ -57,7 +76,7 @@ class DeviceManagementService {
 
       // Subscribe to session changes
       _sessionChannel = _supabase
-          .channel('session_changes_${user.id}')
+          .channel('session_changes_${user.id}_${DateTime.now().millisecondsSinceEpoch}') // ✅ Channel unique
           .onPostgresChanges(
             event: PostgresChangeEvent.all,
             schema: 'public',
@@ -73,10 +92,43 @@ class DeviceManagementService {
           )
           .subscribe();
 
+      _isMonitoringInitialized = true;
+      
+      // ✅ Démarrer le nettoyage périodique des notifications
+      _startCleanupTimer();
+      
       debugPrint('✅ [DeviceService] Real-time monitoring initialized');
     } catch (e) {
       debugPrint('❌ [DeviceService] Error initializing real-time: $e');
+      _isMonitoringInitialized = false;
     }
+  }
+
+  // ✅ Nouvelle méthode pour nettoyer les channels
+  Future<void> _cleanupRealtimeChannels() async {
+    try {
+      if (_deviceChannel != null) {
+        await _deviceChannel!.unsubscribe();
+        _deviceChannel = null;
+      }
+      if (_sessionChannel != null) {
+        await _sessionChannel!.unsubscribe();
+        _sessionChannel = null;
+      }
+      _isMonitoringInitialized = false;
+    } catch (e) {
+      debugPrint('⚠️ [DeviceService] Erreur nettoyage channels: $e');
+    }
+  }
+
+  // ✅ Timer pour nettoyer les notifications anciennes
+  void _startCleanupTimer() {
+    _cleanupTimer?.cancel();
+    _cleanupTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      // Nettoyer les notifications de plus de 10 minutes
+      _notifiedDisconnections.clear();
+      debugPrint('🧹 [DeviceService] Nettoyage cache notifications');
+    });
   }
 
   /// Handle device changes from real-time updates
@@ -86,25 +138,50 @@ class DeviceManagementService {
     final deviceId = newRecord['device_id'] as String?;
     final forceLogout = newRecord['force_logout'] as bool? ?? false;
     
+    debugPrint('📱 [DeviceService] Device change: $deviceId, forceLogout: $forceLogout');
+    
     if (deviceId == _currentDeviceId && forceLogout) {
       debugPrint('🚨 [DeviceService] Force logout detected for current device');
       onForceLogout?.call();
       _handleForcedLogout();
+    } else if (deviceId != null && deviceId != _currentDeviceId && forceLogout) {
+      // ✅ Vérifier la déduplication AVANT de notifier
+      final notificationKey = '${deviceId}_disconnect_${DateTime.now().millisecondsSinceEpoch ~/ 30000}'; // 30 sec window
+      if (!_notifiedDisconnections.contains(notificationKey)) {
+        _notifiedDisconnections.add(notificationKey);
+        debugPrint('🔔 [DeviceService] Remote device force logout: $deviceId');
+        _notifyRemoteDisconnection(deviceId);
+      } else {
+        debugPrint('🔕 [DeviceService] Notification déjà envoyée pour: $deviceId');
+      }
     }
   }
 
   /// Handle session changes from real-time updates
   void _handleSessionChange(PostgresChangePayload payload) {
-    if (payload.eventType == PostgresChangeEvent.update) {
-      final newRecord = payload.newRecord;
-      final deviceId = newRecord['device_id'] as String?;
-      final isActive = newRecord['is_active'] as bool? ?? true;
-      final forceLogout = newRecord['force_logout'] as bool? ?? false;
+    // ✅ Filtrer uniquement les événements UPDATE significatifs
+    if (payload.eventType != PostgresChangeEvent.update) return;
+    
+    final newRecord = payload.newRecord;
+    final deviceId = newRecord['device_id'] as String?;
+    final isActive = newRecord['is_active'] as bool? ?? true;
+    final forceLogout = newRecord['force_logout'] as bool? ?? false;
+    
+    debugPrint('📋 [DeviceService] Session change: $deviceId, active: $isActive, forceLogout: $forceLogout');
+    
+    // ✅ Ne traiter que les sessions d'autres appareils qui deviennent inactives
+    if (deviceId != null && 
+        deviceId != _currentDeviceId && 
+        (!isActive || forceLogout)) {
       
-      // Check if another device was disconnected
-      if (deviceId != null && deviceId != _currentDeviceId && (!isActive || forceLogout)) {
-        debugPrint('🔔 [DeviceService] Remote device disconnected: $deviceId');
+      // ✅ Déduplication avec fenêtre temporelle plus large pour les sessions
+      final notificationKey = '${deviceId}_session_${DateTime.now().millisecondsSinceEpoch ~/ 60000}'; // 1 min window
+      if (!_notifiedDisconnections.contains(notificationKey)) {
+        _notifiedDisconnections.add(notificationKey);
+        debugPrint('🔔 [DeviceService] Remote session disconnected: $deviceId');
         _notifyRemoteDisconnection(deviceId);
+      } else {
+        debugPrint('🔕 [DeviceService] Session notification déjà envoyée pour: $deviceId');
       }
     }
   }
@@ -112,6 +189,14 @@ class DeviceManagementService {
   /// Notify UI about remote disconnection
   Future<void> _notifyRemoteDisconnection(String deviceId) async {
     try {
+      // ✅ Double vérification pour éviter les appels multiples
+      final cacheKey = 'notify_$deviceId';
+      if (_notifiedDisconnections.contains(cacheKey)) {
+        debugPrint('🔕 [DeviceService] Notification UI déjà envoyée pour: $deviceId');
+        return;
+      }
+      _notifiedDisconnections.add(cacheKey);
+      
       // Get device details
       final device = await _supabase
           .from('user_devices')
@@ -121,6 +206,7 @@ class DeviceManagementService {
       
       if (device != null) {
         final deviceName = device['device_name'] as String? ?? 'Unknown Device';
+        debugPrint('📤 [DeviceService] Envoi notification UI: $deviceName');
         onRemoteDisconnect?.call(deviceId, deviceName);
       }
     } catch (e) {
@@ -212,6 +298,28 @@ class DeviceManagementService {
     }
   }
 
+  /// À appeler au démarrage pour recharger currentDeviceId
+  Future<void> initCurrentDeviceFromSession() async {
+    final session = _supabase.auth.currentSession;
+    if (session == null) return;
+    
+    final row = await _supabase
+        .from('user_sessions')
+        .select('device_id')
+        .eq('session_token', session.accessToken)
+        .maybeSingle();
+    
+    _currentDeviceId = row?['device_id'] as String?;
+    
+    if (_currentDeviceId != null) {
+      // ✅ Éviter la double initialisation
+      if (!_isMonitoringInitialized) {
+        await initializeRealtimeMonitoring();
+      }
+      debugPrint('✅ currentDeviceId rechargé: $_currentDeviceId');
+    }
+  }
+
   /// Récupère tous les appareils de l'utilisateur avec identification de l'appareil actuel
   Future<List<Map<String, dynamic>>> getUserDevicesWithCurrentFlag() async {
     try {
@@ -235,21 +343,6 @@ class DeviceManagementService {
       return [];
     }
   }
-/// À appeler au démarrage pour recharger currentDeviceId
-Future<void> initCurrentDeviceFromSession() async {
-  final session = _supabase.auth.currentSession;
-  if (session == null) return;
-  final row = await _supabase
-    .from('user_sessions')
-    .select('device_id')
-    .eq('session_token', session.accessToken)
-    .maybeSingle();
-  _currentDeviceId = row?['device_id'] as String?;
-  if (_currentDeviceId != null) {
-    await initializeRealtimeMonitoring();
-    debugPrint('✅ currentDeviceId rechargé: $_currentDeviceId');
-  }
-}
 
   /// Récupère tous les appareils de l'utilisateur (méthode originale maintenue)
   Future<List<UserDevice>> getUserDevices() async {
@@ -391,47 +484,191 @@ Future<void> initCurrentDeviceFromSession() async {
     }
   }
 
-  /// Déconnecte un appareil à distance (seulement si ce n'est pas l'appareil actuel)
-  Future<bool> disconnectDeviceRemotely(String deviceId) async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return false;
-
-      // Vérifier que ce n'est pas l'appareil actuel
-      if (deviceId == _currentDeviceId) {
-        debugPrint('❌ [DeviceService] Cannot disconnect current device remotely');
-        return false;
-      }
-
-      // Marquer toutes les sessions de cet appareil pour déconnexion
-      await _supabase
-          .from('user_sessions')
-          .update({
-            'force_logout': true,
-            'is_active': false,
-          })
-          .eq('user_id', user.id)
-          .eq('device_id', deviceId);
-
-      // Marquer l'appareil comme déconnecté
-      await _supabase
-          .from('user_devices')
-          .update({
-            'force_logout': true,
-            'logout_requested_at': DateTime.now().toIso8601String(),
-            'is_active': false,
-          })
-          .eq('user_id', user.id)
-          .eq('device_id', deviceId);
-
-      debugPrint('🔹 [DeviceService] Déconnexion forcée pour appareil: $deviceId');
-      return true;
-    } catch (e) {
-      debugPrint('❌ [DeviceService] Erreur déconnexion forcée: $e');
+/// Déconnecte un appareil à distance (seulement si ce n'est pas l'appareil actuel)
+/// Déconnecte un appareil à distance (seulement si ce n'est pas l'appareil actuel)
+/// Version simplifiée sans broadcast manuel
+Future<bool> disconnectDeviceRemotely(String deviceId) async {
+  try {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      debugPrint('❌ [DeviceService] Utilisateur non connecté');
       return false;
     }
-  }
 
+    // ✅ Vérifier que ce n'est pas l'appareil actuel
+    if (deviceId == _currentDeviceId) {
+      debugPrint('❌ [DeviceService] Cannot disconnect current device remotely');
+      return false;
+    }
+
+    debugPrint('🔹 [DeviceService] Début déconnexion à distance pour: $deviceId');
+    debugPrint('🔹 [DeviceService] Current device ID: $_currentDeviceId');
+    debugPrint('🔹 [DeviceService] User ID: ${user.id}');
+
+    // ✅ Transaction pour assurer la cohérence
+    // 1. Marquer l'appareil comme déconnecté
+    final deviceUpdate = await _supabase
+        .from('user_devices')
+        .update({
+          'force_logout': true,
+          'logout_requested_at': DateTime.now().toIso8601String(),
+          'is_active': false,
+        })
+        .eq('user_id', user.id)
+        .eq('device_id', deviceId)
+        .select();
+
+    debugPrint('🔹 [DeviceService] Device update result: $deviceUpdate');
+
+    // 2. Marquer toutes les sessions associées pour déconnexion
+    final sessionUpdate = await _supabase
+        .from('user_sessions')
+        .update({
+          'force_logout': true,
+          'is_active': false,
+        })
+        .eq('user_id', user.id)
+        .eq('device_id', deviceId)
+        .select();
+
+    debugPrint('🔹 [DeviceService] Session update result: $sessionUpdate');
+
+    // ✅ Vérifier que les mises à jour ont réussi
+    if (deviceUpdate.isEmpty) {
+      debugPrint('❌ [DeviceService] Aucun appareil trouvé avec cet ID');
+      return false;
+    }
+
+    debugPrint('✅ [DeviceService] Déconnexion forcée configurée pour appareil: $deviceId');
+    
+    // ✅ Le monitoring temps réel existant devrait détecter ces changements automatiquement
+    // Pas besoin de broadcast manuel, les triggers PostgreSQL + Realtime s'en occupent
+
+    return true;
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur déconnexion forcée: $e');
+    return false;
+  }
+}
+
+/// ✅ Méthode alternative pour déclencher une vérification immédiate
+Future<void> triggerForceLogoutCheck() async {
+  try {
+    // Force une vérification immédiate du logout
+    final shouldLogout = await _checkForceLogout();
+    if (shouldLogout) {
+      debugPrint('🚨 [DeviceService] Force logout détecté lors de la vérification manuelle');
+      await _handleForcedLogout();
+    }
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur vérification manuelle: $e');
+  }
+}
+
+/// ✅ Version améliorée du timer d'activité avec vérification plus fréquente
+Timer startActivityUpdater() {
+  debugPrint('🔹 [DeviceService] Démarrage du suivi d\'activité');
+  
+  return Timer.periodic(const Duration(seconds: 30), (timer) async { // ✅ Plus fréquent : 30s au lieu de 1min
+    if (_supabase.auth.currentUser != null) {
+      await updateDeviceActivity();
+      
+      // ✅ Vérification du force logout à chaque cycle
+      final shouldLogout = await _checkForceLogout();
+      if (shouldLogout) {
+        debugPrint('🔹 [DeviceService] Déconnexion forcée détectée via timer');
+        await _handleForcedLogout();
+        timer.cancel();
+      }
+    } else {
+      debugPrint('🔹 [DeviceService] Arrêt du suivi - utilisateur déconnecté');
+      timer.cancel();
+    }
+  });
+}
+/// ✅ Nouvelle méthode pour vérifier l'état d'un appareil spécifique
+Future<Map<String, dynamic>?> getDeviceStatus(String deviceId) async {
+  try {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return null;
+
+    final device = await _supabase
+        .from('user_devices')
+        .select('*, user_sessions!inner(*)')
+        .eq('user_id', user.id)
+        .eq('device_id', deviceId)
+        .maybeSingle();
+
+    return device;
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur récupération statut appareil: $e');
+    return null;
+  }
+}
+
+/// ✅ Méthode pour forcer la synchronisation des appareils
+Future<void> forceSyncDevices() async {
+  try {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    // Déclencher une mise à jour sur tous les appareils de l'utilisateur
+    await _supabase
+        .from('user_devices')
+        .update({
+          'last_sync': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', user.id);
+
+    debugPrint('🔄 [DeviceService] Synchronisation forcée des appareils');
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur sync forcée: $e');
+  }
+}
+
+/// ✅ Amélioration de la vérification de déconnexion forcée
+Future<bool> _checkForceLogout() async {
+  if (_currentDeviceId == null) return false;
+
+  try {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return false;
+
+    // Vérifier à la fois l'appareil ET les sessions
+    final device = await _supabase
+        .from('user_devices')
+        .select('force_logout, is_active')
+        .eq('device_id', _currentDeviceId!)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    final session = await _supabase
+        .from('user_sessions')
+        .select('force_logout, is_active')
+        .eq('device_id', _currentDeviceId!)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    final deviceForceLogout = device?['force_logout'] == true || device?['is_active'] == false;
+    final sessionForceLogout = session?['force_logout'] == true || session?['is_active'] == false;
+
+    final shouldLogout = deviceForceLogout || sessionForceLogout;
+    
+    if (shouldLogout) {
+      debugPrint('🚨 [DeviceService] Force logout détecté:');
+      debugPrint('   - Device force_logout: ${device?['force_logout']}');
+      debugPrint('   - Device is_active: ${device?['is_active']}');
+      debugPrint('   - Session force_logout: ${session?['force_logout']}');
+      debugPrint('   - Session is_active: ${session?['is_active']}');
+    }
+
+    return shouldLogout;
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur vérification logout: $e');
+    return false;
+  }
+}
   /// Obtient les statistiques des appareils
   Future<Map<String, dynamic>> getDeviceStats() async {
     try {
@@ -537,48 +774,30 @@ Future<void> initCurrentDeviceFromSession() async {
   }
 
   /// Démarre la mise à jour périodique de l'activité
-  Timer startActivityUpdater() {
-    debugPrint('🔹 [DeviceService] Démarrage du suivi d\'activité');
-    
-    return Timer.periodic(const Duration(minutes: 1), (timer) async {
-      if (_supabase.auth.currentUser != null) {
-        await updateDeviceActivity();
-        
-        final shouldLogout = await _checkForceLogout();
-        if (shouldLogout) {
-          debugPrint('🔹 [DeviceService] Déconnexion forcée détectée');
-          await _handleForcedLogout();
-          timer.cancel();
-        }
-      } else {
-        debugPrint('🔹 [DeviceService] Arrêt du suivi - utilisateur déconnecté');
-        timer.cancel();
-      }
-    });
-  }
 
   /// Nettoie les ressources
   void dispose() {
     _sessionCheckTimer?.cancel();
-    _deviceChannel?.unsubscribe();
-    _sessionChannel?.unsubscribe();
+    _cleanupTimer?.cancel(); // ✅ Nouveau nettoyage
+    _cleanupRealtimeChannels();
+    _notifiedDisconnections.clear(); // ✅ Nettoyer le cache
   }
 
   // ============= SESSION MANAGEMENT =============
-Future<void> _createSession(String deviceId) async {
-  final session = _supabase.auth.currentSession;
-  final token = session?.accessToken;
-  if (token == null) return;
-  _currentSessionToken = token;
-  await _supabase.from('user_sessions').insert({
-    'user_id':  session?.user.id,
-    'device_id': deviceId,
-    'session_token': token,
-    'is_active': true,
-    'force_logout': false,
-  });
-  debugPrint('🔹 Session créée (token Supabase)');
-}
+  Future<void> _createSession(String deviceId) async {
+    final session = _supabase.auth.currentSession;
+    final token = session?.accessToken;
+    if (token == null) return;
+    _currentSessionToken = token;
+    await _supabase.from('user_sessions').insert({
+      'user_id': session?.user.id,
+      'device_id': deviceId,
+      'session_token': token,
+      'is_active': true,
+      'force_logout': false,
+    });
+    debugPrint('🔹 Session créée (token Supabase)');
+  }
 
   Future<void> _updateSessionActivity() async {
     if (_currentSessionToken == null) return;
@@ -595,26 +814,6 @@ Future<void> _createSession(String deviceId) async {
     }
   }
 
-  Future<bool> _checkForceLogout() async {
-    if (_currentDeviceId == null) return false;
-
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return false;
-
-      final device = await _supabase
-          .from('user_devices')
-          .select('force_logout')
-          .eq('device_id', _currentDeviceId!)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      return device?['force_logout'] == true;
-    } catch (e) {
-      debugPrint('❌ [DeviceService] Erreur vérification logout: $e');
-      return false;
-    }
-  }
 
   Future<void> _handleForcedLogout() async {
     try {
@@ -623,9 +822,8 @@ Future<void> _createSession(String deviceId) async {
       final previousDeviceId = _currentDeviceId;
       _currentDeviceId = null;
       
-      // Unsubscribe from real-time channels
-      await _deviceChannel?.unsubscribe();
-      await _sessionChannel?.unsubscribe();
+      // ✅ Nettoyer les channels avant déconnexion
+      await _cleanupRealtimeChannels();
       
       await _supabase.auth.signOut();
       

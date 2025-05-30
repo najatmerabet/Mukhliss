@@ -1,4 +1,4 @@
-// main.dart - Version avec gestion du thème
+// main.dart - Version corrigée
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,13 +8,13 @@ import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:mukhliss/services/device_management_service.dart';
-import 'package:mukhliss/providers/langue_provider.dart'; // Ajoutez cette import
 import 'package:mukhliss/providers/langue_provider.dart';
-import 'package:mukhliss/providers/theme_provider.dart'; // Nouveau import
-import 'package:mukhliss/theme/app_theme.dart'; // Nouveau import
+import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart' as flutter_material show ThemeMode;
 typedef flutter_ThemeMode = flutter_material.ThemeMode;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -55,12 +55,11 @@ class ErrorApp extends StatelessWidget {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: const Locale('en'),
-      theme: AppColors.lightTheme, // Thème par défaut
+      theme: AppColors.lightTheme,
     );
   }
 }
 
-// AuthWrapper modifié pour écouter le thème ET la langue
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
@@ -71,25 +70,19 @@ class AuthWrapper extends ConsumerWidget {
     
     return MaterialApp(
       title: 'MUKHLISS',
-      
-      // Configuration des thèmes
       theme: AppColors.lightTheme,
       darkTheme: AppColors.darkTheme,
       themeMode: _convertToFlutterThemeMode(currentThemeMode),
-      
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: currentLocale,
-      
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
   }
 
-  // Convertir notre ThemeMode vers celui de Flutter
- // Correction de la méthode _getFlutterThemeMode
- ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
+  ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
     switch (appThemeMode) {
       case AppThemeMode.light:
         return ThemeMode.light;
@@ -101,7 +94,6 @@ class AuthWrapper extends ConsumerWidget {
   }
 }
 
-// AuthStateHandler modifié pour écouter le thème ET la langue
 class AuthStateHandler extends ConsumerStatefulWidget {
   const AuthStateHandler({super.key});
 
@@ -112,7 +104,8 @@ class AuthStateHandler extends ConsumerStatefulWidget {
 class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
-    bool _initialized = false;
+  bool _initialized = false;
+  bool _monitoringInitialized = false; // ✅ Nouveau flag
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;
 
@@ -120,13 +113,10 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   void initState() {
     super.initState();
     
-    // Configuration des callbacks temps réel
+    // ✅ Configuration des callbacks une seule fois
     _setupRealtimeCallbacks();
     
-    // Initialiser la surveillance des appareils
-    _initializeDeviceMonitoring();
-    
-    // Écoute des changements d'authentification
+    // ✅ Écoute des changements d'authentification SANS initialiser le monitoring ici
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
       _handleAuthChange,
     );
@@ -159,18 +149,36 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     };
   }
 
+  // ✅ Nouvelle méthode centralisée pour initialiser le monitoring
   Future<void> _initializeDeviceMonitoring() async {
-    // Attendre que l'authentification soit prête
-    await Future.delayed(const Duration(milliseconds: 500));
-    
+    // ✅ Éviter les initialisations multiples
+    if (_monitoringInitialized) {
+      debugPrint('🔹 [Main] Monitoring déjà initialisé, ignoré');
+      return;
+    }
+
     final currentUser = Supabase.instance.client.auth.currentUser;
-    if (currentUser != null) {
+    if (currentUser == null) {
+      debugPrint('❌ [Main] Pas d\'utilisateur connecté pour monitoring');
+      return;
+    }
+
+    try {
       debugPrint('🔹 [Main] Initialisation surveillance temps réel');
+      
+      // ✅ Initialiser dans l'ordre correct
       await _deviceService.initCurrentDeviceFromSession();
       await _deviceService.initializeRealtimeMonitoring();
       
       // Démarrer le timer d'activité
       _startActivityTimer();
+      
+      _monitoringInitialized = true;
+      debugPrint('✅ [Main] Monitoring initialisé avec succès');
+      
+    } catch (e) {
+      debugPrint('❌ [Main] Erreur initialisation monitoring: $e');
+      _monitoringInitialized = false;
     }
   }
 
@@ -187,7 +195,6 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   }
 
   void _showForceLogoutNotification() {
-    // Afficher un SnackBar ou un Dialog pour informer l'utilisateur
     if (mounted && navigatorKey.currentContext != null) {
       ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
         const SnackBar(
@@ -243,11 +250,12 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       case AuthChangeEvent.initialSession:
         if (data.session != null) {
           debugPrint('🔹 [Main] Session initiale trouvée, redirection vers main');
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              // Initialiser le monitoring après la navigation
-              _initializeDeviceMonitoring();
+              // ✅ Initialiser le monitoring APRÈS la navigation
+              await Future.delayed(const Duration(milliseconds: 1000));
+              await _initializeDeviceMonitoring();
             }
           });
         } else {
@@ -263,11 +271,12 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       case AuthChangeEvent.signedIn:
         if (data.session != null) {
           debugPrint('🔹 [Main] Connexion réussie, redirection vers main');
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              // Initialiser le monitoring après la navigation
-              _initializeDeviceMonitoring();
+              // ✅ Initialiser le monitoring APRÈS la navigation
+              await Future.delayed(const Duration(milliseconds: 1000));
+              await _initializeDeviceMonitoring();
             }
           });
         }
@@ -301,6 +310,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   }
 
   void _cleanupOnSignOut() {
+    // ✅ Nettoyer les flags
+    _monitoringInitialized = false;
+    
     // Nettoyer les timers et subscriptions
     _activityTimer?.cancel();
     _activityTimer = null;
@@ -338,12 +350,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'MUKHLISS',
-      
-      // Configuration des thèmes
       theme: AppColors.lightTheme,
       darkTheme: AppColors.darkTheme,
       themeMode: _convertToFlutterThemeMode(currentThemeMode),
-      
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -365,8 +374,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     );
   }
 
-  // Convertir notre ThemeMode vers celui de Flutter
- ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
+  ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
     switch (appThemeMode) {
       case AppThemeMode.light:
         return ThemeMode.light;
@@ -377,5 +385,3 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     }
   }
 }
-
-

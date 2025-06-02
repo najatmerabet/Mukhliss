@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/client/profile/devices_screen.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/theme/app_theme.dart';
+// import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
+
+import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
@@ -16,7 +20,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProviderStateMixin {
   bool _isLoading = false;
-  bool _isDarkMode = false;
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   
@@ -99,58 +103,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
 
   @override
   Widget build(BuildContext context) {
-      final l10n = AppLocalizations.of(context);
+      final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           // Modern SliverAppBar
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            backgroundColor: const Color(0xFF6366F1),
-            elevation: 0,
-            leading: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              title:  Text(
-                l10n?.parametre ??
-               'Paramètres',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF6366F1),
-                      Color(0xFF8B5CF6),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(32),
-              ),
-            ),
-          ),
-          
+         AppBarTypes.ParametreAppBar(context),
           // Content
           SliverToBoxAdapter(
             child: FadeTransition(
@@ -178,11 +140,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: 'Thème sombre',
-                          subtitle: _isDarkMode ? 'Activé' : 'Désactivé',
+                          subtitle: isDarkMode ? 'Activé' : 'Désactivé',
                           trailing: Switch.adaptive(
-                            value: _isDarkMode,
+                            value: isDarkMode,
                             onChanged: (value) {
-                              setState(() => _isDarkMode = value);
+                            ref.read(themeProvider.notifier).toggleTheme();
                             },
                             activeColor: const Color(0xFF6366F1),
                           ),
@@ -528,7 +490,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
  void _showLanguageDialog(BuildContext context) {
   final currentLanguage = ref.read(languageProvider.notifier).currentLanguageOption;
   final localizations = AppLocalizations.of(context)!;
-
+final themeMode = ref.read(themeProvider);
+  final isDarkMode = themeMode == AppThemeMode.light;
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -539,7 +502,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color:isDarkMode ? AppColors.darkPrimary :AppColors. surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(

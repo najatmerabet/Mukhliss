@@ -8,10 +8,8 @@ import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/utils/validators.dart';
-
-
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 
@@ -121,7 +119,9 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
  
   @override
   Widget build(BuildContext context) {
-     final l10n = AppLocalizations.of(context);
+     final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Container(
@@ -130,10 +130,10 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.purpleDark.withOpacity(0.20),
-              AppColors.purpleDark.withOpacity(0.10),
-              AppColors.purpleDark.withOpacity(0.02),
+            colors: isDarkMode ?  [AppColors.darkWhite,AppColors.darkGrey50 , AppColors.darkPurpleDark]: [
+             AppColors.lightWhite,
+             AppColors.lightGrey50,
+              AppColors.lightPurpleDark,
             ],
           ),
         ),

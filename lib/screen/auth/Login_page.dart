@@ -11,6 +11,8 @@ import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/utils/validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -104,11 +106,14 @@ Widget _buildLanguageDropdown(BuildContext context) {
 }
   void _showEmailResetDialog() {
     final emailController = TextEditingController(text: _emailController.text);
- final l10n = AppLocalizations.of(context);
+  final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
+             backgroundColor:isDarkMode ? AppColors.darkPrimary :AppColors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -162,7 +167,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                         'Un code OTP vous sera envoyé par email',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade700,
+                          color:isDarkMode ? AppColors.surface: Colors.grey.shade700,
                         ),
                       ),
                     ),
@@ -175,7 +180,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   l10n?.cancel ?? 'Annuler',
-                  style: TextStyle(color: Colors.grey.shade700),
+                  style: TextStyle(color:isDarkMode ? AppColors.surface : Colors.grey.shade700),
                 ),
               ),
               ElevatedButton(
@@ -243,6 +248,8 @@ Future<void> _sendResetOtpEmail(String email) async {
   @override
   Widget build(BuildContext context) {
      final l10n = AppLocalizations.of(context);
+      final themeMode = ref.watch(themeProvider);
+   final isDarkMode = themeMode == AppThemeMode.light;
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -250,10 +257,10 @@ Future<void> _sendResetOtpEmail(String email) async {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.grey.shade50,
-              AppColors.purpleDark.withOpacity(0.02),
+            colors: isDarkMode ? [AppColors.darkWhite,AppColors.darkGrey50 , AppColors.darkPurpleDark]: [
+             AppColors.lightWhite,
+             AppColors.lightGrey50,
+              AppColors.lightPurpleDark,
             ],
           ),
         ),
@@ -483,7 +490,7 @@ Future<void> _sendResetOtpEmail(String email) async {
       child: Text(
         l10n?.pasdecompte ?? 'Pas encore de compte ?',
         style: TextStyle(
-          color: Colors.grey.shade700,
+          color:isDarkMode? AppColors.lightGrey50 :AppColors.darkGrey50,
           fontSize: 15,
         ),
         textAlign: TextAlign.center,  // Add this to center the text
@@ -502,7 +509,7 @@ Future<void> _sendResetOtpEmail(String email) async {
       child: Text(
         l10n?.creecompte ?? 'Créer un compte',
         style: TextStyle(
-          color: AppColors.purpleDark,
+          color:isDarkMode ? AppColors.lightPrimary:AppColors.darkPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 15,
         ),

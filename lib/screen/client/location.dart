@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mukhliss/theme/app_theme.dart';
+import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
 class LocationScreen extends StatelessWidget {
  LocationScreen({Key? key}) : super(key: key);
   final List<Map<String, dynamic>> nearbyStores = [
@@ -41,45 +42,7 @@ class LocationScreen extends StatelessWidget {
       backgroundColor: AppColors.surface,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 60,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                ),
-              ),
-            ),
-            title: const Text(
-              'Localisation',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.my_location, color: Colors.white),
-                  onPressed: () {
-                    // Localiser l'utilisateur
-                  },
-                ),
-              ),
-            ],
-          ),
+          AppBarTypes.localisationAppBar(context),
           SliverToBoxAdapter(
             child: Column(
               children: [

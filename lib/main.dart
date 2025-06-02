@@ -13,6 +13,7 @@ import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart' as flutter_material show ThemeMode;
+
 typedef flutter_ThemeMode = flutter_material.ThemeMode;
 
 void main() async {
@@ -64,10 +65,10 @@ class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { 
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(languageProvider);
     final currentThemeMode = ref.watch(themeProvider);
-    
+
     return MaterialApp(
       title: 'MUKHLISS',
       theme: AppColors.lightTheme,
@@ -112,10 +113,10 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   @override
   void initState() {
     super.initState();
-    
+
     // ✅ Configuration des callbacks une seule fois
     _setupRealtimeCallbacks();
-    
+
     // ✅ Écoute des changements d'authentification SANS initialiser le monitoring ici
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
       _handleAuthChange,
@@ -125,14 +126,16 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   void _setupRealtimeCallbacks() {
     // Callback pour déconnexion forcée
     _deviceService.onForceLogout = () {
-      debugPrint('🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate');
-      
+      debugPrint(
+        '🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate',
+      );
+
       // Afficher une notification à l'utilisateur
       _showForceLogoutNotification();
-      
+
       // Déconnecter immédiatement
       Supabase.instance.client.auth.signOut();
-      
+
       // Redirection vers login
       if (mounted && navigatorKey.currentState != null) {
         navigatorKey.currentState!.pushNamedAndRemoveUntil(
@@ -165,17 +168,16 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
     try {
       debugPrint('🔹 [Main] Initialisation surveillance temps réel');
-      
+
       // ✅ Initialiser dans l'ordre correct
       await _deviceService.initCurrentDeviceFromSession();
       await _deviceService.initializeRealtimeMonitoring();
-      
+
       // Démarrer le timer d'activité
       _startActivityTimer();
-      
+
       _monitoringInitialized = true;
       debugPrint('✅ [Main] Monitoring initialisé avec succès');
-      
     } catch (e) {
       debugPrint('❌ [Main] Erreur initialisation monitoring: $e');
       _monitoringInitialized = false;
@@ -249,7 +251,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     switch (data.event) {
       case AuthChangeEvent.initialSession:
         if (data.session != null) {
-          debugPrint('🔹 [Main] Session initiale trouvée, redirection vers main');
+          debugPrint(
+            '🔹 [Main] Session initiale trouvée, redirection vers main',
+          );
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
@@ -259,7 +263,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
             }
           });
         } else {
-          debugPrint('🔹 [Main] Pas de session initiale, redirection vers login');
+          debugPrint(
+            '🔹 [Main] Pas de session initiale, redirection vers login',
+          );
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
@@ -283,7 +289,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
         break;
 
       case AuthChangeEvent.signedOut:
-        debugPrint('🔹 [Main] Déconnexion, nettoyage et redirection vers login');
+        debugPrint(
+          '🔹 [Main] Déconnexion, nettoyage et redirection vers login',
+        );
         _cleanupOnSignOut();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && navigatorKey.currentState != null) {
@@ -300,7 +308,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       case AuthChangeEvent.userUpdated:
         debugPrint('🔹 [Main] Événement ${data.event} - pas de redirection');
         break;
-      
+
       case AuthChangeEvent.userDeleted:
         _cleanupOnSignOut();
         break;
@@ -312,11 +320,11 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   void _cleanupOnSignOut() {
     // ✅ Nettoyer les flags
     _monitoringInitialized = false;
-    
+
     // Nettoyer les timers et subscriptions
     _activityTimer?.cancel();
     _activityTimer = null;
-    
+
     // Nettoyer le service des appareils
     _deviceService.dispose();
   }
@@ -332,16 +340,15 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   @override
   Widget build(BuildContext context) {
     final currentLocale = ref.watch(languageProvider);
-    final currentThemeMode = ref.watch(themeProvider);
-    
+
     if (_initialized) {
       return MaterialApp(
         locale: currentLocale,
         supportedLocales: L10n.all,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        theme: AppColors.lightTheme,
-        darkTheme: AppColors.darkTheme,
-        themeMode: _convertToFlutterThemeMode(currentThemeMode),
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
         debugShowCheckedModeBanner: false,
       );
@@ -350,16 +357,16 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'MUKHLISS',
-      theme: AppColors.lightTheme,
-      darkTheme: AppColors.darkTheme,
-      themeMode: _convertToFlutterThemeMode(currentThemeMode),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: currentLocale,
       onGenerateRoute: (settings) {
         print('Route demandée: ${settings.name}');
-        
+
         if (settings.name != null && settings.name!.contains('code=')) {
           print('Callback d\'authentification détecté avec code');
           return MaterialPageRoute(
@@ -367,7 +374,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
             settings: settings,
           );
         }
-        
+
         return AppRouter.generateRoute(settings);
       },
       home: const SplashScreen(),

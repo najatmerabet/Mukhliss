@@ -68,7 +68,6 @@ Future<AuthResponse> signUpClient({
     rethrow;
   }
 }
-  /// Connexion avec email et mot de passe
 /// Connexion avec email et mot de passe
 Future<AuthResponse> login(String email, String password) async {
   try {
@@ -79,8 +78,7 @@ Future<AuthResponse> login(String email, String password) async {
 
     if (response.user != null) {
       // Enregistrer automatiquement l'appareil
-      await _deviceService.registerCurrentDevice();
-      
+      await _deviceService.registerCurrentDevice();     
       // Démarrer le suivi d'activité
       _startActivityTracking();
       

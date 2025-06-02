@@ -64,5 +64,7 @@
   "entrzpassword": "يرجى إدخال كلمة المرور",
   "entrzemail": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
   "parametre": "الإعدادات",
-  "compte": "COMPTE"
+  "compte": "حساب ",
+   "offre":"عروضي",
+   "localisation":"الموقع الجغرافي"
 }

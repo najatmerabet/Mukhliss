@@ -35,7 +35,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
    final themeMode = ref.watch(themeProvider);
     final l10n = AppLocalizations.of(context);
-    final isDarkMode = themeMode == AppThemeMode.dark;
+   final isDarkMode = themeMode == AppThemeMode.light;
     
     return Scaffold(
     backgroundColor: isDarkMode 
@@ -46,16 +46,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-             colors: [
-              const Color.fromARGB(255, 42, 41, 48),
-              const Color(0xFFC4BAFF),
-            ],
+             colors: isDarkMode ? AppColors.darkGradient :AppColors.lightGradient,
           ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Text(isDarkMode.toString()),
               Text(
                 l10n?.hello ?? 'Bienvenue sur MUKHLISS',
                 style: TextStyle(

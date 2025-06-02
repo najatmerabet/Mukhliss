@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mukhliss/theme/app_theme.dart';
+import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
 
 class MyOffersScreen extends StatelessWidget {
    MyOffersScreen({Key? key}) : super(key: key);
@@ -48,30 +49,7 @@ class MyOffersScreen extends StatelessWidget {
       backgroundColor: AppColors.surface,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 60,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                ),
-              ),
-            ),
-            title: const Text(
-              'Mes Offres',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+         AppBarTypes.offersAppBar(context),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),

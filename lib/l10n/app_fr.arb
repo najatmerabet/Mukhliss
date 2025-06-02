@@ -66,5 +66,7 @@
   "entrzpassword": "Veuillez entrer votre mot de passe",
   "entrzemail": "Le mot de passe doit contenir au moins 6 caractères",
   "parametre": "Paramètres",
-  "compte": "COMPTE"
+  "compte": "COMPTE",
+  "offre":"Mes Offres",
+    "localisation":"Locallisation "
 }

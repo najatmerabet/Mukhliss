@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/client/profile/devices_screen.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -187,6 +186,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                             activeColor: const Color(0xFF6366F1),
                           ),
                           iconColor: const Color(0xFF8B5CF6),
+                          // ignore: deprecated_member_use
                           iconBgColor: const Color(0xFF8B5CF6).withOpacity(0.1),
                         ),
                         _buildModernDivider(),
@@ -195,6 +195,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                           title: 'Nettoyer le cache',
                           onTap: _clearCache,
                           iconColor: const Color(0xFFF59E0B),
+                          // ignore: deprecated_member_use
                           iconBgColor: const Color(0xFFF59E0B).withOpacity(0.1),
                         ),
                       ],
@@ -212,6 +213,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                           subtitle: 'Appareils connectés',
                           onTap: () => _showDeviceManagement(context),
                           iconColor: const Color(0xFF3B82F6),
+                          // ignore: deprecated_member_use
                           iconBgColor: const Color(0xFF3B82F6).withOpacity(0.1),
                         ),
                         _buildModernDivider(),
@@ -220,6 +222,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                           title: 'Politique de confidentialité',
                           onTap: () => _showPrivacyPolicy(context),
                           iconColor: const Color(0xFFEC4899),
+                          // ignore: deprecated_member_use
                           iconBgColor: const Color(0xFFEC4899).withOpacity(0.1),
                         ),
                       ],

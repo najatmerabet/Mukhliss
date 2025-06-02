@@ -626,49 +626,28 @@ Future<void> forceSyncDevices() async {
   }
 }
 
-/// ✅ Amélioration de la vérification de déconnexion forcée
 Future<bool> _checkForceLogout() async {
   if (_currentDeviceId == null) return false;
+  final user = _supabase.auth.currentUser;
+  if (user == null) return false;
 
-  try {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return false;
+  // Ne ramène qu'un seul enregistrement (le plus récent)
+  final latestSession = await _supabase
+    .from('user_sessions')
+    .select('force_logout, is_active')
+    .eq('device_id', _currentDeviceId!)
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .order('last_activity', ascending: false)
+    .limit(1)
+    .maybeSingle();
 
-    // Vérifier à la fois l'appareil ET les sessions
-    final device = await _supabase
-        .from('user_devices')
-        .select('force_logout, is_active')
-        .eq('device_id', _currentDeviceId!)
-        .eq('user_id', user.id)
-        .maybeSingle();
+  final sessionForceLogout = latestSession?['force_logout'] == true ||
+                             latestSession?['is_active'] == false;
 
-    final session = await _supabase
-        .from('user_sessions')
-        .select('force_logout, is_active')
-        .eq('device_id', _currentDeviceId!)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
-    final deviceForceLogout = device?['force_logout'] == true || device?['is_active'] == false;
-    final sessionForceLogout = session?['force_logout'] == true || session?['is_active'] == false;
-
-    final shouldLogout = deviceForceLogout || sessionForceLogout;
-    
-    if (shouldLogout) {
-      debugPrint('🚨 [DeviceService] Force logout détecté:');
-      debugPrint('   - Device force_logout: ${device?['force_logout']}');
-      debugPrint('   - Device is_active: ${device?['is_active']}');
-      debugPrint('   - Session force_logout: ${session?['force_logout']}');
-      debugPrint('   - Session is_active: ${session?['is_active']}');
-    }
-
-    return shouldLogout;
-  } catch (e) {
-    debugPrint('❌ [DeviceService] Erreur vérification logout: $e');
-    return false;
-  }
+  return sessionForceLogout;
 }
+
   /// Obtient les statistiques des appareils
   Future<Map<String, dynamic>> getDeviceStats() async {
     try {

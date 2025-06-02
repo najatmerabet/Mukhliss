@@ -32,28 +32,31 @@ class _DevicesScreenState extends State<DevicesScreen> {
     await _loadDevices();
   }
 
-  Future<void> _loadDevices() async {
+Future<void> _loadDevices() async {
+  if (!mounted) return;           // <- garde avant le premier setState
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
+
+  try {
+    final devices = await _authService.getUserDevices();
+    final stats   = await _authService.getDeviceStats();
+
+    if (!mounted) return;         // <- garde avant le setState final
     setState(() {
-      _isLoading = true;
-      _error = null;
+      _devices   = devices;
+      _stats     = stats;
+      _isLoading = false;
     });
-
-    try {
-      final devices = await _authService.getUserDevices();
-      final stats = await _authService.getDeviceStats();
-
-      setState(() {
-        _devices = devices;
-        _stats = stats;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
+  } catch (e) {
+    if (!mounted) return;         // <- garde avant le setState d’erreur
+    setState(() {
+      _error     = e.toString();
+      _isLoading = false;
+    });
   }
+}
 
 Future<void> _disconnectDeviceRemotely(UserDevice device) async {
   debugPrint('🔹 [DevicesScreen] =============');
@@ -373,145 +376,167 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
     );
   }
 
-  Widget _buildDeviceCard(UserDevice device) {
-    final isCurrent = device.deviceId == _deviceService.currentDeviceId;
+// Modifiez la méthode _buildDeviceCard comme suit :
+Widget _buildDeviceCard(UserDevice device) {
+  final isCurrent = device.deviceId == _deviceService.currentDeviceId;
+  final isActive = device.isActive;
+  print(' is active ${_deviceService.currentDeviceId}');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: isCurrent
-            ? Border.all(color: const Color(0xFF10B981), width: 2)
-            : null,
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 20,
+          offset: const Offset(0, 4),
+        ),
+      ],
+      border: isCurrent
+          ? Border.all(color: const Color(0xFF10B981), width: 2)
+          : null,
+    ),
+    child: ListTile(
+      contentPadding: const EdgeInsets.all(20),
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: isCurrent
+              ? const Color(0xFF10B981).withOpacity(0.1)
+              : isActive
+                  ? const Color(0xFF3B82F6).withOpacity(0.1)
+                  : Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          _getDeviceIcon(device.deviceType, device.platform),
+          color: isCurrent
+              ? const Color(0xFF10B981)
+              : isActive
+                  ? const Color(0xFF3B82F6)
+                  : Colors.grey,
+          size: 24,
+        ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(20),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: isCurrent
-                ? const Color(0xFF10B981).withOpacity(0.1)
-                : device.isActive
-                    ? const Color(0xFF3B82F6).withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            _getDeviceIcon(device.deviceType, device.platform),
-            color: isCurrent
-                ? const Color(0xFF10B981)
-                : device.isActive
-                    ? const Color(0xFF3B82F6)
-                    : Colors.grey,
-            size: 24,
-          ),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                device.deviceName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-            ),
-            if (isCurrent)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF10B981).withOpacity(0.3),
-                  ),
-                ),
-                child: const Text(
-                  'Appareil actuel',
-                  style: TextStyle(
-                    color: Color(0xFF10B981),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  _getPlatformIcon(device.platform),
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${device.platform.toUpperCase()} • ${device.deviceType.toUpperCase()}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Dernière activité: ${_formatDate(device.lastActiveAt)}',
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              device.deviceName,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: isActive ? const Color(0xFF1F2937) : Colors.grey,
               ),
             ),
-            if (device.appVersion != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Version: ${device.appVersion}',
+          ),
+          if (isCurrent)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                ),
+              ),
+              child: const Text(
+                'Appareil actuel',
                 style: TextStyle(
+                  color: Color(0xFF10B981),
                   fontSize: 12,
-                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          if (!isActive && !isCurrent)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+              ),
+              child: const Text(
+                'Déconnecté',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                _getPlatformIcon(device.platform),
+                size: 16,
+                color: isActive ? Colors.grey[600] : Colors.grey[400],
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${device.platform.toUpperCase()} • ${device.deviceType.toUpperCase()}',
+                style: TextStyle(
+                  color: isActive ? Colors.grey[600] : Colors.grey[400],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Dernière activité: ${_formatDate(device.lastActiveAt)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: isActive ? Colors.grey[500] : Colors.grey[400],
+            ),
+          ),
+          if (device.appVersion != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Version: ${device.appVersion}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isActive ? Colors.grey[500] : Colors.grey[400],
+              ),
+            ),
           ],
-        ),
-        trailing: !isCurrent
-            ? Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () => _disconnectDeviceRemotely(device),
-                  icon: const Icon(
-                    Icons.logout,
-                    color: Colors.red,
-                    size: 20,
-                  ),
-                  tooltip: 'Déconnecter à distance',
-                ),
-              )
-            : null,
-        isThreeLine: true,
+        ],
       ),
-    );
-  }
-
+      // Afficher le bouton de déconnexion seulement si l'appareil est actif et n'est pas l'appareil courant
+      trailing: isActive && !isCurrent
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                onPressed: () => _disconnectDeviceRemotely(device),
+                icon: const Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                tooltip: 'Déconnecter à distance',
+              ),
+            )
+          : null,
+      isThreeLine: true,
+    ),
+  );
+}
   IconData _getDeviceIcon(String deviceType, String platform) {
     switch (deviceType.toLowerCase()) {
       case 'mobile':

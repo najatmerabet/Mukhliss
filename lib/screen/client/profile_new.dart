@@ -838,12 +838,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   void _showLocation() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Ma Localisation'),
-        backgroundColor: AppColors.accent,
-      ),
-    );
+    Navigator.pushNamed(context, AppRouter.maptest);
   }
 
   void _showNotificationSettings() {

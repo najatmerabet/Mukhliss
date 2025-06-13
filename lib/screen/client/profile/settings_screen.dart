@@ -668,57 +668,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   );
 }
 
-  Widget _buildLanguageOption(
-    BuildContext context, {
-    required String language,
-    required String flag,
-    bool selected = false,
-    required Locale locale,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      onTap: () {
-        // Fermer le dialog d'abord
-        Navigator.of(context).pop();
-        
-        // Changer la langue
-        ref.read(languageProvider.notifier).changeLanguage(locale);
-        
-        // Attendre un petit délai pour que le changement de langue soit effectif
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            final newLocalizations = AppLocalizations.of(context)!;
-            
-            // Afficher le message de confirmation dans la nouvelle langue
-            if (!selected) {
-              showSuccessSnackbar(
-                context: context,
-                message: newLocalizations.languageChanged,
-              );
-            }
-          }
-        });
-      },
-      leading: Text(
-        flag,
-        style: const TextStyle(fontSize: 24),
-      ),
-      title: Text(
-        language,
-        style: TextStyle(
-          color: selected ? const Color(0xFF6366F1) : const Color(0xFF1F2937),
-          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-          fontSize: 16,
-        ),
-      ),
-      trailing: selected
-          ? const Icon(
-              Icons.check_circle,
-              color: Color(0xFF6366F1),
-              size: 20,
-            )
-          : null,
-    );
-  }
+Widget _buildLanguageOption(
+  BuildContext context, {
+  required String language,
+  required String flag,
+  bool selected = false,
+  required Locale locale,
+}) {
+  // Get the localizations before any async operations
+  final l10n = AppLocalizations.of(context);
   
+  return ListTile(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    onTap: () {
+      // Change the language immediately
+      ref.read(languageProvider.notifier).changeLanguage(locale);
+      
+           
+      // Close the dialog
+      Navigator.of(context).pop();
+      
+      // Show confirmation message
+      if (!selected) {
+        // Use the stored localizations reference
+        showSuccessSnackbar(
+          context: context,
+          message: l10n?.languageChanged ?? 'Language changed',
+        );
+      }
+    },
+    leading: Text(
+      flag,
+      style: const TextStyle(fontSize: 24),
+    ),
+    title: Text(
+      language,
+      style: TextStyle(
+        color: selected ? const Color(0xFF6366F1) : const Color(0xFF1F2937),
+        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+        fontSize: 16,
+      ),
+    ),
+    trailing: selected
+        ? const Icon(
+            Icons.check_circle,
+            color: Color(0xFF6366F1),
+            size: 20,
+          )
+        : null,
+  );
+}
 }

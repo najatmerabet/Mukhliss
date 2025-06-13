@@ -105,7 +105,7 @@ class AuthStateHandler extends ConsumerStatefulWidget {
 class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
-  bool _initialized = false;
+  final bool _initialized = false;
   bool _monitoringInitialized = false; // ✅ Nouveau flag
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;

@@ -6,6 +6,7 @@ import 'package:mukhliss/screen/auth/signup_page.dart';
 import 'package:mukhliss/screen/client/profile.dart';
 import 'package:mukhliss/screen/client/profile/settings_screen.dart';
 import 'package:mukhliss/screen/client/profile_new.dart';
+import 'package:mukhliss/screen/client/test_map.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 
 class AppRouter {
@@ -17,6 +18,7 @@ class AppRouter {
   static const String profile = '/profile';
   static const String main = '/main'; // Route vers le layout principal
   static const String setting = '/setting'; // Route vers le layout principal
+  static const String maptest = '/test'; // Route vers le layout principal
 
   static Route<dynamic> unknownRoute() {
     return MaterialPageRoute(
@@ -48,6 +50,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => MainNavigationScreen());
       case signupClient:
         return MaterialPageRoute(builder: (_) => const ClientSignup());
+          case maptest:
+        return MaterialPageRoute(builder: (_) =>  MapScreen());
       case passwordReset:
         final email = settings.arguments as String;
         return MaterialPageRoute(

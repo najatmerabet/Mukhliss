@@ -8,14 +8,15 @@ import 'package:mukhliss/screen/client/qr_code_screen.dart';
 class AppColors {
   static const primary = Color(0xFF6366F1);
   static const secondary = Color(0xFF8B5CF6);
-  static const accent = Color(0xFF06B6D4);
+  static const accent = Color.fromARGB(255, 34, 128, 223); // Equivalent to Colors.blue[700]
   static const success = Color(0xFF10B981);
   static const warning = Color(0xFFF59E0B);
   static const error = Color(0xFFEF4444);
-  static const surface = Color(0xFFF8FAFC);
+  static const surface = Colors.white;
   static const cardBg = Colors.white;
   static const textPrimary = Color(0xFF1F2937);
   static const textSecondary = Color(0xFF6B7280);
+  static const darkSurface = Colors.black;
 }
 
 class MainNavigationScreen extends StatefulWidget {

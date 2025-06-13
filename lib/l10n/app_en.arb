@@ -68,5 +68,25 @@
   "parametre": "Settings",
   "compte": "COMPTE",
    "offre":"My Offers",
-      "localisation":"Location"
+      "localisation":"Location",
+       "categories":"My Categories",
+        "tous":"All",
+         "tousmagasins":"Nearest stores",
+          "categoie":"Category",
+           "distance":"Distance:",
+           "fermer":"Close",
+            "iterinaire":"Itinerary",
+              "glissez":"Swipe to see more",
+               "mode":"Mode of transportation",
+               "voiture":"Car",
+               "marche":"Walk",
+                "velo":"Bike",
+                 "vers":"Directions to",
+                  "duree":"Duration",
+                    "mode":"mode",
+                     "recenter":"Refocus",
+                      "chercher":"Find a store...",
+                       "calcule":"Calculation...",
+                        "connectionRequired": "You must be logged in to see your points."
+
 }

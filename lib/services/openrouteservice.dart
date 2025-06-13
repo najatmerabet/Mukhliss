@@ -40,7 +40,7 @@ class OSRMService {
     } catch (e) {
       print('Error getting OSRM route: $e');
     }
-    
+
     return null;
   }
 
@@ -68,7 +68,8 @@ class OSRMService {
           return OSRMRoute.fromJson(data['routes'][0]);
         }
       }
-    } catch (e) {
+    }
+     catch (e) {
       print('Error getting OSRM route with waypoints: $e');
     }
     

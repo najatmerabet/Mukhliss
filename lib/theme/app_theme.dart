@@ -26,14 +26,20 @@ class AppColors {
   static const Color lightBackground = Color(0xFFF8FAFC);
   static const Color lightTextPrimary = Color(0xFF1F2937);
   static const Color lightTextSecondary = Color(0xFF6B7280);
+   static const Color lightWhite = Colors.white;
+static const Color lightGrey50 = Color(0xFFFAFAFA);
+  static const Color lightPurpleDark = Color.fromARGB(255, 105, 96, 231);
+ 
 
   // Dark Theme Colors
-  static const Color darkPrimary = Color(0xFF5A4BD9);       // Version sombre de 0xFF765EFF
-  static const Color darkSecondary = Color(0xFF9D8AFF);     // Version sombre de 0xFFC4BAFF
-  static const Color darkSurface = Color(0xFF1F2937);
-  static const Color darkBackground = Color(0xFF111827);
+  static const Color darkPrimary = Color.fromARGB(255, 13, 13, 14);       // Version sombre de 0xFF765EFF
+  static const Color darkSecondary = Color.fromARGB(255, 0, 0, 0);     // Version sombre de 0xFFC4BAFF
+  static const Color darkSurface = Colors.black;  static const Color darkBackground = Color(0xFF111827);
   static const Color darkTextPrimary = Color(0xFFF9FAFB);
   static const Color darkTextSecondary = Color(0xFFD1D5DB);
+  static const Color darkWhite = Color.fromARGB(255, 247, 250, 252); // Gris très clair pour dark
+  static const Color darkGrey50 = Color.fromARGB(255, 191, 194, 196); // Gris plus foncé pour dark
+  static const Color darkPurpleDark = Color.fromARGB(255, 19, 15, 78);
 
     // Gradients
   static const List<Color> lightGradient = [
@@ -42,8 +48,8 @@ class AppColors {
   ];
   
   static const List<Color> darkGradient = [
-    Color(0xFF5A4BD9),
-    Color(0xFF9D8AFF),
+    Color.fromARGB(255, 63, 45, 221),
+    Color.fromARGB(255, 141, 120, 248),
   ];
    // Thème clair
   static ThemeData lightTheme = ThemeData(

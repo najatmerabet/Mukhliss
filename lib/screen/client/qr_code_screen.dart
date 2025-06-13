@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:mukhliss/services/qrcode_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mukhliss/theme/app_theme.dart';
-
-
-class QRCodeScreen extends StatefulWidget {
+import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/widgets/Appbar/app_bar_types.dart'; 
+class QRCodeScreen extends ConsumerStatefulWidget  {
   const QRCodeScreen({Key? key}) : super(key: key);
 
   @override
-  State<QRCodeScreen> createState() => _QRCodeScreenState();
+  ConsumerState<QRCodeScreen> createState() => _QRCodeScreenState();
 }
 
-class _QRCodeScreenState extends State<QRCodeScreen> {
+class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
   final QrcodeService _qrcodeService = QrcodeService();
   late Future<Widget> _qrCodeFuture;
 
@@ -27,36 +28,14 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final qrSize = screenWidth * 0.8; // Prend 80% de la largeur de l'écran
-    final l10n = AppLocalizations.of(context); 
+    final l10n = AppLocalizations.of(context);
+     final themeMode = ref.watch(themeProvider);
+      final isDarkMode = themeMode == AppThemeMode.light;
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor:isDarkMode? AppColors.darkSurface:AppColors.lightSurface,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 60,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                ),
-              ),
-            ),
-            title:  Text(
-              l10n?.identificationTitleqrcode ??
-              'Mon Identification',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+        AppBarTypes.identificationAppBar(context),
           SliverFillRemaining(
             hasScrollBody: false,
             child: Padding(

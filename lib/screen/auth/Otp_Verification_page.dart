@@ -8,7 +8,7 @@ import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/utils/error_handler.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 enum OtpVerificationType { signup, passwordReset }
 

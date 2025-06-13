@@ -66,5 +66,27 @@
   "entrzpassword": "Veuillez entrer votre mot de passe",
   "entrzemail": "Le mot de passe doit contenir au moins 6 caractères",
   "parametre": "Paramètres",
-  "compte": "COMPTE"
+  "compte": "COMPTE",
+  "offre":"Mes Offres",
+    "localisation":"Locallisation ",
+    "categories":"Mes Catégories",
+    "tous":"Tous",
+    "tousmagasins":"Magasins les plus proches",
+    "categoie":"Catégorie",
+    "distance":"Distance:",
+    "fermer":"Fermer",
+    "iterinaire":"Itinéraire",
+    "glissez":"Glissez pour voir plus",
+    "mode":"Mode de transport",
+    "voiture":"Voiture",
+    "marche":"Marche",
+    "velo":"Vélo",
+    "vers":"Itinéraire vers",
+    "duree":"Durée",
+      "mode":"Mode",
+      "recenter":"Recentrer",
+      "chercher":"Rechercher un magasin...",
+      "calcule":"Calcul...",
+    "connectionRequired": "Vous devez être connecté pour voir vos points"
+   
 }

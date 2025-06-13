@@ -1074,4 +1074,7 @@ class DeviceManagementService {
     final platform = _getPlatform();
     return 'Mon appareil ${platform.toUpperCase()}';
   }
+
+  
+ 
 }

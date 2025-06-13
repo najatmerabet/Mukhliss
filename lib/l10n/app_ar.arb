@@ -64,5 +64,26 @@
   "entrzpassword": "يرجى إدخال كلمة المرور",
   "entrzemail": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
   "parametre": "الإعدادات",
-  "compte": "COMPTE"
+  "compte": "حساب ",
+   "offre":"عروضي",
+   "localisation":"الموقع الجغرافي",
+    "categories":"فئات ",
+     "tous":"كلّ ",
+      "tousmagasins":"أقرب المتاجر",
+       "categoie":"فئة",
+        "distance":":مسافة",
+        "fermer":"إغلاق",
+         "iterinaire":"مسار",
+           "glissez":"اسحب لرؤية المزيد",
+            "voiture":"سيارة",
+            "marche":"المشي",
+             "velo":"دراجة هوائية",
+              "vers":"مسار نحو",
+               "duree":"مدة",
+               "mode":"Mode",
+                "recenter":"إعادة التمركز",
+                 "chercher":"...ابحث عن متجر",
+                  "calcule":"...حساب",
+                   "connectionRequired": "يجب أن تكون مسجلاً للدخول لرؤية نقاطك"
+
 }

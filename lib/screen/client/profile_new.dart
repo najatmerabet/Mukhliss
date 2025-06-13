@@ -8,6 +8,7 @@ import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
+import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -175,32 +176,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildHeader() {
-    return SliverAppBar(
-      expandedHeight: 60,
-      floating: false,
-      pinned: true,
-      automaticallyImplyLeading: false,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.secondary],
-            ),
-          ),
-        ),
-      ),
-      title: const Text(
-        'Mon Profil',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.5,
-        ),
-      ),
-
-    );
+    return AppBarTypes.profileAppBar(context);
   }
 
   Widget _buildProfileSection() {

@@ -994,4 +994,7 @@ Future<bool> _checkForceLogout() async {
     final platform = _getPlatform();
     return 'Mon appareil ${platform.toUpperCase()}';
   }
+
+  
+ 
 }

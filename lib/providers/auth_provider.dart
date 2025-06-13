@@ -14,6 +14,22 @@ final authStateProvider =StreamProvider<User?>((ref){
   return authService.authStateChanges.map((event)=>event.session?.user);
 });
 
+// Provider synchrone pour l'utilisateur actuel
+final currentUserProvider = Provider<User?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) => user,
+    loading: () => null,
+    error: (_, __) => null,
+  );
+});
+
+// Provider pour le client ID
+final currentClientIdProvider = Provider<String?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  return user?.id;
+});
+
 // Ajouter cette méthode à votre AuthService
 Future<void> sendPasswordResetEmail(String email) async {
   final supabase = Supabase.instance.client;
@@ -44,3 +60,4 @@ Future<void> verifyEmailOtp(String email, String token) async {
     throw Exception('Verification failed');
   }
 }
+

@@ -634,57 +634,56 @@ final themeMode = ref.read(themeProvider);
   );
 }
 
-  Widget _buildLanguageOption(
-    BuildContext context, {
-    required String language,
-    required String flag,
-    bool selected = false,
-    required Locale locale,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      onTap: () {
-        // Fermer le dialog d'abord
+ Widget _buildLanguageOption(
+  BuildContext context, {
+  required String language,
+  required String flag,
+  bool selected = false,
+  required Locale locale,
+}) {
+  return ListTile(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    onTap: () {
+      if (!selected) {
+        // Close the dialog first
         Navigator.of(context).pop();
         
-        // Changer la langue
+        // Change the language
         ref.read(languageProvider.notifier).changeLanguage(locale);
         
-        // Attendre un petit délai pour que le changement de langue soit effectif
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            final newLocalizations = AppLocalizations.of(context)!;
-            
-            // Afficher le message de confirmation dans la nouvelle langue
-            if (!selected) {
-              showSuccessSnackbar(
-                context: context,
-                message: newLocalizations.languageChanged,
-              );
-            }
-          }
-        });
-      },
-      leading: Text(
-        flag,
-        style: const TextStyle(fontSize: 24),
+        // Show success message immediately with current localizations
+        // The UI will rebuild with the new language automatically
+        if (mounted) {
+          showSuccessSnackbar(
+            context: this.context, // Use the settings screen context
+            message: 'Language changed successfully', // Fallback message
+          );
+        }
+      } else {
+        // Just close if the same language is selected
+        Navigator.of(context).pop();
+      }
+    },
+    leading: Text(
+      flag,
+      style: const TextStyle(fontSize: 24),
+    ),
+    title: Text(
+      language,
+      style: TextStyle(
+        color: selected ? const Color(0xFF6366F1) : const Color(0xFF1F2937),
+        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+        fontSize: 16,
       ),
-      title: Text(
-        language,
-        style: TextStyle(
-          color: selected ? const Color(0xFF6366F1) : const Color(0xFF1F2937),
-          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-          fontSize: 16,
-        ),
-      ),
-      trailing: selected
-          ? const Icon(
-              Icons.check_circle,
-              color: Color(0xFF6366F1),
-              size: 20,
-            )
-          : null,
-    );
-  }
+    ),
+    trailing: selected
+        ? const Icon(
+            Icons.check_circle,
+            color: Color(0xFF6366F1),
+            size: 20,
+          )
+        : null,
+  );
+}
   
 }

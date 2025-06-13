@@ -11,6 +11,8 @@ class  Client{
   final String tel;
   final String password;
   final String updatedAt;
+  
+  
 
 const  Client({
     required this.id,
@@ -19,8 +21,10 @@ const  Client({
     required this.email,
     required this.adr,
     required this.tel,
+    
     required this.password,
     required this.updatedAt,
+    
   });
 
 

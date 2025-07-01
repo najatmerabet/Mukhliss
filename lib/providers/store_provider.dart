@@ -12,5 +12,10 @@ final storeServiceProvider= Provider<StoreService>((ref) {
 
 final storesListProvider = FutureProvider<List<Store>>((ref) async {
   final storeService = ref.read(storeServiceProvider);
-  return await storeService.fetchStores();
+  return await storeService.getStoresWithLogos();
+});
+
+final storeLogoUrlProvider = Provider.family<String, String>((ref, fileName) {
+  final storeService = ref.read(storeServiceProvider);
+  return storeService.getStoreLogoUrl(fileName);
 });

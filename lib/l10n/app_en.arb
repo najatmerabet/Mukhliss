@@ -87,6 +87,14 @@
                      "recenter":"Refocus",
                       "chercher":"Find a store...",
                        "calcule":"Calculation...",
-                        "connectionRequired": "You must be logged in to see your points."
+                        "connectionRequired": "You must be logged in to see your points.",
+                          "offredisponible":"Offers available",
+                          "navigation":"START NAVIGATION",
+                            "detailsiterinaire":"ROUTE DETAILS",
+                             "offremagasin":"OFFER",
+                             "depensez":"Spend",
+                              "pointsagagner":"points to win",
+                               "nooffre":"No offers available ",
+                               "arrivee":"You have arrived at"
 
 }

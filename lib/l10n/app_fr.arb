@@ -87,6 +87,14 @@
       "recenter":"Recentrer",
       "chercher":"Rechercher un magasin...",
       "calcule":"Calcul...",
-    "connectionRequired": "Vous devez être connecté pour voir vos points"
+    "connectionRequired": "Vous devez être connecté pour voir vos points",
+    "offredisponible":"Offres disponibles",
+    "navigation":"LANCER LA NAVIGATION",
+    "detailsiterinaire":"DÉTAILS DE L'ITINÉRAIRE",
+    "offremagasin":"OFFRE",
+    "depensez":"Dépensez",
+    "pointsagagner":"points à gagner",
+    "nooffre":"No offers available",
+    "arrivee":"Vous êtes arrivé à"
    
 }

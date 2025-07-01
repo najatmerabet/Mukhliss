@@ -8,12 +8,12 @@ class ClientMagazinService {
     try {
       print('Recherche points pour client:$clientId, magasin:$magazinId');
       final response = await _client
-          .from('clientmagazin')
+          .from('clientmagasin')
           .select()
           .eq('client_id', clientId) // Maintenant en String pour UUID
-          .eq('magazin_id', magazinId)
+          .eq('magasin_id', magazinId)
           .maybeSingle();
- print('r===================== ClientMagazinService: $response');
+ print('ClientMagazinServicerespponse: $response');
       return response == null ? null : ClientMagazin.fromJson(response);
     
     } catch (error) {

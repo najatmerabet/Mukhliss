@@ -370,7 +370,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
         if (settings.name != null && settings.name!.contains('code=')) {
           print('Callback d\'authentification détecté avec code');
           return MaterialPageRoute(
-            builder: (_) => const SplashScreen(),
+            builder: (_) => const SplashScreen( ),
             settings: settings,
           );
         }

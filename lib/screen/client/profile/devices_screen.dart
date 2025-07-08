@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:mukhliss/models/user_device.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/services/auth_service.dart';
 import 'package:mukhliss/services/device_management_service.dart';
-
-class DevicesScreen extends StatefulWidget {
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mukhliss/theme/app_theme.dart';
+class DevicesScreen extends ConsumerWidget  {
   const DevicesScreen({super.key});
 
   @override
-  State<DevicesScreen> createState() => _DevicesScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const _DevicesScreenContent();
+  }
+}
+class _DevicesScreenContent extends ConsumerStatefulWidget {
+  const _DevicesScreenContent();
+
+  @override
+  ConsumerState<_DevicesScreenContent> createState() => _DevicesScreenState();
 }
 
-class _DevicesScreenState extends State<DevicesScreen> {
+class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
   final AuthService _authService = AuthService();
   final DeviceManagementService _deviceService = DeviceManagementService();
 
@@ -124,17 +136,21 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
 
   @override
   Widget build(BuildContext context) {
+   final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor:isDarkMode ? AppColors.darkSurface: AppColors.surface ,
       appBar: AppBar(
-        title: const Text(
-          'Mes Appareils',
+        title:  Text(
+       l10n?.mesappariels ??  'Mes Appareils',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF6366F1),
+        backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.primary,
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(8),
@@ -161,11 +177,11 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
             ),
           ),
         ],
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(32),
-          ),
-        ),
+        // shape: const RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.vertical(
+        //     bottom: Radius.circular(32),
+        //   ),
+        // ),
       ),
       body: _buildBody(),
     );
@@ -222,7 +238,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
 
   Widget _buildStatsSection() {
     if (_stats.isEmpty) return const SizedBox.shrink();
-
+final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -239,8 +255,8 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Statistiques',
+          Text(
+            l10n?.statistiques ?? 'Statistiques',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -252,7 +268,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
             children: [
               Expanded(
                 child: _buildStatBox(
-                  'Total',
+                  l10n?.total ?? 'Total',
                   _stats['total']?.toString() ?? '0',
                   const Color(0xFF3B82F6),
                   Icons.devices,
@@ -261,7 +277,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatBox(
-                  'Actifs',
+                  l10n?.active ?? 'Actifs',
                   _stats['active']?.toString() ?? '0',
                   const Color(0xFF10B981),
                   Icons.check_circle,
@@ -270,7 +286,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatBox(
-                  'Inactifs',
+                  l10n?.inactifs ?? 'Inactifs',
                   _stats['inactive']?.toString() ?? '0',
                   const Color(0xFFF59E0B),
                   Icons.pause_circle,
@@ -316,11 +332,12 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
   }
 
   Widget _buildDevicesSection() {
+     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Appareils connectés',
+        Text(
+          l10n?.apparielsconnecte ?? 'Appareils connectés',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

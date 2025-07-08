@@ -8,14 +8,18 @@ import 'package:mukhliss/l10n/l10n.dart';
 
 import 'package:mukhliss/models/categories.dart';
 import 'package:mukhliss/models/offers.dart';
+import 'package:mukhliss/models/rewards.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/providers/clientmagazin_provider.dart';
 
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/offers_provider.dart';
+import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 
 import 'package:mukhliss/utils/category_helpers.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
@@ -99,19 +103,18 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-     final bool categoriesBottomSheetShown=false;
+     
      final clientAsync=ref.watch(authProvider).currentUser;
      final pointsAsync = ref.watch(clientMagazinPointsProvider(Tuple2(clientAsync?.id, widget.shop?.id)));
-     print("la respponse====================>"+pointsAsync.toString());
     if (widget.shop == null) {
       return _buildEmptyState(true); // Return empty container if shop is null
     }
-final offersAsync = widget.ref.watch(offersByStoreProvider(widget.shop?.id ?? ''));
+final rewardsAsync = widget.ref.watch(rewardsByMagasinProvider(widget.shop?.id ?? ''));
 
-print('Watching offers for shopId: ${widget.shop?.id}');
-print('Current offersAsync state: ${offersAsync.value}');
-print('Has error: ${offersAsync.hasError}');
-print('Is loading: ${offersAsync.isLoading}');
+print('Watching rewards for shopId: ${widget.shop?.id}');
+print('Current rewardsAsync state: ${rewardsAsync.value}');
+print('Has error: ${rewardsAsync.hasError}');
+print('Is loading: ${rewardsAsync.isLoading}');
     // Early return if shop is null
     if (widget.shop == null) {
       return _buildEmptyState(true); // or some other placeholder
@@ -149,93 +152,60 @@ print('Is loading: ${offersAsync.isLoading}');
           child: CustomScrollView(
             controller: scrollController,
             slivers: [
-              // Handle du BottomSheet
-              SliverToBoxAdapter(
-                child: Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+               SliverToBoxAdapter(
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-
-              // Contenu principal
-              SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: fadeAnimation,
-                  child: ScaleTransition(
-                    scale: scaleAnimation,
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            CategoryMarkers.getPinColor(
-                              localizedName,
-                            ).withOpacity(0.9),
-                            CategoryMarkers.getPinColor(localizedName),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: CategoryMarkers.getPinColor(
-                              localizedName,
-                            ).withOpacity(0.3),
-                            blurRadius: 30,
-                            offset: const Offset(0, 15),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(28),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withOpacity(0.15),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-  padding: const EdgeInsets.all(24),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // En-tête avec logo et catégorie
-      Row(
-        children: [
-          // Logo avec effet de placeholder amélioré
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: Colors.white.withOpacity(0.15),
+            ),
+             SliverToBoxAdapter(
+               child: Padding(
+                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           // En-tête avec logo et badge catégorie
+                           Row(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+           // Logo avec effet glassmorphism
+                     Container(
+                    width: 85,
+                   height: 85,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                     gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.25),
+                  Colors.white.withOpacity(0.1),
+                ],
+              ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withOpacity(0.3),
                 width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(22),
               child: cleanLogoUrl != null
                   ? CachedNetworkImage(
                       imageUrl: cleanLogoUrl,
@@ -247,38 +217,82 @@ print('Is loading: ${offersAsync.isLoading}');
             ),
           ),
           
-          const Spacer(),
+          const SizedBox(width: 16),
           
-          // Badge de catégorie avec animation
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.25),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+          // Informations principale et badge
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  CategoryMarkers.getPinIcon(localizedName),
-                  color: Colors.white,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  localizedName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                // Badge de catégorie redesigné
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
                   ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        CategoryMarkers.getPinColor(localizedName).withOpacity(0.25),
+                        CategoryMarkers.getPinColor(localizedName).withOpacity(0.15),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        CategoryMarkers.getPinIcon(localizedName),
+                        color: CategoryMarkers.getPinColor(localizedName),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          localizedName,
+                          style:  TextStyle(
+                            color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Nom de l'enseigne avec effet
+                Text(
+                  widget.shop!.nom_enseigne,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: isDarkMode ?  AppColors.surface : AppColors.darkSurface,
+                    height: 1.1,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        offset: const Offset(0, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -286,92 +300,92 @@ print('Is loading: ${offersAsync.isLoading}');
         ],
       ),
       
-      const SizedBox(height: 24),
+      const SizedBox(height: 28),
       
-      // Nom de l'enseigne avec effet de dégradé possible
-      Text(
-        widget.shop!.nom_enseigne,
-        style: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          height: 1.1,
-          // Option: ajouter un dégradé si pertinent pour votre design
-          // foreground: Paint()..shader = gradient.createShader(...),
+      // Grille d'informations avec design moderne
+ LayoutBuilder(
+  builder: (context, constraints) {
+    return SizedBox(
+      height: 90, // Hauteur fixe pour la ligne
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        children: [
+          _buildModernInfoCard(
+            icon: Icons.location_on_rounded,
+            title: l10n?.address ?? 'Adresse',
+            value: widget.shop!.adresse,
+            gradient: [
+              AppColors.accent,
+              AppColors.accent,
+            ],
+            isDarkMode: isDarkMode,
+          ),
+          const SizedBox(width: 8),
+          _buildModernInfoCard(
+            icon: Icons.near_me_rounded,
+            title: l10n?.distance ??'Distance',
+            value: distance < 1000 
+                ? '${distance.toStringAsFixed(0)} m' 
+                : '${(distance / 1000).toStringAsFixed(1)} km',
+            gradient: [
+              AppColors.success,
+              AppColors.success.withOpacity(0.9),
+            ],
+            isDarkMode: isDarkMode,
+          ),
+          const SizedBox(width: 8),
+          pointsAsync.when(
+            data: (clientMagazin) => _buildModernInfoCard(
+              icon: Icons.loyalty_rounded,
+              title: 'Points',
+              value: '${clientMagazin?.cumulpoint ?? 0}',
+              gradient: [
+                AppColors.secondary,
+                  AppColors.secondary,
+              ],
+              isDarkMode: isDarkMode,
+            ),
+            loading: () => _buildLoadingInfoCard(isDarkMode),
+            error: (error, stack) => _buildModernInfoCard(
+              icon: Icons.error_outline_rounded,
+              title: 'Points',
+              value: 'Erreur',
+              gradient: [
+                Colors.red.shade400.withOpacity(0.8),
+                Colors.red.shade600.withOpacity(0.9),
+              ],
+              isDarkMode: isDarkMode,
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+)
+    ],
+  ),
+
+          ],
+                  
         ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
       ),
-      
-      const SizedBox(height: 16),
-      
-      // Informations sous forme de liste
-      ListView.separated(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: 3,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          switch (index) {
-            case 0:
-              return _buildInfoChip(
-                icon: Icons.location_on_rounded,
-                text: widget.shop!.adresse,
-                isDarkMode: isDarkMode,
-              );
-            case 1:
-              return _buildInfoChip(
-                icon: Icons.near_me_rounded,
-                text: distance < 1000 
-                  ? '${distance.toStringAsFixed(0)} m' 
-                  : '${(distance / 1000).toStringAsFixed(1)} km',
-                isDarkMode: isDarkMode,
-              );
-            case 2:
-              return pointsAsync.when(
-                data: (clientMagazin) => _buildInfoChip(
-                  icon: Icons.loyalty_rounded,
-                  text: '${clientMagazin?.cumulpoint ?? 0} pts',
-                  isDarkMode: isDarkMode,
-                 // Paramètre supplémentaire pour styliser différemment
-                ),
-                loading: () => _buildShimmerChip(isDarkMode: isDarkMode),
-                error: (error, stack) => _buildInfoChip(
-                  icon: Icons.error_outline_rounded,
-                  text: 'Erreur de chargement',
-                  isDarkMode: isDarkMode,
-                ),
-              );
-            default:
-              return const SizedBox();
-          }
-        },
-      ),
-                    ],
-                ),
-                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Section Offres
+             ),
+
             
             
-            
-offersAsync.when(
+rewardsAsync.when(
   loading: () {
-    final isFirstLoad = !offersAsync.hasValue;
-    return isFirstLoad 
+    final isFirstLoad = !rewardsAsync.hasValue;
+    return isFirstLoad
         ? _buildFirstLoadState(isDarkMode)
         : _buildRegularLoadingState(isDarkMode);
   },
   error: (error, stack) => _buildErrorState(error, stack, isDarkMode),
-  data: (offers) => offers.isEmpty
+  data: (rewards) => rewards.isEmpty
       ? _buildEmptyState(isDarkMode)
-      : _buildOffersList(offers, isDarkMode, l10n),
-       
+      : _buildOffersList(rewards, isDarkMode, l10n),
+
 ),
 // ajouter un espace 
     
@@ -519,6 +533,163 @@ offersAsync.when(
       },
     );
   }
+
+  // Widget pour les cartes d'information modernes
+Widget _buildModernInfoCard({
+  required IconData icon,
+  required String title,
+  required String value,
+  required List<Color> gradient,
+  required bool isDarkMode,
+}) {
+  return ConstrainedBox(
+    constraints: BoxConstraints(
+      minHeight: 80,  // Hauteur réduite
+      minWidth: 110,  // Largeur réduite
+      maxWidth: 120,  // Largeur maximale
+    ),
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradient,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: gradient.first.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withOpacity(0.1),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 6,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// Widget pour l'état de chargement des cartes d'info
+Widget _buildLoadingInfoCard(bool isDarkMode) {
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.grey.shade400.withOpacity(0.6),
+          Colors.grey.shade600.withOpacity(0.8),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Shimmer.fromColors(
+      baseColor: Colors.white.withOpacity(0.3),
+      highlightColor: Colors.white.withOpacity(0.1),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 50,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 70,
+              height: 14,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 Widget _buildFirstLoadState(bool isDarkMode) {
   return SliverToBoxAdapter(
     child: Container(
@@ -550,39 +721,7 @@ Widget _buildRegularLoadingState(bool isDarkMode) {
     ),
   );
 }
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String text,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color:
-            isDarkMode
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.white.withOpacity(0.9)),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withOpacity(0.95),
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
+
 Widget _buildShimmerPlaceholder() {
   return Shimmer.fromColors(
     baseColor: Colors.grey[800]!,
@@ -598,183 +737,258 @@ Widget _buildShimmerPlaceholder() {
 }
  
 
-Widget _buildShimmerChip({required bool isDarkMode}) {
-  return Shimmer.fromColors(
-    baseColor: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
-    highlightColor: isDarkMode ? Colors.grey[600]! : Colors.grey[100]!,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(isDarkMode ? 0.15 : 0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(isDarkMode ? 0.25 : 0.4),
+
+  // 🎫 DESIGN 1: Style Ticket/Coupon
+Widget _buildTicketStyle(Rewards offer, bool isDarkMode, int index) {
+  final colors = [
+    [Colors.purple.shade600, Colors.blue.shade600],
+    [Colors.blue.shade600, Colors.cyan.shade400],
+    [Colors.green.shade500, Colors.teal.shade400],
+    [Colors.orange.shade600, Colors.red.shade500],
+  ];
+  final gradient = colors[index % colors.length];
+  final l10n = AppLocalizations.of(context);
+  final isRTL = Directionality.of(context) == TextDirection.rtl;
+
+  return Padding(
+    padding: EdgeInsets.only(
+      right: isRTL ? 0 : 16,
+      left: isRTL ? 16 : 0,
+      top: 8,
+      bottom: 8,
+    ),
+    child: MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        width: 300,
+        height: 170,
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
+          borderRadius: isRTL 
+              ? BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                 
+                )
+              : BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                 
+                ),
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.4)
+                  : Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: Offset(0, 6),
+            ),
+          ],
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          children: [
+            // Section colorée - Adaptée pour RTL
+            Positioned(
+              left: isRTL ? null : 0,
+              right: isRTL ? 0 : null,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 90,
+                height: 170,
+                decoration: BoxDecoration(
+                  borderRadius: isRTL
+                      ? BorderRadius.only(
+                          topRight: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        )
+                      : BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
+                        ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: gradient,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.card_giftcard, color: Colors.white, size: 36),
+                    SizedBox(height: 8),
+                    RotatedBox(
+                      quarterTurns: isRTL ? 1 : -1, // Inverser la rotation pour RTL
+                      child: Text(
+                        l10n?.offremagasin ?? 'REWARD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 80,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
+
+            // Séparateur pointillé - Adapté pour RTL
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: isRTL ? null : 90,
+              right: isRTL ? 90 : null,
+              width: 2,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final boxCount = (constraints.maxHeight / 8).floor();
+                  return Flex(
+                    direction: Axis.vertical,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(boxCount, (_) {
+                      return Container(
+                        width: 1,
+                        height: 4,
+                        color: isDarkMode ? Colors.white.withOpacity(0.3) : Colors.grey.shade400,
+                      );
+                    }),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+
+            // Zone de contenu principale - Adaptée pour RTL
+            Positioned.fill(
+              left: isRTL ? 0 : 100,
+              right: isRTL ? 100 : 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Nom de l'offre
+                    Text(
+                      offer.name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.grey.shade900,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                    ),
+                    SizedBox(height: 8),
+                    
+                    // Description
+                    if (offer.description != null && offer.description!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          offer.description!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkMode ? Colors.white70 : Colors.grey.shade700,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                        ),
+                      ),
+                    
+                    // Points requis - Alignement adapté
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: isRTL ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${offer.points_required}',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: gradient.first,
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'PTS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white70 : Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    SizedBox(height: 8),
+                    
+                    // Statut - Alignement adapté
+                    Align(
+                      alignment: isRTL ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: offer.is_active
+                              ? (isDarkMode ? Colors.green.shade700.withOpacity(0.3) : Colors.green.shade100)
+                              : (isDarkMode ? Colors.orange.shade800.withOpacity(0.3) : Colors.orange.shade100),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          offer.is_active
+                              ? (l10n?.disponible ?? 'Disponible')
+                              : (l10n?.limite ?? 'Limité'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: offer.is_active
+                                ? (isDarkMode ? Colors.greenAccent.shade200 : Colors.green.shade700)
+                                : (isDarkMode ? Colors.orangeAccent.shade100 : Colors.orange.shade700),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+
+            // Cercles supérieur et inférieur - Adaptés pour RTL
+            Positioned(
+              top: -10,
+              left: isRTL ? null : 86,
+              right: isRTL ? 86 : null,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade200,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -10,
+              left: isRTL ? null : 86,
+              right: isRTL ? 86 : null,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade200,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
 }
-  Widget _buildModernOfferCard(Offers offer, bool isDarkMode, int index) {
-    final gradients = [
-      [const Color(0xFFFF6B6B), const Color(0xFFFF8E53)],
-      [const Color(0xFF4ECDC4), const Color(0xFF44A08D)],
-      [const Color(0xFF45B7D1), const Color(0xFF96C93D)],
-      [const Color(0xFFFF9A9E), const Color(0xFFFAD0C4)],
-    ];
- final l10n = AppLocalizations.of(context);
-    final gradient = gradients[index % gradients.length];
-    final isRTL = Directionality.of(context) == TextDirection.rtl;
-    return Container(
-      width: 280,
-     margin: EdgeInsets.only(
-      right: isRTL ? 0 : 16,
-      left: isRTL ? 16 : 0,
-    ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: gradient,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: gradient[0].withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 16,
-            right: isRTL ? null : 16,
-            left: isRTL ? 16 : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-              ),
-              child:  Text(
-               l10n?.offremagasin ?? 'OFFRE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  constraints: BoxConstraints(
-                     minWidth: 120, // Ajustez selon vos besoins
-                    ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                     (l10n?.depensez != null 
-                        ? '${l10n!.depensez} ${offer.min_amount}€' 
-                        : 'Dépensez ${offer.min_amount}€'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                     textDirection: TextDirection.ltr,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${offer.points_given}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                           l10n?.pointsagagner ?? 'points à gagner',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   double _calculateDistance(Position? currentPosition, Store? shop) {
     if (currentPosition == null) return 0;
 
@@ -786,6 +1000,8 @@ Widget _buildShimmerChip({required bool isDarkMode}) {
     );
   }
 
+  
+
   Widget _buildPlaceholderIcon() {
     return Container(
       decoration: BoxDecoration(
@@ -796,14 +1012,7 @@ Widget _buildShimmerChip({required bool isDarkMode}) {
     );
   }
 
-  Widget _buildLoadingState(bool isDarkMode) {
-    return SliverToBoxAdapter(
-      child: const Padding(
-        padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-    );
-  }
+
 
   Widget _buildErrorState(Object error, StackTrace? stack, bool isDarkMode) {
     return SliverToBoxAdapter(
@@ -852,7 +1061,7 @@ Widget _buildShimmerChip({required bool isDarkMode}) {
               ),
               const SizedBox(width: 12),
               Text(
-                l10n?.offredisponible ?? 'Offres spéciales',
+                l10n?.offredisponible ?? 'Offres disponibles',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -890,7 +1099,7 @@ Widget _buildShimmerChip({required bool isDarkMode}) {
             itemCount: offers.length,
             itemBuilder: (context, index) {
               final offer = offers[index];
-              return _buildModernOfferCard(offer, isDarkMode, index);
+              return _buildTicketStyle(offer, isDarkMode, index);
             },
           ),
         ),

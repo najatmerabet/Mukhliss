@@ -8,6 +8,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 
 class NavigationArrowWidget extends ConsumerStatefulWidget {
   final Position? currentPosition;
@@ -197,7 +198,7 @@ class _NavigationArrowWidgetState extends ConsumerState<NavigationArrowWidget> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color:isDarkMode ? AppColors.darkSurface : AppColors.surface,
+              color:isDarkMode ? AppColors.surface : AppColors.darkSurface,
             ),
           ),
         ),

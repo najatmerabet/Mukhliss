@@ -43,13 +43,14 @@ static const Color lightGrey50 = Color(0xFFFAFAFA);
 
     // Gradients
   static const List<Color> lightGradient = [
-    Color(0xFF765EFF),
-    Color(0xFFC4BAFF),
+   AppColors.primary,
+AppColors.surface
   ];
   
   static const List<Color> darkGradient = [
-    Color.fromARGB(255, 63, 45, 221),
-    Color.fromARGB(255, 141, 120, 248),
+   Colors.black,
+   Color.fromARGB(255, 19, 15, 78),
+
   ];
    // Thème clair
   static ThemeData lightTheme = ThemeData(

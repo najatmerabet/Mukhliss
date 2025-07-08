@@ -1,6 +1,9 @@
 // lib/screens/settings_screen.dart
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/client/profile/devices_screen.dart';
 
@@ -89,6 +92,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   }
 
   Future<void> _clearCache() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 1)); // Simule le nettoyage du cache
     setState(() => _isLoading = false);
@@ -96,7 +100,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
     if (mounted) {
       showSuccessSnackbar(
         context: context,
-        message: 'Cache nettoyé avec succès',
+        message: l10n?.cachenettoye ?? 'Cache nettoyé avec succès',
       );
     }
   }
@@ -110,7 +114,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
    final isDarkMode = themeMode == AppThemeMode.light;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor:isDarkMode ? AppColors.darkSurface :AppColors.surface,
       body: CustomScrollView(
         slivers: [
           // Modern SliverAppBar
@@ -126,14 +130,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                   children: [                 
              
                     // App Settings Section
-                    _buildSectionHeader('APPLICATION', Icons.settings_outlined),
+                    _buildSectionHeader(l10n?.application ?? 'APPLICATION', Icons.settings_outlined),
                     const SizedBox(height: 12),
                     _buildModernSettingCard(
                       children: [
                         _buildModernSettingTile(
                           icon: Icons.language_outlined,
-                          title: 'Langue',
-                          subtitle: 'Français',
+                          title:l10n?.language ?? 'Langue',
+                          subtitle:l10n?.currentLanguage ?? 'Français',
                           onTap: () => _showLanguageDialog(context),
                           iconColor: const Color(0xFF10B981),
                           iconBgColor: const Color(0xFF10B981).withOpacity(0.1),
@@ -141,8 +145,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernDivider(),
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
-                          title: 'Thème sombre',
-                          subtitle: isDarkMode ? 'Activé' : 'Désactivé',
+                          title: l10n?.theme ?? 'Thème sombre',
+                          subtitle: isDarkMode ? l10n?.active ?? 'Activé' :  'Désactivé',
                           trailing: Switch.adaptive(
                             value: isDarkMode,
                             onChanged: (value) {
@@ -157,7 +161,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernDivider(),
                         _buildModernSettingTile(
                           icon: Icons.storage_outlined,
-                          title: 'Nettoyer le cache',
+                          title: l10n?.netoyercacha ?? 'Nettoyer le cache',
                           onTap: _clearCache,
                           iconColor: const Color(0xFFF59E0B),
                           // ignore: deprecated_member_use
@@ -168,14 +172,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
 
                     const SizedBox(height: 24),
                     // Security & Privacy Section
-                    _buildSectionHeader('SÉCURITÉ & CONFIDENTIALITÉ', Icons.security_outlined),
+                    _buildSectionHeader(l10n?.securite ??'SÉCURITÉ & CONFIDENTIALITÉ', Icons.security_outlined),
                     const SizedBox(height: 12),
                     _buildModernSettingCard(
                       children: [
                         _buildModernSettingTile(
                           icon: Icons.devices_outlined,
-                          title: 'Gestion des appareils ',
-                          subtitle: 'Appareils connectés',
+                          title:l10n?.gestionappariels ?? 'Gestion des appareils ',
+                          subtitle:l10n?.apparielsconnecte ?? 'Appareils connectés',
                           onTap: () => _showDeviceManagement(context),
                           iconColor: const Color(0xFF3B82F6),
                           // ignore: deprecated_member_use
@@ -184,7 +188,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernDivider(),
                         _buildModernSettingTile(
                           icon: Icons.privacy_tip_outlined,
-                          title: 'Politique de confidentialité',
+                          title: l10n?.politiques ??'Politique de confidentialité',
                           onTap: () => _showPrivacyPolicy(context),
                           iconColor: const Color(0xFFEC4899),
                           // ignore: deprecated_member_use
@@ -211,192 +215,196 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   );
 }
 
-  void _showPrivacyPolicy(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.5),
-      isScrollControlled: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAFAFC),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEC4899).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.privacy_tip,
-                      color: Color(0xFFEC4899),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Politique de confidentialité',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-                        Text(
-                          'Dernière mise à jour: 15/06/2023',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(20),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '1. Collecte des informations',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Nous collectons des informations lorsque vous vous inscrivez sur notre site, vous connectez à votre compte, passez une commande, participez à un concours, et/ou lorsque vous vous déconnectez. Les informations collectées incluent votre nom, votre adresse e-mail, numéro de téléphone, et/ou carte de crédit.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    
-                    Text(
-                      '2. Utilisation des informations',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Toutes les informations que nous recueillons auprès de vous peuvent être utilisées pour :\n- Personnaliser votre expérience et répondre à vos besoins individuels\n- Fournir un contenu publicitaire personnalisé\n- Améliorer notre site Web\n- Améliorer le service client et vos besoins de prise en charge\n- Vous contacter par e-mail\n- Administrer un concours, une promotion, ou une enquête',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    
-                    Text(
-                      '3. Confidentialité du commerce en ligne',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Nous sommes les seuls propriétaires des informations recueillies sur ce site. Vos informations personnelles ne seront pas vendues, échangées, transférées, ou données à une autre société pour n\'importe quelle raison, sans votre consentement, en dehors de ce qui est nécessaire pour répondre à une demande et/ou une transaction, comme par exemple pour expédier une commande.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.grey.shade300),
-                  shape: RoundedRectangleBorder(
+void _showPrivacyPolicy(BuildContext context) {
+  final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+      ),
+      decoration: BoxDecoration(
+        color:isDarkMode ? AppColors.darkSurface : AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.pink.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  minimumSize: const Size(double.infinity, 0),
+                  child: const Icon(Icons.security, color: Colors.pink, size: 28),
                 ),
-                child: Text(
-                  'J\'ai compris',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n?.politiques ?? 'Politique de confidentialité',
+                        style:  TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ?AppColors.surface : AppColors.darkGrey50,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n?.datemiseajour ?? 'Dernière mise à jour: 15/06/2023',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color:isDarkMode ?AppColors.surface : AppColors.darkGrey50,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Content with uniform padding
+            _buildPrivacySection(
+              title: l10n?.premierstep ?? '1. Collecte des données',
+              content: l10n?.contentstepone ?? 
+                'Mukhliss collecte les données suivantes pour fournir le service de carte de fidélité :\n\n'
+                '- Informations personnelles (nom, prénom, email, téléphone)\n'
+                '- Données de localisation (pour trouver les magasins partenaires)\n'
+                '- Historique des achats et points accumulés\n'
+                '- Données de paiement (pour les offres premium)',
+            ),
+
+            _buildPrivacySection(
+              title: l10n?.deusiemestep ?? '2. Utilisation des données',
+              content: l10n?.contentsteptwo ?? 
+                'Vos données sont utilisées pour :\n\n'
+                '- Gérer votre compte et carte de fidélité\n'
+                '- Vous informer des offres personnalisées\n'
+                '- Analyser les tendances d\'achat\n'
+                '- Améliorer notre service\n'
+                '- Prévenir les fraudes',
+            ),
+
+            _buildPrivacySection(
+              title: l10n?.troisemestep ?? '3. Partage des données',
+              content: l10n?.contentstepthre ?? 
+                'Vos données peuvent être partagées avec :\n\n'
+                '- Les magasins partenaires où vous utilisez votre carte\n'
+                '- Les prestataires de paiement\n'
+                '- Les services d\'analyse (de manière anonyme)\n\n'
+                'Nous ne vendons jamais vos données personnelles.',
+            ),
+
+            _buildPrivacySection(
+              title: l10n?.quatriemestep ?? '4. Sécurité des données',
+              content: l10n?.contentstepfor ?? 
+                'Nous protégeons vos données par :\n\n'
+                '- Chiffrement AES-256\n'
+                '- Authentification à deux facteurs\n'
+                '- Audits de sécurité réguliers\n'
+                '- Stockage sécurisé conforme RGPD',
+            ),
+
+            _buildPrivacySection(
+              title: l10n?.cinquemestep ?? '5. Vos droits',
+              content: l10n?.contentstepfive ?? 
+                'Vous avez le droit de :\n\n'
+                '- Accéder à vos données\n'
+                '- Demander leur correction\n'
+                '- Supprimer votre compte\n'
+                '- Exporter vos données\n'
+                '- Vous opposer au traitement\n\n'
+                'Contactez-nous à privacy@mukhliss.com pour toute demande.',
+            ),
+
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                backgroundColor:isDarkMode ? AppColors.surface : AppColors.darkGrey50,
               ),
-              SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-            ],
-          ),
+              child: Text(
+                l10n?.compris ?? 'J\'ai compris',
+                style:  TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color:isDarkMode ? AppColors.darkPrimary : AppColors.surface,
+                ),
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
+Widget _buildPrivacySection({required String title, required String content}) {
+ final themeMode = ref.watch(themeProvider);
+    
+   final isDarkMode = themeMode == AppThemeMode.light;
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: AppColors.surface.withOpacity(0.1),
+        width: 1,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style:  TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color:isDarkMode ? AppColors.primary : Colors.deepPurple,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          content,
+          style: TextStyle(
+            fontSize: 15,
+            color: AppColors.darkSurface,
+            height: 1.5,
+          ),
+        ),
+      ],
+    ),
+  );
+}
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
         Icon(
           icon,
           size: 16,
-          color: const Color(0xFF6366F1),
+          color: AppColors.primary,
         ),
         const SizedBox(width: 8),
         Text(
@@ -404,7 +412,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF6366F1),
+            color: AppColors.primary,
             letterSpacing: 1.2,
           ),
         ),
@@ -527,7 +535,7 @@ final themeMode = ref.read(themeProvider);
               width: 48,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.darkGrey50,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -555,17 +563,17 @@ final themeMode = ref.read(themeProvider);
                     children: [
                       Text(
                         localizations.selectLanguage,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                          color:  isDarkMode ? AppColors.surface : AppColors.darkSurface,
                         ),
                       ),
                       Text(
                         localizations.languageSubtitle,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF6B7280),
+                          color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
                         ),
                       ),
                     ],
@@ -577,7 +585,7 @@ final themeMode = ref.read(themeProvider);
             
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -612,7 +620,7 @@ final themeMode = ref.read(themeProvider);
               onPressed: () => Navigator.of(context).pop(),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(color: Colors.grey.shade300),
+                side: BorderSide(color: AppColors.darkGrey50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -621,7 +629,7 @@ final themeMode = ref.read(themeProvider);
               child: Text(
                 localizations.cancel,
                 style: TextStyle(
-                  color: Colors.grey.shade700,
+                  color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -674,7 +682,7 @@ final themeMode = ref.read(themeProvider);
     title: Text(
       language,
       style: TextStyle(
-        color: selected ? const Color(0xFF6366F1) : const Color(0xFF1F2937),
+        color: selected ? AppColors.primary : AppColors.darkGrey50,
         fontWeight: selected ? FontWeight.bold : FontWeight.w500,
         fontSize: 16,
       ),
@@ -682,7 +690,7 @@ final themeMode = ref.read(themeProvider);
     trailing: selected
         ? const Icon(
             Icons.check_circle,
-            color: Color(0xFF6366F1),
+            color: AppColors.primary,
             size: 20,
           )
         : null,

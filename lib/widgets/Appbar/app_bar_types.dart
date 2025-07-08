@@ -8,7 +8,7 @@ class AppBarTypes {
   static CustomSliverAppBar offersAppBar(BuildContext context, {List<Widget>? actions}) {
     final l10n = AppLocalizations.of(context);
     return CustomSliverAppBar(
-      title:l10n?.address  ?? 'Mes Offres',
+      title:l10n?.offre  ?? 'Mes Offres',
       actions: actions,
     );
   }
@@ -31,6 +31,22 @@ class AppBarTypes {
     );
   }
 
+    static CustomSliverAppBar SupportAppBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return CustomSliverAppBar(
+      title: l10n?.support ?? 'Aide & Support',
+      useFlexibleSpace: true,
+        showDefaultLeading: true, //
+    );
+  }
+   static CustomSliverAppBar AboutAppBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return CustomSliverAppBar(
+      title: l10n?.apropos ?? 'À Propos',
+      useFlexibleSpace: true,
+        showDefaultLeading: true, //
+    );
+  }
 
   // AppBar pour les magasins
   static CustomSliverAppBar localisationAppBar(BuildContext context, {List<Widget>? actions}) {

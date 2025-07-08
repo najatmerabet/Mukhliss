@@ -2,14 +2,19 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/l10n.dart';
+
 import 'package:mukhliss/providers/auth_provider.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/screen/client/SupportTicketFormScreen%20.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -143,15 +148,18 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+     final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.darkSurface,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
       body: CustomScrollView(
         slivers: [
           _buildHeader(),
@@ -180,6 +188,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileSection() {
+    final themeMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context);
+   final isDarkMode = themeMode == AppThemeMode.light;
     return Column(
       children: [
         // Photo de profil avec bouton play
@@ -233,19 +244,19 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
         // Nom
         Text(
           '${_userData?['prenom'] ?? ""} ${_userData?['nom'] ?? ''}',
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
           ),
         ),
         const SizedBox(height: 8),
         // Sous-titre
         Text(
           _userData?['email'] ?? '',
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 16,
-            color: Colors.black54,
+            color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -254,27 +265,19 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildActionButtons() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: _buildActionCard(
             icon: Icons.person_outline,
-            title: 'Informations',
-            subtitle: 'Voir et modifier',
-            buttonText: 'Gérer',
+            title:l10n?.info ?? 'Informations',
+            subtitle: l10n?.voir ??'Voir et modifier',
+            buttonText: l10n?.gerer ?? 'Gérer',
             onPressed: () => _showUserInfo(),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActionCard(
-            icon: Icons.analytics_outlined,
-            title: 'Statistiques',
-            subtitle: 'Activité',
-            buttonText: 'Voir',
-            onPressed: () => _showStats(),
-          ),
-        ),
+      
       ],
     );
   }
@@ -347,38 +350,31 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildMenuItems() {
+     final l10n = AppLocalizations.of(context);
     return Column(
       children: [
-        _buildMenuItem(
-          icon: Icons.timeline_outlined,
-          title: 'Mon Activité',
-          onTap: () => _showActivity(),
-        ),
-        _buildMenuItem(
-          icon: Icons.location_on_outlined,
-          title: 'Ma Localisation',
-          onTap: () => _showLocation(),
-        ),
+    
+     
         _buildMenuItem(
           icon: Icons.settings_outlined,
 
-          title: 'Paramètres',
+          title:l10n?.parametre ?? 'Paramètres',
           onTap: () => _showNotificationSettings(),
         ),
         _buildMenuItem(
           icon: Icons.help_outline,
-          title: 'Aide et Support',
+          title: l10n?.aide ??'Aide et Support',
           onTap: () => _showSupport(),
         ),
         _buildMenuItem(
           icon: Icons.info_outline,
-          title: 'À propos',
+          title:l10n?.apropos ?? 'À propos',
           onTap: () => _showAbout(),
         ),
         const SizedBox(height: 10),
         _buildMenuItem(
           icon: Icons.logout,
-          title: 'Se Déconnecter',
+          title: l10n?.deconection ?? 'Se Déconnecter',
           isLogout: true,
           onTap: () => _showLogoutDialog(context, ref),
         ),
@@ -443,6 +439,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
 
   // Méthodes pour afficher les informations avec possibilité d'édition
   void _showUserInfo() {
+      final l10n = AppLocalizations.of(context);
     setState(() => _isEditing = false); // Reset editing state
 
     showModalBottomSheet(
@@ -472,8 +469,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                           children: [
                             Text(
                               _isEditing
-                                  ? 'Modifier mes informations'
-                                  : 'Mes Informations',
+                                  ? l10n?.mesinformation ?? 'Modifier mes informations'
+                                  : l10n?.modifiermesinformation ?? 'Mes Informations',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -525,14 +522,15 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                             child: Column(
                               children: [
                                 if (_isEditing) ...[
+                               
                                   AppFormFields.buildModernTextField(
                                     context: context,
                                     controller: _firstNameController,
-                                    label: 'Prénom',
+                                    label:l10n?.prenom ?? 'Prénom',
                                     icon: Icons.person_outline,
                                     validator: (value) {
                                       if (value?.trim().isEmpty ?? true) {
-                                        return 'Le prénom est requis';
+                                        return l10n?.requis ??'Le prénom est requis';
                                       }
                                       return null;
                                     },
@@ -541,7 +539,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                                   AppFormFields.buildModernTextField(
                                     context: context,
                                     controller: _lastNameController,
-                                    label: 'Nom',
+                                    label:l10n?.nom ?? 'Nom',
                                     icon: Icons.person_outline,
                                     validator: (value) {
                                       if (value?.trim().isEmpty ?? true) {
@@ -554,7 +552,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                                   AppFormFields.buildModernTextField(
                                     context: context,
                                     controller: _emailController,
-                                    label: 'Email',
+                                    label:l10n?.email ?? 'Email',
                                     icon: Icons.email_outlined,
                                     keyboardType: TextInputType.emailAddress,
                                     validator: (value) {
@@ -573,7 +571,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                                   AppFormFields.buildModernTextField(
                                     context: context,
                                     controller: _phoneController,
-                                    label: 'Téléphone',
+                                    label:l10n?.phone ?? 'Téléphone',
                                     icon: Icons.phone_outlined,
                                     keyboardType: TextInputType.phone,
                                   ),
@@ -581,39 +579,39 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                                   AppFormFields.buildModernTextField(
                                     context: context,
                                     controller: _addressController,
-                                    label: 'Adresse',
+                                    label:l10n?.address ?? 'Adresse',
                                     icon: Icons.location_on_outlined,
                                     maxLines: 2,
                                   ),
                                 ] else ...[
                                   _buildInfoRow(
                                     Icons.person_outline,
-                                    'Prénom',
+                                 l10n?.prenom ??   'Prénom',
                                     _userData?['prenom'] ?? '',
                                   ),
                                   _buildInfoRow(
                                     Icons.person_outline,
-                                    'Nom',
+                                   l10n?.nom ?? 'Nom',
                                     _userData?['nom'] ?? '',
                                   ),
                                   _buildInfoRow(
                                     Icons.email_outlined,
-                                    'Email',
+                                   l10n?.email ?? 'Email',
                                     _userData?['email'] ?? '',
                                   ),
                                   _buildInfoRow(
                                     Icons.phone_outlined,
-                                    'Téléphone',
+                                    l10n?.phone ?? 'Téléphone',
                                     _userData?['telephone'] ?? '',
                                   ),
                                   _buildInfoRow(
                                     Icons.location_on_outlined,
-                                    'Adresse',
+                                    l10n?.address ?? 'Adresse',
                                     _userData?['adresse'] ?? '',
                                   ),
                                   _buildInfoRow(
                                     Icons.calendar_today_outlined,
-                                    'Membre depuis',
+                                    l10n?.membredepuis ?? 'Membre depuis',
                                     _userData?['created_at'] != null
                                         ? DateTime.parse(
                                           _userData!['created_at'],
@@ -652,8 +650,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                                           strokeWidth: 2,
                                         ),
                                       )
-                                      : const Text(
-                                        'Sauvegarder',
+                                      :  Text(
+                                     l10n?.sauvgarder ??   'Sauvegarder',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
@@ -713,131 +711,378 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showStats() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            height: MediaQuery.of(context).size.height * 0.6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Mes Statistiques',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        '1,270',
-                        'Points',
-                        AppColors.warning,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard('15', 'Offres', AppColors.success),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard('8', 'Magasins', AppColors.accent),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        '245€',
-                        'Économies',
-                        AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _buildStatCard(String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Méthodes pour les autres actions
-  void _showActivity() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Mon Activité'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
-  }
-
-  void _showLocation() {
-    Navigator.pushNamed(context, AppRouter.maptest);
-  }
 
   void _showNotificationSettings() {
     Navigator.pushNamed(context, AppRouter.setting);
   }
 
-  void _showSupport() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Aide et Support'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-  }
+void _showSupport() async {
+  if (!mounted) return;
+  
+  // Ouvrir directement le formulaire de ticket
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => SupportTicketFormScreen(),
+    ),
+  );
 
-  void _showAbout() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('MUKHLISS v1.0.0'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+  if (result == true && mounted) {
+    _showSuccessSnackbar("Votre demande a été envoyée avec succès");
   }
+}
+
+
+
+
+
+
+
+void _showSuccessSnackbar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.green,
+    ),
+  );
+}
+
+void _showAbout() {
+  final themeMode = ref.watch(themeProvider);
+  final l10n = AppLocalizations.of(context);
+  final isDarkMode = themeMode == AppThemeMode.light;
+  
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => Scaffold(
+        extendBodyBehindAppBar: true,
+        body: CustomScrollView(
+          slivers: [
+            AppBarTypes.AboutAppBar(context),
+            SliverToBoxAdapter(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: isDarkMode
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.darkSurface,
+                            AppColors.darkSurface.withOpacity(0.9),
+                            Color(0xFF1A1A2E),
+                          ],
+                        )
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.surface,
+                            Color(0xFFF8F9FA),
+                            Color(0xFFE8F4FD),
+                          ],
+                        ),
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header avec icône modernisé
+                        Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: isDarkMode
+                                        ? [
+                                            Color(0xFF4A90E2),
+                                            Color(0xFF357ABD),
+                                            Color(0xFF2E5B8A),
+                                          ]
+                                        : [
+                                            Color(0xFF6C5CE7),
+                                            Color(0xFF5A4FCF),
+                                            Color(0xFF4834D4),
+                                          ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isDarkMode
+                                          ? Colors.black.withOpacity(0.3)
+                                          : Colors.grey.withOpacity(0.3),
+                                      blurRadius: 15,
+                                      offset: Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: Image.asset(
+                                    'images/withoutbg.png',
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(
+                                        Icons.star_rounded,
+                                        size: 60,
+                                        color: Colors.white,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                "MUKHLISS",
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDarkMode ? Colors.white : Color(0xFF2D3748),
+                                  letterSpacing: 2.0,
+                                  shadows: [
+                                    Shadow(
+                                      color: isDarkMode
+                                          ? Colors.black.withOpacity(0.5)
+                                          : Colors.grey.withOpacity(0.3),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: isDarkMode
+                                        ? [
+                                            Color(0xFF4A90E2).withOpacity(0.3),
+                                            Color(0xFF357ABD).withOpacity(0.3),
+                                          ]
+                                        : [
+                                            Color(0xFF6C5CE7).withOpacity(0.2),
+                                            Color(0xFF5A4FCF).withOpacity(0.2),
+                                          ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: isDarkMode
+                                        ? Color(0xFF4A90E2).withOpacity(0.5)
+                                        : Color(0xFF6C5CE7).withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n?.version ?? "Version 1.0.0",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkMode ? Colors.white : Color(0xFF2D3748),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 48),
+                        
+                        // Cartes d'information modernisées
+                        _buildInfoCard(
+                          icon: Icons.description_outlined,
+                          title: l10n?.desc ?? "Description",
+                          content: l10n?.content ?? "Mukhliss – Votre carte de fidélité intelligente et connectée\n\nMukhliss est l'application mobile de fidélité nouvelle génération, conçue pour récompenser vos achats et vous faire profiter des meilleures offres autour de vous.Avec Mukhliss, chaque achat effectué dans un magasin partenaire vous fait gagner des points, selon les offres proposées par le commerçant. Cumulez vos points et échangez-les contre des cadeaux exclusifs dans vos boutiques préférées. Plus vous êtes fidèle, plus vous êtes récompensé !",
+                          isDarkMode: isDarkMode,
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        _buildInfoCard(
+                          icon: Icons.contact_support_outlined,
+                          title: l10n?.support ?? "Contact & Support",
+                          content: "mukhlissfidelite@gmail.com",
+                          isContact: true,
+                          isDarkMode: isDarkMode,
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        _buildInfoCard(
+                          icon: Icons.code_outlined,
+                          title: l10n?.technologies ?? "Technologies",
+                          content: "Flutter • Supabase • Dart",
+                          isDarkMode: isDarkMode,
+                        ),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Footer décoratif
+                  
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// Fonction helper pour créer les cartes d'information
+Widget _buildInfoCard({
+  required IconData icon,
+  required String title,
+  required String content,
+  bool isContact = false,
+  required bool isDarkMode,
+}) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 4),
+    decoration: BoxDecoration(
+      gradient: isDarkMode
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF2A2A4A).withOpacity(0.8),
+                Color(0xFF1F1F3A).withOpacity(0.6),
+              ],
+            )
+          : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.9),
+                Color(0xFFF8F9FA).withOpacity(0.8),
+              ],
+            ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: isDarkMode
+              ? Colors.black.withOpacity(0.3)
+              : Colors.grey.withOpacity(0.1),
+          blurRadius: 10,
+          offset: Offset(0, 4),
+        ),
+      ],
+      border: Border.all(
+        color: isDarkMode
+            ? Colors.white.withOpacity(0.1)
+            : Colors.grey.withOpacity(0.2),
+        width: 1,
+      ),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDarkMode
+                        ? [
+                            Color(0xFF4A90E2),
+                            Color(0xFF357ABD),
+                          ]
+                        : [
+                            Color(0xFF6C5CE7),
+                            Color(0xFF5A4FCF),
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDarkMode
+                          ? Color(0xFF4A90E2).withOpacity(0.3)
+                          : Color(0xFF6C5CE7).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkMode ? Colors.white : Color(0xFF2D3748),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 15,
+              color: isDarkMode
+                  ? Colors.white.withOpacity(0.8)
+                  : Color(0xFF4A5568),
+              height: 1.6,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          if (isContact) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? Color(0xFF4A90E2).withOpacity(0.2)
+                    : Color(0xFF6C5CE7).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                "Contactez-nous",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkMode ? Color(0xFF4A90E2) : Color(0xFF6C5CE7),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+// Widget helper pour les cartes d'information
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(

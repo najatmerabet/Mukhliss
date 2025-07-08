@@ -7,13 +7,17 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/models/categories.dart';
 import 'package:mukhliss/models/offers.dart';
 import 'package:mukhliss/models/store.dart';
+import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/providers/categories_provider.dart';
+import 'package:mukhliss/providers/clientmagazin_provider.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
+import 'package:tuple/tuple.dart';
 
 
 class CategoriesBottomSheet extends ConsumerStatefulWidget  {
@@ -467,8 +471,9 @@ Widget _buildStoreItem({ required BuildContext context,
     required bool isDarkMode,
     required Position? currentPosition,
     final Function(Store?, Categories?)? onStoreSelected,
-    final Categories? category,
       }) {
+        final clientAsync=ref.watch(authProvider).currentUser;
+  final pointsAsync = ref.watch(clientMagazinPointsProvider(Tuple2(clientAsync?.id, store.id)));
   return   Container(
     margin: const EdgeInsets.only(bottom: 1),
     decoration: BoxDecoration(
@@ -491,110 +496,177 @@ Widget _buildStoreItem({ required BuildContext context,
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
+          child:Row(
+  children: [
+    // Logo du magasin
+    Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: store.logoUrl != null && store.logoUrl!.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: store.logoUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => _buildPlaceholderIcon(),
+                errorWidget: (context, url, error) => _buildPlaceholderIcon(),
+              )
+            : _buildPlaceholderIcon(),
+      ),
+    ),
+    
+    const SizedBox(width: 16),
+    
+    // Contenu principal
+    Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nom de l'enseigne
+          Text(
+            store.nom_enseigne,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Ligne d'informations (adresse)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo du magasin avec placeholder
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: store.logoUrl != null && store.logoUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: store.logoUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => _buildPlaceholderIcon(),
-                          errorWidget: (context, url, error) => _buildPlaceholderIcon(),
-                        )
-                      : _buildPlaceholderIcon(),
-                ),
-              ),
-              
-              const SizedBox(width: 16),
-              
-              // Informations du magasin
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            store.nom_enseigne,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            store.adresse,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // Badge de distance
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isDarkMode ? Colors.blue.shade700 : Colors.blue.shade200,
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Text(
-                            distance < 1000
-                              ? '${distance.toStringAsFixed(0)}m'
-                              : '${(distance / 1000).toStringAsFixed(1)}km',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode ? Colors.blue.shade200 : Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Flèche d'indication
-              const SizedBox(width: 8),
               Icon(
-                Icons.chevron_right,
-                color: Colors.grey.shade400,
-                size: 20,
+                Icons.location_on_outlined,
+                size: 14,
+                color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  store.adresse,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
+          
+          const SizedBox(height: 8),
+          
+          // Ligne des badges (distance + points)
+          Row(
+  children: [
+    // Badge de distance
+   Container(
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  decoration: BoxDecoration(
+    color: isDarkMode ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+      color: isDarkMode ? Colors.blue.shade700 : Colors.blue.shade200,
+      width: 0.5,
+    ),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        Icons.near_me_outlined,  // Icône de localisation/distance
+        size: 14,
+        color: isDarkMode ? Colors.blue.shade200 : Colors.blue.shade700,
+      ),
+      const SizedBox(width: 4),
+      Text(
+        distance < 1000 
+          ? '${distance.toStringAsFixed(0)}m' 
+          : '${(distance / 1000).toStringAsFixed(1)}km',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: isDarkMode ? Colors.blue.shade200 : Colors.blue.shade700,
+        ),
+      ),
+    ],
+  ),
+),
+    
+    // Espace augmenté entre les badges (passé de 8 à 12)
+    const SizedBox(width: 50),
+    
+    // Badge de points
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDarkMode ? Colors.green.shade700 : Colors.green.shade200,
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 14,
+            color: isDarkMode ? Colors.green.shade200 : Colors.green.shade700,
+          ),
+          const SizedBox(width: 4),
+          pointsAsync.when(
+            data: (data) => Text(
+              '${data?.cumulpoint ?? 0} pts',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.green.shade200 : Colors.green.shade700,
+              ),
+            ),
+            error: (_, __) => Text(
+              '0 pts',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.green.shade200 : Colors.green.shade700,
+              ),
+            ),
+            loading: () => const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+        ],
+      ),
+    ),
+    
+    // Flèche indicative
+    Icon(
+      Icons.chevron_right,
+      color: Colors.grey.shade400,
+      size: 20,
+    ),
+  ],
+)
         ),
       ),
     ),

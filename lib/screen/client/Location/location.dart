@@ -10,6 +10,7 @@ import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location_controller.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/services/osrm_service.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/category_helpers.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
 import 'package:mukhliss/providers/categories_provider.dart'; // Ajout du provider des catégories
@@ -72,39 +73,47 @@ Timer? _searchDebounceTimer;
 StreamSubscription<Position>? _positionStream;
   Timer? _navigationTimer;
 BottomSheetState _bottomSheetState = BottomSheetState.none;
+bool _disposed = false;
+
+// Update the initState method to use safe callbacks
 @override
 void initState() {
   super.initState();
-   controller = LocationController(
-  ref, 
-  context,
-  _mapController,
-  (position) => setState(() => _currentPosition = position),
-  (isLoading) => setState(() => _isLocationLoading = isLoading),
-  (points) {
-    setState(() {
-      _polylinePoints = points; // Ceci mettra à jour les points locaux
-    });
-  },
-  (isNavigating) {
-    setState(() {
-      _isNavigating = isNavigating;
-    });
-  },
-);
+  
+  controller = LocationController(
+    ref, 
+    context,
+    _mapController,
+    (position) {
+      _safeSetState(() => _currentPosition = position);
+    },
+    (isLoading) {
+      _safeSetState(() => _isLocationLoading = isLoading);
+    },
+    (points) {
+      _safeSetState(() {
+        _polylinePoints = points;
+      });
+    },
+    (isNavigating) {
+      _safeSetState(() {
+        _isNavigating = isNavigating;
+      });
+    },
+  );
+  
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted) {
-    
-       controller.getCurrentLocation();
+    if (mounted && !_disposed) {
+      controller.getCurrentLocation();
     }
   });
 }
 
 
   void _handleStoreSelection(Store? store, Categories? category) {
-  if (store == null) return;
-  
-  setState(() {
+  if (store == null || _disposed) return;
+
+  _safeSetState(() {
     _selectedShop = store;
     _selectedCategory = category;
     _bottomSheetState = BottomSheetState.shopDetails;
@@ -123,9 +132,9 @@ void initState() {
 }
    
   void _startNavigation() {
-    if (_selectedShop == null || _currentPosition == null) return;
-    
-    setState(() {
+    if (_selectedShop == null || _currentPosition == null || _disposed) return;
+
+    _safeSetState(() {
       _isNavigating = true;
       // Calculer le bearing initial
       _currentBearing = Geolocator.bearingBetween(
@@ -139,19 +148,26 @@ void initState() {
     // Démarrer les mises à jour de position
     _startPositionUpdates();
   }
-    void _startPositionUpdates() {
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 5, // Mise à jour tous les 5 mètres
-    );
 
-    _positionStream = Geolocator.getPositionStream(
-      locationSettings: locationSettings,
-    ).listen((Position position) {
-      if (!_isNavigating || _selectedShop == null) return;
+void _startPositionUpdates() {
+  if (_disposed) return;
+  
+  const locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 5, // Update every 5 meters
+  );
+
+  // Cancel existing stream
+  _positionStream?.cancel();
+
+  _positionStream = Geolocator.getPositionStream(
+    locationSettings: locationSettings,
+  ).listen(
+    (Position position) {
+      if (_disposed || !mounted || !_isNavigating || _selectedShop == null) return;
       
-      // Mettre à jour la position et le bearing
-      setState(() {
+      // Update position and bearing
+      _safeSetState(() {
         _currentPosition = position;
         _currentBearing = Geolocator.bearingBetween(
           position.latitude,
@@ -161,16 +177,23 @@ void initState() {
         );
       });
       
-      // Mettre à jour la position de la caméra
+      // Update camera position
       _updateCameraPosition(position, _currentBearing);
       
-      // Vérifier si on est arrivé
+      // Check if arrived
       _checkArrival(position);
-    });
-  }
+    },
+    onError: (error) {
+      if (!_disposed) {
+        debugPrint('Position stream error: $error');
+      }
+    },
+  );
+}
 
  void _closeAllSheets() {
-  setState(() {
+  if (_disposed) return;
+  _safeSetState(() {
     _bottomSheetState = BottomSheetState.none;
     // Optionnel: reset d'autres états si nécessaire
     _selectedShop = null;
@@ -188,7 +211,8 @@ void initState() {
 
     // Callback pour le CategoriesBottomSheet
 void _onCategorySelected(Categories? category, Store? store) {
-  setState(() {
+   if (_disposed) return;
+  _safeSetState(() {
     _selectedCategory = category;
     if (store != null) {
       _selectedShop = store;
@@ -207,12 +231,41 @@ void _onCategorySelected(Categories? category, Store? store) {
  
 @override
 void dispose() {
- _mapController.dispose();
-    _searchController.dispose();
-    _positionStream?.cancel();
-    _navigationTimer?.cancel();
-    _searchDebounceTimer?.cancel();
-    super.dispose();
+  debugPrint('[DISPOSE] LocationScreen disposing...');
+  
+  // Set disposed flag first
+  _disposed = true;
+  
+  // Cancel all streams and timers
+  _positionStream?.cancel();
+  _positionStream = null;
+  _navigationTimer?.cancel();
+  _navigationTimer = null;
+  _searchDebounceTimer?.cancel();
+  _searchDebounceTimer = null;
+  
+  // Dispose controller (this will also cancel its streams)
+  controller.dispose();
+  
+  // Dispose other controllers
+  _mapController.dispose();
+  _searchController.dispose();
+  
+  // Clear references
+  _selectedShop = null;
+  _routeInfo = null;
+  _polylinePoints.clear();
+  _searchResults.clear();
+  
+  debugPrint('[DISPOSE] LocationScreen disposed');
+  super.dispose();
+}
+
+// Also add this helper method to safely call setState
+void _safeSetState(VoidCallback fn) {
+  if (mounted && !_disposed) {
+    setState(fn);
+  }
 }
 
 void _handleCategoriesAndPosition(WidgetRef ref) {
@@ -243,11 +296,13 @@ void _handleCategoriesAndPosition(WidgetRef ref) {
   }
 
 void _showCategoriesBottomSheetAuto(List<Categories> categories) {
-  if (_categoriesBottomSheetShown || !mounted) return;
-  
-  setState(() => _categoriesBottomSheetShown = true);
+  if (_categoriesBottomSheetShown || !mounted || _disposed) return;
+
+  _safeSetState(() => _categoriesBottomSheetShown = true);
 }
 void _initiateRouting(Store shop) async {
+  if (_disposed) return;
+
   debugPrint('[ROUTE] Initiating routing to ${shop.nom_enseigne}');
    setState(() {
     _isRouting = true;
@@ -261,9 +316,9 @@ void _initiateRouting(Store shop) async {
       _selectedMode,
     );
 
-    if (!mounted) return;
+    if (_disposed || !mounted) return;
 
-    setState(() {
+    _safeSetState(() {
       _routeInfo = routeInfo;
       _isRouting = false;
       _polylinePoints = routeInfo?['polyline'] ?? []; // Assurez-vous que c'est bien 'polyline'
@@ -285,7 +340,7 @@ void _initiateRouting(Store shop) async {
   } catch (e, stack) {
     debugPrint('[ROUTE ERROR] $e');
     debugPrint(stack.toString());
-    if (mounted) {
+    if (mounted && !_disposed) {
       setState(() => _isRouting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur: ${e.toString()}')),
@@ -336,7 +391,8 @@ void _showArrivalNotification() {
     );
   }
 void _showRouteBottomSheet(Store shop, Map<String, dynamic> routeInfo) {
-  setState(() {
+   if (_disposed) return;
+  _safeSetState(() {
     _selectedShop = shop;
     _routeInfo = routeInfo;
     _bottomSheetState = BottomSheetState.route;
@@ -398,10 +454,11 @@ void _navigateToStoreAndShowDetails(Store store) async {
 }
 
   void _stopNavigation() {
+    if (_disposed) return;
     _positionStream?.cancel();
     _navigationTimer?.cancel();
-    
-    setState(() {
+
+    _safeSetState(() {
       _isNavigating = false;
       _currentBearing = null;
       _lastPosition = null;
@@ -944,9 +1001,9 @@ Widget _buildSearchResults() {
   );
 }
 void _showShopDetails(Store store) {
-  if (!mounted) return;
+  if (!mounted || _disposed) return;
   debugPrint('Updating UI for shop details...');
-  setState(() {
+  _safeSetState(() {
     _selectedShop = store;
     _bottomSheetState = BottomSheetState.shopDetails;
   });

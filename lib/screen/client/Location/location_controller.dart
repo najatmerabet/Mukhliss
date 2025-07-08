@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -16,8 +15,8 @@ class LocationController {
   final WidgetRef ref;
   final BuildContext context;
   final MapController mapController;
-  final Function(Position?) onPositionUpdated;
-  final Function(bool) onLoadingChanged;
+  final Function(Position?)? onPositionUpdated;
+  final Function(bool)? onLoadingChanged;
   final Function(List<LatLng>)? onPolylineUpdated;
   final Function(bool)? onNavigatingUpdated;
   bool get isRouteBottomSheetShowing => _isRouteBottomSheetShowing;
@@ -36,8 +35,7 @@ class LocationController {
   bool isNavigating = false;
   double? currentBearing;
   StreamSubscription<Position>? positionStream;
-
-
+  bool _disposed = false;
 
   LocationController(
     this.ref,
@@ -45,64 +43,93 @@ class LocationController {
     this.mapController,
     this.onPositionUpdated,
     this.onLoadingChanged,
-     this.onPolylineUpdated,
+    this.onPolylineUpdated,
     this.onNavigatingUpdated,
   );
 
+  void dispose() {
+    _disposed = true;
+    positionStream?.cancel();
+    positionStream = null;
+    // Clear all callbacks to prevent memory leaks
+    // Note: We can't null out the callbacks as they're final, 
+    // but we check _disposed before calling them
+  }
+
+  // Helper method to safely call callbacks
+  void _safeCallback(Function? callback, dynamic parameter) {
+    if (!_disposed && callback != null) {
+      callback(parameter);
+    }
+  }
+
   Future<void> getCurrentLocation() async {
+    if (_disposed) return;
     if (!context.mounted) return;
-    onLoadingChanged(true);
+    
+    _safeCallback(onLoadingChanged, true);
     
     try {
       final geolocationService = ref.read(geolocationServiceProvider);
       final position = await geolocationService.determinePosition();
       
-      if (context.mounted) {
-        currentPosition = position; // Update controller's position
-        onPositionUpdated(position);
-        onLoadingChanged(false);
+      // Check if still mounted and not disposed after async operation
+      if (_disposed || !context.mounted) {
+        return;
       }
+      
+      currentPosition = position;
+      _safeCallback(onPositionUpdated, position);
+      _safeCallback(onLoadingChanged, false);
 
-      if (position != null) {
+      if (position != null && !_disposed) {
         mapController.move(
           LatLng(position.latitude, position.longitude),
           17.0,
         );
       }
     } catch (e) {
-      onLoadingChanged(false);
-      if (context.mounted) {
-        debugPrint('Location error: ${e.toString()}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Impossible d\'obtenir votre position: ${e.toString()}'),
-            action: SnackBarAction(
-              label: 'Réessayer',
-              onPressed: getCurrentLocation,
+      if (!_disposed) {
+        _safeCallback(onLoadingChanged, false);
+        
+        if (context.mounted) {
+          debugPrint('Location error: ${e.toString()}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Impossible d\'obtenir votre position: ${e.toString()}'),
+              action: SnackBarAction(
+                label: 'Réessayer',
+                onPressed: () {
+                  if (!_disposed) {
+                    getCurrentLocation();
+                  }
+                },
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
 
- void showRouteBottomSheet() {
+  void showRouteBottomSheet() {
+    if (_disposed) return;
+    
     _isRouteBottomSheetShowing = true;
-    // Notifiez les listeners si nécessaire
-    if (onNavigatingUpdated != null) {
-      onNavigatingUpdated!(true);
-    }
+    _safeCallback(onNavigatingUpdated, true);
   }
 
-Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) async {
+  Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) async {
+    if (_disposed) throw Exception("Controller disposed");
     if (shop == null) throw Exception("No shop selected");
 
     if (currentPosition == null) {
       await getCurrentLocation();
+      if (_disposed) throw Exception("Controller disposed during location fetch");
       if (currentPosition == null) throw Exception("Could not obtain current position");
     }
     
-    onLoadingChanged(true);
+    _safeCallback(onLoadingChanged, true);
     isRouting = true;
     isNavigating = true;
     
@@ -112,23 +139,30 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
       final end = LatLng(shop.latitude, shop.longitude);
 
       final routeCoordinates = await routingService.getRouteCoordinates(start, end, mode);
+      
+      // Check if disposed after async operation
+      if (_disposed) throw Exception("Controller disposed during route calculation");
+      
       final routeSteps = await routingService.getRouteSteps(start, end, mode);
+      
+      if (_disposed) throw Exception("Controller disposed during route calculation");
+      
       final routeInfo = await routingService.getRouteInfo(start, end, mode);
 
-      // Mise à jour des états
+      if (_disposed) throw Exception("Controller disposed during route calculation");
+
+      // Update states only if not disposed
       polylinePoints = routeCoordinates;
       this.routeInfo = routeInfo;
       selectedShop = shop;
       selectedMode = mode;
       
-      // Force l'affichage du bottom sheet
+      // Force display of bottom sheet
       showRouteBottomSheet();
       
-      if (onPolylineUpdated != null) {
-        onPolylineUpdated!(routeCoordinates);
-      }
-
-      onLoadingChanged(false);
+      _safeCallback(onPolylineUpdated, routeCoordinates);
+      _safeCallback(onLoadingChanged, false);
+      
       isRouting = false;
 
       return {
@@ -137,16 +171,20 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
         'steps': routeSteps,
       };
     } catch (e) {
-      _isRouteBottomSheetShowing = false;
-      onLoadingChanged(false);
-      isRouting = false;
-      isNavigating = false;
+      if (!_disposed) {
+        _isRouteBottomSheetShowing = false;
+        _safeCallback(onLoadingChanged, false);
+        isRouting = false;
+        isNavigating = false;
+      }
       rethrow;
     }
   }
 
   void fitMapToRoute(List<LatLng> points) {
-      print('[FIT] Fitting map to route with ${points.length} points');
+    if (_disposed) return;
+    
+    print('[FIT] Fitting map to route with ${points.length} points');
     if (points.isEmpty) return;
 
     double minLat = points.first.latitude;
@@ -163,27 +201,30 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
 
     final bounds = LatLngBounds.fromPoints(points);
     
-       mapController.fitCamera(
-           CameraFit.bounds(
-           bounds: bounds,
-           padding: const EdgeInsets.all(50.0),
-         ),
-        );
+    mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(50.0),
+      ),
+    );
   }
 
   void clearRoute() {
+    if (_disposed) return;
+    
     polylinePoints = [];
     selectedShop = null;
     routeInfo = null;
     showTransportModes = false;
     _isRouteBottomSheetShowing = false;
     stopNavigation();
-    if (onPolylineUpdated != null) {
-    onPolylineUpdated!([]);
-  }
+    
+    _safeCallback(onPolylineUpdated, <LatLng>[]);
   }
 
   void startPositionUpdates() {
+    if (_disposed) return;
+    
     const locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 5,
@@ -193,14 +234,21 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
 
     positionStream = Geolocator.getPositionStream(
       locationSettings: locationSettings,
-    ).listen((Position position) {
-      if (!isNavigating) return;
-      handlePositionUpdate(position);
-    });
+    ).listen(
+      (Position position) {
+        if (_disposed || !isNavigating) return;
+        handlePositionUpdate(position);
+      },
+      onError: (error) {
+        if (!_disposed) {
+          debugPrint('Position stream error: $error');
+        }
+      },
+    );
   }
 
   void handlePositionUpdate(Position newPosition) {
-    if (selectedShop == null) return;
+    if (_disposed || !isNavigating || selectedShop == null) return;
 
     final bearingToShop = Geolocator.bearingBetween(
       newPosition.latitude,
@@ -217,6 +265,8 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
   }
 
   void updateCameraPosition(Position position, double? bearing) {
+    if (_disposed) return;
+   
     final newCenter = LatLng(position.latitude, position.longitude);
     
     if (bearing != null) {
@@ -228,6 +278,7 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
   }
 
   void checkArrival(Position position) {
+    if (_disposed) return;
     if (selectedShop == null) return;
 
     final distance = Geolocator.distanceBetween(
@@ -244,7 +295,7 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
   }
 
   void showArrivalNotification() {
-    if (!context.mounted) return;
+    if (_disposed || !context.mounted) return;
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -255,7 +306,10 @@ Future<Map<String, dynamic>> calculateRoute(Store? shop, TransportMode mode) asy
   }
 
   void stopNavigation() {
+    if (_disposed) return;
+
     positionStream?.cancel();
+    positionStream = null;
     isNavigating = false;
     currentBearing = null;
   }

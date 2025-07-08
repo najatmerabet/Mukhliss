@@ -80,10 +80,18 @@
              "velo":"دراجة هوائية",
               "vers":"مسار نحو",
                "duree":"مدة",
-               "mode":"Mode",
+               "mode":"نمط",
                 "recenter":"إعادة التمركز",
                  "chercher":"...ابحث عن متجر",
                   "calcule":"...حساب",
-                   "connectionRequired": "يجب أن تكون مسجلاً للدخول لرؤية نقاطك"
+                   "connectionRequired": "يجب أن تكون مسجلاً للدخول لرؤية نقاطك",
+                     "offredisponible":"العروض المتاحة",
+                     "navigation":"تشغيل التوجيه",
+                       "detailsiterinaire":"تفاصيل المسار",
+                        "offremagasin":"عرض",
+                        "depensez":"أنفق",
+                         "pointsagagner":"نقاط للفوز",
+                          "nooffre":"لا توجد عروض متاحة",
+                          "arrivee":"لقد وصلت الى"
 
 }

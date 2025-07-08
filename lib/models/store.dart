@@ -1,7 +1,7 @@
 
 
 
-import 'package:latlong2/latlong.dart';
+
 
 class Store{
 
@@ -15,6 +15,7 @@ final String id;
   final String description ;
    final Map<String, dynamic> geom;
   final int Categorieid;
+  final String? logoUrl; // Ajout de l'URL du logo
 
   const Store({
     required this.id,
@@ -27,6 +28,7 @@ final String id;
     required this.description,
     required this.geom,
     required this.Categorieid,
+    this.logoUrl, // Initialisation de l'URL du logo
   });
 
    double get latitude {
@@ -62,6 +64,7 @@ final String id;
       description: json['description'],
       Categorieid: json['Categorieid'],
       geom: json['geom'],
+      logoUrl: json['logoUrl'], // Ajout de l'initialisation de l'URL du logo
     );
   }
 

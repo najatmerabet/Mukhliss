@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mukhliss/screen/client/location.dart';
+import 'package:mukhliss/screen/client/Location/location.dart';
 import 'package:mukhliss/screen/client/offres.dart';
 import 'package:mukhliss/screen/client/profile_new.dart';
 import 'package:mukhliss/screen/client/qr_code_screen.dart';

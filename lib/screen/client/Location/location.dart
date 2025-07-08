@@ -66,8 +66,8 @@ Position? _lastPosition;
 double? _currentBearing;
 // StreamSubscription<Position>? _positionStream;
 bool _isNavigating = false;
-// Pour stocker les étapes de l'itinéraire
-// Index de l'étape actuelle
+List<LatLng> _routeSteps = []; // Pour stocker les étapes de l'itinéraire
+int _currentStepIndex = 0; // Index de l'étape actuelle
 Timer? _searchDebounceTimer;
 StreamSubscription<Position>? _positionStream;
   Timer? _navigationTimer;
@@ -414,7 +414,11 @@ void _navigateToStoreAndShowDetails(Store store) async {
      final themeMode = ref.watch(themeProvider);
       final isDarkMode = themeMode == AppThemeMode.light;
 
-   
+    print('[DEBUG] RouteBottomSheet conditions: '
+      'isRouteBottomSheetShowing: ${controller.isRouteBottomSheetShowing}, '
+      'selectedShop: ${controller.selectedShop != null}, '
+      'routeInfo: ${controller.routeInfo != null}, '
+      'isNavigating: $_isNavigating');
  
     storesAsync.whenData((_) {
     if (mounted) {

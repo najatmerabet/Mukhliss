@@ -43,47 +43,7 @@ class MyOffersScreen extends ConsumerWidget  {
               child:Column(
   crossAxisAlignment: CrossAxisAlignment.start,
   children: [
-    // Section des cartes statistiques FIXES (remplacement du SingleChildScrollView)
-    Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        // Première carte
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: rewardsAsync.when(
-              loading: () => _buildLoadingStatCard(),
-              error: (error, _) => _buildErrorStatCard(error),
-              data: (rewards) => _buildStatCardPulse(
-                rewards.length.toString(),
-               l10n?.nouvelleoffre ?? 'Nouvelles Offres',
-                Icons.card_giftcard,
-                AppColors.primary,
-              ),
-            ),
-          ),
-        ),
-        
-        // Deuxième carte
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(left: 8),
-            child: clientoffreAsync.when(
-              loading: () => _buildLoadingStatCard(),
-              error: (error, _) => _buildErrorStatCard(error),
-              data: (clientOffres) => _buildStatCardPulse(
-                clientOffres.length.toString(),
-               l10n?.offrerecus ?? 'Offres Reçues',
-                Icons.local_offer,
-                AppColors.secondary,
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
     
-    const SizedBox(height: 24),
     
     // Le reste du contenu (scrollable via le parent CustomScrollView)
     rewardsAsync.when(
@@ -332,16 +292,20 @@ Widget _buildStatCardPulse(String value, String label, IconData icon, Color colo
 Widget _buildOfferCard(Rewards offer, BuildContext context , WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
      final themeMode = ref.watch(themeProvider);
-
+    final isDarkMode = themeMode == AppThemeMode.light;
   return Container(
     margin: const EdgeInsets.only(bottom: 24),
     decoration: BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Colors.white,
-          Colors.grey.shade50,
+        colors: isDarkMode ? [
+          AppColors.darkSurface,
+          AppColors.darkGrey50,
+          Colors.blue.shade50.withOpacity(0.3),
+        ] : [
+          AppColors.surface,
+           Colors.grey.shade50,
           Colors.blue.shade50.withOpacity(0.3),
         ],
       ),

@@ -46,7 +46,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-             colors: isDarkMode ? AppColors.darkGradient :AppColors.lightGradient,
+             colors: isDarkMode ? AppColors.darkGradientscreen :AppColors.lightGradient,
           ),
         ),
         child: Center(

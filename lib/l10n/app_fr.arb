@@ -179,5 +179,11 @@
    "contentstepfor":"Nous protégeons vos données par :\n - Chiffrement AES-256\n- Authentification à deux facteurs\n - Audits de sécurité réguliers\n - Stockage sécurisé conforme RGPD",
    "cinquemestep":"5. Vos droits",
    "contentstepfive":"Vous avez le droit de :\n - Accéder à vos données\n- Demander leur correction\n  - Supprimer votre compte\n - Exporter vos données\n - Vous opposer au traitement\n - Contactez-nous à mukhlissfidelite@gmail.com pour toute demande.",
-   "compris":"J'ai compris"
+   "compris":"J'ai compris",
+   "deconnextion":"Déconnexion",
+   "etresur":"Êtes-vous sûr de vouloir vous déconnecter ?",
+   "exclusifs":"EXCLUSIF",
+   "pointsrequis":"POINTS REQUIS",
+    "benificier":"À bénéficier",
+    "points":"pts"
 }

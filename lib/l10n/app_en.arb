@@ -177,9 +177,15 @@
     "contentstepthre":"Your data may be shared with:\n - Partner stores where you use your card\n  -  Payment providers\n  -Nous ne vendons jamais vos données personnelles.",
    "quatriemestep":"4. Data security",
    "contentstepfor":"We protect your data with: :\n -AES-256 encryption\n-Two-factor authentication\n - Regular security audits\n - GDPR-compliant secure storage",
-   "cinquemestep":"5. Your rights",
-    "contentstepfive":"You have the right to:\n - Access your data\n- Request its correction\n  - Delete your account\n - Export your data\n - Object to its processing\n -Contact us at  mukhlissfidelite@gmail.com  for any requests.",
-    "compris":"I understand"
+  "cinquemestep":"5. Your rights",
+ "contentstepfive":"You have the right to:\n - Access your data\n- Request its correction\n  - Delete your account\n - Export your data\n - Object to its processing\n -Contact us at  mukhlissfidelite@gmail.com  for any requests.",
+ "compris":"I understand",
+ "deconnextion":"Disconnect",
+  "etresur":"Are you sure you want to log out?",
+ "exclusifs":"EXCLUSIVE",
+  "pointsrequis":"REQUIRED POINTS",
+   "benificier":"To benefit",
+    "points":"pts"
 }
 
 

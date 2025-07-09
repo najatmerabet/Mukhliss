@@ -10,6 +10,7 @@ import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location_controller.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/services/osrm_service.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/category_helpers.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
 import 'package:mukhliss/providers/categories_provider.dart'; // Ajout du provider des catégories

@@ -170,8 +170,8 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                 children: [
                   const SizedBox(height: 10),
                   _buildProfileSection(),
-                  const SizedBox(height: 30),
-                  _buildActionButtons(),
+                  // const SizedBox(height: 30),
+                  //  _buildActionButtons(),
                   const SizedBox(height: 40),
                   _buildMenuItems(),
                 ],
@@ -214,30 +214,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
               ),
               child: const Icon(Icons.person, color: Colors.white, size: 60),
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-            ),
+           
           ],
         ),
         const SizedBox(height: 20),
@@ -354,7 +331,12 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     return Column(
       children: [
     
-     
+               _buildMenuItem(
+          icon: Icons.person_outline,
+
+          title:l10n?.info ?? 'Informations ',
+          onTap: () => _showUserInfo(),
+        ),
         _buildMenuItem(
           icon: Icons.settings_outlined,
 
@@ -918,19 +900,6 @@ void _showAbout() {
                           isContact: true,
                           isDarkMode: isDarkMode,
                         ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        _buildInfoCard(
-                          icon: Icons.code_outlined,
-                          title: l10n?.technologies ?? "Technologies",
-                          content: "Flutter • Supabase • Dart",
-                          isDarkMode: isDarkMode,
-                        ),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Footer décoratif
                   
                       ],
                     ),
@@ -1085,33 +1054,37 @@ Widget _buildInfoCard({
 // Widget helper pour les cartes d'information
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Row(
+          title:  Row(
             children: [
-              Icon(Icons.logout, color: Colors.red),
+              Icon(Icons.logout, color: AppColors.error),
               SizedBox(width: 12),
               Text(
-                'Déconnexion',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+               l10n?.deconection ??  'Déconnexion',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18 ,color: isDarkMode ? AppColors.surface : AppColors.darkSurface),
               ),
             ],
           ),
-          content: const Text(
-            'Êtes-vous sûr de vouloir vous déconnecter ?',
-            style: TextStyle(fontSize: 16),
+          content:  Text(
+          l10n?.etresur ??  'Êtes-vous sûr de vouloir vous déconnecter ?',
+            style: TextStyle(fontSize: 16 , color: isDarkMode ? AppColors.surface : AppColors.darkSurface),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Annuler',
-                style: TextStyle(color: Colors.grey),
+              child:  Text(
+               l10n?.cancel ?? 'Annuler',
+                style: TextStyle(color: AppColors.surface),
               ),
             ),
             ElevatedButton(
@@ -1136,8 +1109,8 @@ Widget _buildInfoCard({
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'Déconnecter',
+              child:  Text(
+               l10n?.deconection ?? 'Déconnecter',
                 style: TextStyle(color: Colors.white),
               ),
             ),

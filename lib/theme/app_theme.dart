@@ -40,6 +40,7 @@ static const Color lightGrey50 = Color(0xFFFAFAFA);
   static const Color darkWhite = Color.fromARGB(255, 247, 250, 252); // Gris très clair pour dark
   static const Color darkGrey50 = Color.fromARGB(255, 191, 194, 196); // Gris plus foncé pour dark
   static const Color darkPurpleDark = Color.fromARGB(255, 19, 15, 78);
+  static const Color amber= Colors.amber;
 
     // Gradients
   static const List<Color> lightGradient = [
@@ -52,7 +53,16 @@ AppColors.surface
    Color.fromARGB(255, 19, 15, 78),
 
   ];
+
+    static const List<Color> darkGradientscreen = [
+   Color.fromARGB(255, 63, 45, 221),
+     Color.fromARGB(255, 141, 120, 248),
+
+  ];
+
    // Thème clair
+    //  Color.fromARGB(255, 63, 45, 221),
+    // Color.fromARGB(255, 141, 120, 248),
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,

@@ -15,20 +15,21 @@ Future<List<ClientOffre>> getClientOffres(String clientId) async {
         .from('reward_claims')
         .select('''
           *,
-          rewards:rewards_id (*, magasin:magasin_id (*))
+          rewards:reward_id (*, magasin:magasin_id (*))
         ''')
         .eq('client_id', clientId);
     if (response.isEmpty) {
       return [];
     }
-
+print("response des recompence reclamation"+response.toString());
     return (response as List).map((json) {
       return ClientOffre(
         client_id: json['client_id'] as String,
         reward: Rewards.fromJson(json['rewards']), // Notez 'Reward' au lieu de 'Rewards'
-        created_at: DateTime.parse(json['created_at'] as String),
+        claimed_at: DateTime.parse(json['claimed_at'] as String)
       );
     }).toList();
+    
   } catch (e) {
     print('Error fetching client offers: $e');
     throw Exception('Failed to load client offers: $e');

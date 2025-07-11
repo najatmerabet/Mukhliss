@@ -826,7 +826,7 @@ Widget _buildOfferCardutilise(ClientOffre offer, BuildContext context) {
             left: 28,
             right: 28,
             bottom: 28,
-            top: _isNewOffer(offer.created_at) ? 60 : 28,
+            top: _isNewOffer(offer.claimed_at) ? 60 : 28,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1085,7 +1085,7 @@ Widget _buildOfferCardutilise(ClientOffre offer, BuildContext context) {
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-  DateFormat('dd/MM/yyyy').format(offer.created_at), // Format jour/mois/année
+  DateFormat('dd/MM/yyyy').format(offer.claimed_at), // Format jour/mois/année
   style: TextStyle(
     color: AppColors.surface,
     fontSize: 10,

@@ -152,19 +152,25 @@ print('Is loading: ${rewardsAsync.isLoading}');
           child: CustomScrollView(
             controller: scrollController,
             slivers: [
-               SliverToBoxAdapter(
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-            ),
+             SliverToBoxAdapter(
+  child: GestureDetector(
+    behavior: HitTestBehavior.opaque, // Important pour que toute la zone soit cliquable
+    onTap: widget.closeCategoriesSheet,
+    child: Container(
+      width: double.infinity, // Prend toute la largeur
+      padding: const EdgeInsets.only(top: 12, bottom: 12), // Zone de touche plus grande
+      alignment: Alignment.center,
+      child: Container(
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    ),
+  ),
+),
              SliverToBoxAdapter(
                child: Padding(
                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
@@ -306,57 +312,60 @@ print('Is loading: ${rewardsAsync.isLoading}');
       const SizedBox(height: 28),
       
       // Grille d'informations avec design moderne
- LayoutBuilder(
-  builder: (context, constraints) {
-    return SizedBox(
-      height: 90, // Hauteur fixe pour la ligne
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+// Dans votre méthode build, remplacez la partie concernée par :
+
+// Grille d'informations avec design moderne
+Container(
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // Première ligne - Adresse
+      _buildInfoRow(
+        icon: Icons.location_on_rounded,
+        iconColor: Colors.blue,
+        title: l10n?.address ?? 'Adresse',
+        value: widget.shop!.adresse.split(',').first,
+        isDarkMode: isDarkMode,
+      ),
+      
+      const SizedBox(height: 12),
+      
+      // Deuxième ligne - Distance et Points
+      Row(
         children: [
-          _buildModernInfoCard(
-            icon: Icons.location_on_rounded,
-            title: l10n?.address ?? 'Adresse',
-            value: widget.shop!.adresse,
-            gradient:  AppColors.lightGradient,
-            isDarkMode: isDarkMode,
-          ),
-          const SizedBox(width: 8),
-          _buildModernInfoCard(
-            icon: Icons.near_me_rounded,
-            title: l10n?.distance ??'Distance',
-            value: distance < 1000 
-                ? '${distance.toStringAsFixed(0)} m' 
-                : '${(distance / 1000).toStringAsFixed(1)} km',
-            gradient:AppColors.lightGradient,
-            isDarkMode: isDarkMode,
-          ),
-          const SizedBox(width: 8),
-          pointsAsync.when(
-            data: (clientMagazin) => _buildModernInfoCard(
-              icon: Icons.loyalty_rounded,
-              title: 'Points',
-              value: '${clientMagazin?.cumulpoint ?? 0}',
-              gradient: AppColors.lightGradient,
+          Expanded(
+            child: _buildInfoRow(
+              icon: Icons.near_me_rounded,
+              iconColor: Colors.green,
+              title: l10n?.distance ?? 'Distance',
+              value: distance < 1000 
+                  ? '${distance.toStringAsFixed(0)} m' 
+                  : '${(distance / 1000).toStringAsFixed(1)} km',
               isDarkMode: isDarkMode,
             ),
-            loading: () => _buildLoadingInfoCard(isDarkMode),
-            error: (error, stack) => _buildModernInfoCard(
-              icon: Icons.error_outline_rounded,
-              title: 'Points',
-              value: 'Erreur',
-              gradient: [
-                Colors.red.shade400.withOpacity(0.8),
-                Colors.red.shade600.withOpacity(0.9),
-              ],
-              isDarkMode: isDarkMode,
+          ),
+          
+          const SizedBox(width: 16),
+          
+          Expanded(
+            child: pointsAsync.when(
+              data: (clientMagazin) => _buildInfoRow(
+                icon: Icons.loyalty_rounded,
+                iconColor: Colors.amber,
+                title: 'Points',
+                value: '${clientMagazin?.cumulpoint ?? 0}',
+                isDarkMode: isDarkMode,
+              ),
+              loading: () => _buildLoadingRow(isDarkMode),
+              error: (_, __) => _buildErrorRow(isDarkMode),
             ),
           ),
         ],
       ),
-    );
-  },
-)
+    ],
+  ),
+),
     ],
   ),
 
@@ -529,158 +538,106 @@ rewardsAsync.when(
     );
   }
 
-  // Widget pour les cartes d'information modernes
-Widget _buildModernInfoCard({
+Widget _buildInfoRow({
   required IconData icon,
+  required Color iconColor,
   required String title,
   required String value,
-  required List<Color> gradient,
   required bool isDarkMode,
 }) {
-  return ConstrainedBox(
-    constraints: BoxConstraints(
-      minHeight: 80,  // Hauteur réduite
-      minWidth: 110,  // Largeur réduite
-      maxWidth: 120,  // Largeur maximale
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+      borderRadius: BorderRadius.circular(12),
     ),
-    child: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: gradient,
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          color: iconColor,
+          size: 20,
         ),
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: gradient.first.withOpacity(0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withOpacity(0.1),
-              Colors.transparent,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ],
           ),
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 6,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  color:AppColors.darkSurface,
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color:AppColors.darkSurface,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      height: 1.1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Flexible(
-              child: Text(
-                value,
-                style: const TextStyle(
-                  color: AppColors.darkSurface,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     ),
   );
 }
 
-// Widget pour l'état de chargement des cartes d'info
-Widget _buildLoadingInfoCard(bool isDarkMode) {
+Widget _buildLoadingRow(bool isDarkMode) {
   return Container(
+    padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.grey.shade400.withOpacity(0.6),
-          Colors.grey.shade600.withOpacity(0.8),
-        ],
-      ),
-      borderRadius: BorderRadius.circular(16),
+      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+      borderRadius: BorderRadius.circular(12),
     ),
-    child: Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.3),
-      highlightColor: Colors.white.withOpacity(0.1),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 50,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: 70,
-              height: 14,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(7),
-              ),
-            ),
-          ],
+    child: Row(
+      children: [
+        const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
-      ),
+        const SizedBox(width: 12),
+        Text(
+          'Chargement...',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildErrorRow(bool isDarkMode) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          Icons.error_outline,
+          color: Colors.red,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'Erreur',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+      ],
     ),
   );
 }

@@ -59,17 +59,17 @@ class RouteBottomSheet extends ConsumerWidget {
           child: Column(
             children: [
               // Handle avec couleur d'accent
-              Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 8),
-                width: 60,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
+              // Container(
+              //   margin: const EdgeInsets.only(top: 8, bottom: 8),
+              //   width: 60,
+              //   height: 6,
+              //   decoration: BoxDecoration(
+              //     color: isDarkMode
+              //                 ? Colors.grey.shade700
+              //                 : Colors.grey.shade400,
+              //     borderRadius: BorderRadius.circular(3),
+              //   ),
+              // ),
               
               // Main content
               Expanded(

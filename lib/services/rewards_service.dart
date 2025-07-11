@@ -49,6 +49,8 @@ Future<List<Rewards>> getRecentRewards() async {
       .gte('created_at', oneWeekAgo.toIso8601String())
       .order('created_at', ascending: false);
 
+
+      print("les recompence"+response.toString());
     if (response == null || response.isEmpty) {
       return [];
     }

@@ -445,6 +445,25 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Center(
+                          child: GestureDetector(
+            behavior: HitTestBehavior.opaque, // Important pour que toute la zone soit cliquable
+            onTap: Navigator.of(context).pop,
+              child: Container(
+               width: double.infinity, // Prend toute la largeur
+            padding: const EdgeInsets.only(top: 12, bottom: 12), // Zone de touche plus grande
+      alignment: Alignment.center,
+      child: Container(
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    ),
+  ),
+                        ),
                         // Header avec boutons
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -776,51 +795,24 @@ void _showAbout() {
                           child: Column(
                             children: [
                               Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: isDarkMode
-                                        ? [
-                                            Color(0xFF4A90E2),
-                                            Color(0xFF357ABD),
-                                            Color(0xFF2E5B8A),
-                                          ]
-                                        : [
-                                            Color(0xFF6C5CE7),
-                                            Color(0xFF5A4FCF),
-                                            Color(0xFF4834D4),
-                                          ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDarkMode
-                                          ? Colors.black.withOpacity(0.3)
-                                          : Colors.grey.withOpacity(0.3),
-                                      blurRadius: 15,
-                                      offset: Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(30),
-                                  child: Image.asset(
-                                    'images/withoutbg.png',
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.star_rounded,
-                                        size: 60,
-                                        color: Colors.white,
-                                      );
-                                    },
-                                  ),
-                                ),
+                                width: 220,
+                                height: 220,
+                               
+                               child: Image.asset(
+  isDarkMode ? 'images/withoutbackgroundwhite.png' : 'images/withoutbg.png',
+  width: 240,
+  height: 240,
+  fit: BoxFit.cover,
+  frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+    if (wasSynchronouslyLoaded) return child;
+    return AnimatedOpacity(
+      child: child,
+      opacity: frame == null ? 0 : 1,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  },
+),
                               ),
                               const SizedBox(height: 24),
                               Text(

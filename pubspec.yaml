@@ -58,6 +58,7 @@ flutter:
     - images/google_logo.png
     - images/facbook.jpeg
     - images/offer_pattern.png
+    - images/withoutbackgroundwhite.png
 
   # Fonts configuration
   fonts:

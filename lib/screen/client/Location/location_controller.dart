@@ -51,12 +51,8 @@ class LocationController {
     _disposed = true;
     positionStream?.cancel();
     positionStream = null;
-    // Clear all callbacks to prevent memory leaks
-    // Note: We can't null out the callbacks as they're final, 
-    // but we check _disposed before calling them
   }
 
-  // Helper method to safely call callbacks
   void _safeCallback(Function? callback, dynamic parameter) {
     if (!_disposed && callback != null) {
       callback(parameter);
@@ -73,7 +69,6 @@ class LocationController {
       final geolocationService = ref.read(geolocationServiceProvider);
       final position = await geolocationService.determinePosition();
       
-      // Check if still mounted and not disposed after async operation
       if (_disposed || !context.mounted) {
         return;
       }
@@ -82,7 +77,7 @@ class LocationController {
       _safeCallback(onPositionUpdated, position);
       _safeCallback(onLoadingChanged, false);
 
-      if (position != null && !_disposed) {
+      if (!_disposed) {
         mapController.move(
           LatLng(position.latitude, position.longitude),
           17.0,
@@ -151,13 +146,11 @@ class LocationController {
 
       if (_disposed) throw Exception("Controller disposed during route calculation");
 
-      // Update states only if not disposed
       polylinePoints = routeCoordinates;
       this.routeInfo = routeInfo;
       selectedShop = shop;
       selectedMode = mode;
       
-      // Force display of bottom sheet
       showRouteBottomSheet();
       
       _safeCallback(onPolylineUpdated, routeCoordinates);
@@ -270,10 +263,10 @@ class LocationController {
     final newCenter = LatLng(position.latitude, position.longitude);
     
     if (bearing != null) {
-      mapController.move(newCenter, mapController.camera.zoom ?? 17.0);
+      mapController.move(newCenter, mapController.camera.zoom);
       mapController.rotate(bearing);
     } else {
-      mapController.move(newCenter, mapController.camera.zoom ?? 17.0);
+      mapController.move(newCenter, mapController.camera.zoom);
     }
   }
 

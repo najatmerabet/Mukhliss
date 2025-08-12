@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/auth/Otp_Verification_page.dart';
 import 'package:mukhliss/theme/app_theme.dart';
@@ -12,7 +11,6 @@ import 'package:mukhliss/utils/validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
-import 'package:mukhliss/theme/app_theme.dart';
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 

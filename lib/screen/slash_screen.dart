@@ -54,7 +54,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(isDarkMode.toString()),
+              // Text(isDarkMode.toString()),
               Text(
                 l10n?.hello ?? 'Bienvenue sur MUKHLISS',
                 style: TextStyle(

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/services/osrm_service.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:geolocator/geolocator.dart';
 

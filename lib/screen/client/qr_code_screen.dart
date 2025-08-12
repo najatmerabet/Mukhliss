@@ -1,7 +1,8 @@
 // lib/screens/qr_code_screen.dart
 import 'package:flutter/material.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/services/qrcode_service.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

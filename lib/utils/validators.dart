@@ -1,6 +1,7 @@
 // utils/validators.dart
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 
 class Validators {
   static String? validateEmail(String? value, BuildContext context) {

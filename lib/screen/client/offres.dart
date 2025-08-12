@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/models/clientoffre.dart';
 import 'package:mukhliss/models/rewards.dart';
@@ -12,7 +13,7 @@ import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 
 class MyOffersScreen extends ConsumerWidget  {
    MyOffersScreen({Key? key}) : super(key: key);

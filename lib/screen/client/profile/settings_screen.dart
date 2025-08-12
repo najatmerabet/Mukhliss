@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/screen/client/profile/devices_screen.dart';
@@ -12,7 +13,7 @@ import 'package:mukhliss/theme/app_theme.dart';
 
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/providers/theme_provider.dart';
 
 import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
@@ -327,7 +328,7 @@ void _showPrivacyPolicy(BuildContext context) {
                 '- Supprimer votre compte\n'
                 '- Exporter vos données\n'
                 '- Vous opposer au traitement\n\n'
-                'Contactez-nous à privacy@mukhliss.com pour toute demande.',
+                'Contactez-nous à mukhlissfidelite@gmail.com pour toute demande.',
             ),
 
             const SizedBox(height: 24),

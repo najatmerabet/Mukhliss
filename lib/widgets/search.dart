@@ -6,13 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/category_helpers.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class SearchWidget extends ConsumerStatefulWidget {
   final List<Store> initialStores;
   final Position? currentPosition;
@@ -73,8 +74,8 @@ void _searchStores(String query) {
     if (!mounted) return;
     
     final results = widget.initialStores.where((store) {
-      return store.nom_enseigne.toLowerCase().contains(query.toLowerCase()) ||
-          store.adresse.toLowerCase().contains(query.toLowerCase());
+      return (store.nom_enseigne != null && store.nom_enseigne!.toLowerCase().contains(query.toLowerCase())) ||
+          (store.adresse != null && store.adresse!.toLowerCase().contains(query.toLowerCase()));
     }).toList();
 
     setState(() {
@@ -225,7 +226,7 @@ Widget _buildLoader() {
         ),
       ),
       title: Text(
-        store.nom_enseigne,
+        store.nom_enseigne ?? '',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
@@ -235,7 +236,7 @@ Widget _buildLoader() {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            store.adresse,
+            store.adresse ?? '',
             style: TextStyle(color: isDarkMode ? AppColors.surface : AppColors.darkSurface),
           ),
           const SizedBox(height: 4),

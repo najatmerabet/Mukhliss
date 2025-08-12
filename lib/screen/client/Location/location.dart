@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
@@ -23,7 +24,7 @@ import 'package:mukhliss/widgets/buttons/route_bottom_sheet.dart';
 import 'package:mukhliss/widgets/buttons/ShopDetailsBottomSheet.dart';
 import 'package:mukhliss/widgets/direction_arrow_widget.dart';
 import 'package:mukhliss/widgets/search.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 enum BottomSheetState {
   none,
   categories,
@@ -297,8 +298,12 @@ void _handleCategoriesAndPosition(WidgetRef ref) {
 
 void _showCategoriesBottomSheetAuto(List<Categories> categories) {
   if (_categoriesBottomSheetShown || !mounted || _disposed) return;
-
-  _safeSetState(() => _categoriesBottomSheetShown = true);
+debugPrint('[DEBUG] Attempting to show categories bottom sheet');
+  _safeSetState(() {
+    _categoriesBottomSheetShown = true;
+    _bottomSheetState = BottomSheetState.categories; // AJOUT IMPORTANT
+  });
+   debugPrint('[DEBUG] Categories bottom sheet state updated: $_categoriesBottomSheetShown');
 }
 void _initiateRouting(Store shop) async {
   if (_disposed) return;
@@ -732,17 +737,18 @@ if (_isNavigating && _selectedShop != null && _currentPosition != null)
     ),
   ),
           // Categories BottomSheet
-        if (_categoriesBottomSheetShown && !_showTransportModes)
-      Positioned(
-        child:  CategoriesBottomSheet(
-    navigatorKey: navigatorKey,
-  initialCategory: _selectedCategory,
-  currentPosition: _currentPosition,
-  mapController: _mapController,
-  onStoreSelected: _handleStoreSelection,
-  onCategorySelected: _onCategorySelected,
-  onClose: _closeAllSheets,
-),),
+        if (_bottomSheetState == BottomSheetState.categories && _currentPosition != null)
+  Positioned(
+            child: CategoriesBottomSheet(
+              navigatorKey: navigatorKey,
+              initialCategory: _selectedCategory,
+              currentPosition: _currentPosition,
+              mapController: _mapController,
+              onStoreSelected: _handleStoreSelection,
+              onCategorySelected: _onCategorySelected,
+              onClose: _closeAllSheets,
+            ),
+          ),
    if (_bottomSheetState == BottomSheetState.shopDetails && _selectedShop != null)
              ShopDetailsBottomSheet(
               navigatorKey: navigatorKey,
@@ -969,8 +975,8 @@ Widget _buildSearchResults() {
                 CategoryHelpers.getCategoryName(ref, store.Categorieid),
               ),
             ),
-            title: Text(store.nom_enseigne),
-            subtitle: Text(store.adresse),
+            title: Text(store?.nom_enseigne ?? ''),
+            subtitle: Text(store?.adresse ?? ''),
             trailing: Text(
               distance < 1000
                   ? '${distance.toStringAsFixed(0)} m'

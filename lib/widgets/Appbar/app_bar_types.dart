@@ -1,6 +1,7 @@
 // lib/widgets/common/app_bar_types.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
+
 import 'package:mukhliss/widgets/Appbar/custom_sliver_app_bar.dart';
 
 class AppBarTypes {

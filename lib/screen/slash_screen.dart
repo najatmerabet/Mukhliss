@@ -1,8 +1,9 @@
 // splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/screen/auth/login_page.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 

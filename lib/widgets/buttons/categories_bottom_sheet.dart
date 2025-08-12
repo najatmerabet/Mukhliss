@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/models/categories.dart';
 import 'package:mukhliss/models/offers.dart';
 import 'package:mukhliss/models/store.dart';
@@ -13,7 +14,7 @@ import 'package:mukhliss/providers/clientmagazin_provider.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
@@ -528,7 +529,7 @@ Widget _buildStoreItem({ required BuildContext context,
         children: [
           // Nom de l'enseigne
           Text(
-            store.nom_enseigne,
+            store.nom_enseigne ?? '',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -552,7 +553,7 @@ Widget _buildStoreItem({ required BuildContext context,
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  store.adresse,
+                  store.adresse ?? '',
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? AppColors.surface : AppColors.textPrimary,

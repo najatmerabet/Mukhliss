@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/routes/app_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
  // Assurez-vous d'importer votre router
 
 class ClientHome extends StatefulWidget {

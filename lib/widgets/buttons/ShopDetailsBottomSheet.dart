@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 
 import 'package:mukhliss/models/categories.dart';
@@ -23,7 +24,7 @@ import 'package:mukhliss/theme/app_theme.dart';
 
 import 'package:mukhliss/utils/category_helpers.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:tuple/tuple.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -286,7 +287,7 @@ print('Is loading: ${rewardsAsync.isLoading}');
                 
                 // Nom de l'enseigne avec effet
                 Text(
-                  widget.shop!.nom_enseigne,
+                  widget.shop!.nom_enseigne ?? '',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
@@ -325,7 +326,7 @@ Container(
         icon: Icons.location_on_rounded,
         iconColor: Colors.blue,
         title: l10n?.address ?? 'Adresse',
-        value: widget.shop!.adresse.split(',').first,
+        value: widget.shop!.adresse != null ? widget.shop!.adresse!.split(',').first : '',
         isDarkMode: isDarkMode,
       ),
       

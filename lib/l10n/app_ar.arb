@@ -183,7 +183,20 @@
     "exclusifs":"حصري ",
      "pointsrequis":"النقاط المطلوبة",
      "benificier":"للاستفادة ",
-      "points":"نقــاط "
+      "points":"نقــاط ",
+  "ofline":"وضع عدم الاتصال",
+"noloadqrcode":"تعذر تحميل رمز الاستجابة السريعة",
+  "retry":"إعادة المحاولة",
+    "pasconnexioninternet":"لا يوجد اتصال بالإنترنت",
+  "veuillezvzrifier":"يرجى التحقق من الاتصال وإعادة المحاولة",
+ "aucunoffre":"لم يتم استخدام أي عرض",
+  "aucunoffreutilise":"لا توجد مكافآت متاحة في الوقت الحالي",
+"langagechangedsuccessfully": "تم تغيير اللغة بنجاح",
+"uneconnexionnecessaire":"يلزم وجود اتصال لتحميل الخريطة والمتاجر"
+
+
+
+
 }
 
 

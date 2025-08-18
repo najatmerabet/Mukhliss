@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,7 +11,6 @@ import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location_controller.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/services/osrm_service.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/category_helpers.dart';
@@ -22,7 +23,7 @@ import 'package:mukhliss/widgets/buttons/categories_bottom_sheet.dart';
 import 'package:mukhliss/widgets/buttons/mapcontrolbutton.dart';
 import 'package:mukhliss/widgets/buttons/route_bottom_sheet.dart';
 import 'package:mukhliss/widgets/buttons/ShopDetailsBottomSheet.dart';
-import 'package:mukhliss/widgets/direction_arrow_widget.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mukhliss/widgets/search.dart';
 
 enum BottomSheetState {
@@ -75,12 +76,14 @@ StreamSubscription<Position>? _positionStream;
   Timer? _navigationTimer;
 BottomSheetState _bottomSheetState = BottomSheetState.none;
 bool _disposed = false;
-
+bool _isCheckingConnectivity = true;
+bool _hasConnection = true;
+StreamSubscription<ConnectivityResult>? _connectivitySubscription;
 // Update the initState method to use safe callbacks
 @override
 void initState() {
   super.initState();
-  
+   _disposed = false;
   controller = LocationController(
     ref, 
     context,
@@ -104,10 +107,131 @@ void initState() {
   );
   
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted && !_disposed) {
-      controller.getCurrentLocation();
+    if (mounted) {
+      _checkConnectivity().then((_) {
+        if (mounted) {
+          setState(() => _isCheckingConnectivity = false);
+          if (_hasConnection) {
+            controller.getCurrentLocation();
+          }
+        }
+      });
     }
   });
+}
+
+Future<void> _checkConnectivity() async {
+  try {
+    // Vérifie d'abord la connectivité de base
+    final connectivityResult = await Connectivity().checkConnectivity();
+    
+    // Vérifie ensuite une connexion Internet réelle
+    final reallyConnected = await _checkRealInternetConnection();
+    
+    _safeSetState(() {
+      _hasConnection = connectivityResult != ConnectivityResult.none && reallyConnected;
+      _isCheckingConnectivity = false;
+    });
+  } catch (e) {
+    debugPrint('Connectivity error: $e');
+    _safeSetState(() {
+      _hasConnection = false;
+      _isCheckingConnectivity = false;
+    });
+  }
+}
+Future<bool> _checkRealInternetConnection() async {
+  try {
+    // Teste une connexion à un serveur fiable avec timeout
+    final response = await http.get(
+      Uri.parse('https://www.google.com'),
+      headers: {'Cache-Control': 'no-cache'},
+    ).timeout(const Duration(seconds: 5));
+
+    return response.statusCode == 200;
+  } catch (e) {
+    return false;
+  }
+}
+
+void _updateConnectionStatus(ConnectivityResult result) {
+  if (!mounted || _disposed) return;
+  
+  final newStatus = result != ConnectivityResult.none;
+  
+  _safeSetState(() {
+    _hasConnection = newStatus;
+  });
+
+  // Rafraîchir les données si la connexion revient
+  if (newStatus) {
+    ref.invalidate(storesListProvider);
+    controller.getCurrentLocation();
+  }
+}
+
+Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
+  return Center(
+    child: SingleChildScrollView(
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppColors.error.withOpacity(0.1) : Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDarkMode ? AppColors.error : Colors.orange.shade300,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 64,
+              color: isDarkMode ? AppColors.error : Colors.orange.shade700,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n?.pasconnexioninternet ?? 'Pas de connexion Internet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? AppColors.error : Colors.orange.shade800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Une connexion est nécessaire pour charger la carte et les magasins',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _checkConnectivity,
+              icon: const Icon(Icons.refresh),
+              label: Text(l10n?.retry ?? 'Réessayer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDarkMode ? AppColors.error : Colors.orange.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+           
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 
@@ -155,33 +279,26 @@ void _startPositionUpdates() {
   
   const locationSettings = LocationSettings(
     accuracy: LocationAccuracy.high,
-    distanceFilter: 5, // Update every 5 meters
+    distanceFilter: 5, // 5 mètres pour équilibrer précision et performance
   );
 
-  // Cancel existing stream
   _positionStream?.cancel();
 
   _positionStream = Geolocator.getPositionStream(
     locationSettings: locationSettings,
   ).listen(
     (Position position) {
-      if (_disposed || !mounted || !_isNavigating || _selectedShop == null) return;
+      if (_disposed || !mounted || !_isNavigating) return;
       
-      // Update position and bearing
       _safeSetState(() {
         _currentPosition = position;
-        _currentBearing = Geolocator.bearingBetween(
-          position.latitude,
-          position.longitude,
-          _selectedShop!.latitude,
-          _selectedShop!.longitude,
-        );
+        // La flèche sera automatiquement mise à jour via _buildNavigationMarkers
       });
       
-      // Update camera position
-      _updateCameraPosition(position, _currentBearing);
+      // Centrer la carte sur la nouvelle position
+      _updateCameraPosition(position, null);
       
-      // Check if arrived
+      // Vérifier l'arrivée
       _checkArrival(position);
     },
     onError: (error) {
@@ -233,7 +350,7 @@ void _onCategorySelected(Categories? category, Store? store) {
 @override
 void dispose() {
   debugPrint('[DISPOSE] LocationScreen disposing...');
-  
+   _connectivitySubscription?.cancel();
   // Set disposed flag first
   _disposed = true;
   
@@ -397,12 +514,8 @@ void _showArrivalNotification() {
   }
 void _showRouteBottomSheet(Store shop, Map<String, dynamic> routeInfo) {
    if (_disposed) return;
-  _safeSetState(() {
-    _selectedShop = shop;
-    _routeInfo = routeInfo;
-    _bottomSheetState = BottomSheetState.route;
-      _categoriesBottomSheetShown = false; 
-  });
+
+  _updateBottomSheetState(BottomSheetState.route);
 }
   void _fitMapToRoute(List<LatLng> points) {
     if (points.isEmpty) return;
@@ -475,13 +588,25 @@ void _navigateToStoreAndShowDetails(Store store) async {
     final storesAsync = ref.watch(storesListProvider);
      final themeMode = ref.watch(themeProvider);
       final isDarkMode = themeMode == AppThemeMode.light;
-
+      final l10n = AppLocalizations.of(context);
     print('[DEBUG] RouteBottomSheet conditions: '
       'isRouteBottomSheetShowing: ${controller.isRouteBottomSheetShowing}, '
       'selectedShop: ${controller.selectedShop != null}, '
       'routeInfo: ${controller.routeInfo != null}, '
       'isNavigating: $_isNavigating');
- 
+ if (_isCheckingConnectivity) {
+    return Scaffold(
+      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+      body: _buildConnectivityCheckWidget(),
+    );
+  }
+  if (!_hasConnection) {
+    return Scaffold(
+      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+      body: _buildNoConnectionWidget(context, l10n, isDarkMode),
+    );
+  }
+
     storesAsync.whenData((_) {
     if (mounted) {
       setState(() {
@@ -490,7 +615,6 @@ void _navigateToStoreAndShowDetails(Store store) async {
     }
   });
      _handleCategoriesAndPosition(ref);
-
     return Scaffold(
       body:  Stack(
         children: [
@@ -520,7 +644,8 @@ void _navigateToStoreAndShowDetails(Store store) async {
                       ),
                     // Shop markers
                     MarkerLayer(
-                      markers: storesAsync.maybeWhen(
+                      markers:[ 
+                        ...storesAsync.maybeWhen(
                         data: (stores) {
                           List<Store> filteredStores = stores;
                           if (_selectedCategory != null) {
@@ -545,46 +670,51 @@ void _navigateToStoreAndShowDetails(Store store) async {
                         },
                         orElse: () => [],
                       ),
+                      ]
                     ),
                     // Current position marker
-                    if (_currentPosition != null)
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: LatLng(
-                              _currentPosition!.latitude.toDouble(),
-                              _currentPosition!.longitude.toDouble(),
-                            ),
-                            width: 48,
-                            height: 48,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color:Colors.blue.withOpacity(0.2),
-                                  ),
-                                ),
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.blue.shade700,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 3,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                   if (_currentPosition != null)
+  MarkerLayer(
+    markers: [
+      // Position actuelle
+      Marker(
+        point: LatLng(
+          _currentPosition!.latitude.toDouble(),
+          _currentPosition!.longitude.toDouble(),
+        ),
+        width: 48,
+        height: 48,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.withOpacity(0.2),
+              ),
+            ),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.shade700,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      // Flèche de navigation (séparée et conditionnelle)
+      if (_isNavigating && _selectedShop != null && _polylinePoints.isNotEmpty)
+        ..._buildNavigationMarkers(),
+    ],
+  ),
            if (_isNavigating && _selectedShop != null && _currentPosition != null)
            Positioned(
                bottom: 0,
@@ -711,31 +841,26 @@ Positioned(
     ],
   ),
 ),
-if (_isNavigating && _selectedShop != null && _currentPosition != null)
-  Positioned(
-    top: MediaQuery.of(context).padding.top + 10,
-    right: 120,
-    child: NavigationArrowWidget(
-      currentPosition: _currentPosition,
-      selectedShop: _selectedShop,
-      isNavigating: _isNavigating,
-      currentBearing: _currentBearing,
-      onStopNavigation: _stopNavigation,
-      onPositionUpdate: (newPosition) {
-        setState(() {
-          _currentPosition = newPosition;
-          _lastPosition = newPosition;
-          _currentBearing = Geolocator.bearingBetween(
-            newPosition.latitude,
-            newPosition.longitude,
-            _selectedShop!.latitude,
-            _selectedShop!.longitude,
-          );
-        });
-      },
-      updateCameraPosition: _updateCameraPosition,
-    ),
-  ),
+Positioned.fill(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: CategoriesBottomSheet(
+                key: ValueKey('categoriesSheet'),
+                navigatorKey: navigatorKey,
+                initialCategory: _selectedCategory,
+                currentPosition: _currentPosition,
+                mapController: _mapController,
+                onStoreSelected: _handleStoreSelection,
+                onCategorySelected: _onCategorySelected,
+                onClose: _closeAllSheets,
+              ),
+            ),
+          ),
+        ),
+
+  
           // Categories BottomSheet
         if (_bottomSheetState == BottomSheetState.categories && _currentPosition != null)
   Positioned(
@@ -750,46 +875,53 @@ if (_isNavigating && _selectedShop != null && _currentPosition != null)
             ),
           ),
    if (_bottomSheetState == BottomSheetState.shopDetails && _selectedShop != null)
-             ShopDetailsBottomSheet(
-              navigatorKey: navigatorKey,
-              shop: _selectedShop!,
-              currentPosition: _currentPosition,
-              ref: ref,
-              vsync: this,
-              isRouting: _isRouting,
-              onStoreSelected: _handleStoreSelection,
-              selectedCategory: _selectedCategory,
-              initiateRouting: _initiateRouting,
-              closeCategoriesSheet:  () {
-      setState(() {
-        _bottomSheetState = BottomSheetState.none; // Réinitialise l'état
-      });
-    },
-            ),    
+    
+     Positioned.fill(
+    child: Align(
+      alignment: Alignment.bottomCenter,
+      child: ShopDetailsBottomSheet(
+        navigatorKey: navigatorKey,
+        shop: _selectedShop!,
+        currentPosition: _currentPosition,
+        ref: ref,
+        vsync: this,
+        isRouting: _isRouting,
+        onStoreSelected: _handleStoreSelection,
+        selectedCategory: _selectedCategory,
+        initiateRouting: _initiateRouting,
+        closeCategoriesSheet: () {
+          _updateBottomSheetState(BottomSheetState.none);
+        },
+      ),
+    ),
+  ),
   // Dans la méthode build, ajoutez ce widget conditionnel
 if (_bottomSheetState == BottomSheetState.route && _selectedShop != null && _routeInfo != null)
-  RouteBottomSheet(
-    shop: _selectedShop!,
-    currentPosition: _currentPosition,
-    selectedMode: _selectedMode,
-    routeInfo: _routeInfo!,
-    showTransportModes: true,
-    onModeChanged: (mode) {
-      setState(() => _selectedMode = mode);
-      _initiateRouting(_selectedShop!);
-    },
-    onRecenter: _centerOnCurrentLocation,
-    onCancel: () {
-      setState(() {
-        _polylinePoints = [];
-        _bottomSheetState = BottomSheetState.none;
-      });
-    },
-    onShowShopDetails: () {
-      setState(() {
-        _bottomSheetState = BottomSheetState.shopDetails;
-      });
-    },
+   Positioned.fill(
+    child: Align(
+      alignment: Alignment.bottomCenter,
+      child: RouteBottomSheet(
+        shop: _selectedShop!,
+        currentPosition: _currentPosition,
+        selectedMode: _selectedMode,
+        routeInfo: _routeInfo!,
+        showTransportModes: true,
+        onModeChanged: (mode) {
+          setState(() => _selectedMode = mode);
+          _initiateRouting(_selectedShop!);
+        },
+        onRecenter: _centerOnCurrentLocation,
+        onCancel: () {
+          setState(() {
+            _polylinePoints = [];
+            _updateBottomSheetState(BottomSheetState.none);
+          });
+        },
+        onShowShopDetails: () {
+          _updateBottomSheetState(BottomSheetState.shopDetails);
+        },
+      ),
+    ),
   ),
           // Map layers selector
           if (_showMapLayers)
@@ -890,6 +1022,34 @@ if (_bottomSheetState == BottomSheetState.route && _selectedShop != null && _rou
       ),  
     );
   }
+
+
+
+
+int _findNearestPointIndex(LatLng point) {
+  double minDistance = double.infinity;
+  int nearestIndex = 0;
+  
+  for (int i = 0; i < _polylinePoints.length; i++) {
+    final distance = _calculateDistance(point, _polylinePoints[i]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestIndex = i;
+    }
+  }
+  
+  return nearestIndex;
+}
+double _calculateDistance(LatLng point1, LatLng point2) {
+  return Geolocator.distanceBetween(
+    point1.latitude,
+    point1.longitude,
+    point2.latitude,
+    point2.longitude,
+  );
+}
+
+
   Widget _buildSearchButton(BuildContext context, WidgetRef ref) {
   final themeMode = ref.watch(themeProvider);
   final isDarkMode = themeMode == AppThemeMode.light;
@@ -1009,10 +1169,171 @@ Widget _buildSearchResults() {
 void _showShopDetails(Store store) {
   if (!mounted || _disposed) return;
   debugPrint('Updating UI for shop details...');
+   
+  _updateBottomSheetState(BottomSheetState.shopDetails);
+}
+
+void _updateBottomSheetState(BottomSheetState newState) {
   _safeSetState(() {
-    _selectedShop = store;
-    _bottomSheetState = BottomSheetState.shopDetails;
+    _bottomSheetState = newState;
   });
+}
+
+
+List<Marker> _buildNavigationMarkers() {
+  if (!_isNavigating || _currentPosition == null || _polylinePoints.isEmpty) {
+    return [];
+  }
+
+  // Position actuelle en LatLng
+  final currentLatLng = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+  
+  // Calculer le bearing vers le prochain point de l'itinéraire
+  double bearing = _calculateNavigationBearing(currentLatLng);
+  
+  // Trouver une position légèrement devant la position actuelle sur l'itinéraire
+  // pour afficher la flèche
+  LatLng arrowPosition = _calculateArrowPosition(currentLatLng, bearing);
+
+  return [
+    Marker(
+      point: arrowPosition,
+      width: 40,
+      height: 40,
+      child: _buildNavigationArrowWidget(bearing),
+    ),
+  ];
+}
+
+LatLng _calculateArrowPosition(LatLng currentPosition, double bearing) {
+  // Distance en mètres pour placer la flèche devant la position actuelle
+  const double distanceAhead = 30.0; // 30 mètres devant
+  
+  // Convertir le bearing en radians
+  final bearingRad = bearing * (math.pi / 180);
+  
+  // Calculer la nouvelle position
+  const double earthRadius = 6371000; // Rayon de la Terre en mètres
+  final double lat1 = currentPosition.latitude * (math.pi / 180);
+  final double lng1 = currentPosition.longitude * (math.pi / 180);
+  
+  final double lat2 = math.asin(
+    math.sin(lat1) * math.cos(distanceAhead / earthRadius) +
+    math.cos(lat1) * math.sin(distanceAhead / earthRadius) * math.cos(bearingRad)
+  );
+  
+  final double lng2 = lng1 + math.atan2(
+    math.sin(bearingRad) * math.sin(distanceAhead / earthRadius) * math.cos(lat1),
+    math.cos(distanceAhead / earthRadius) - math.sin(lat1) * math.sin(lat2)
+  );
+  
+  return LatLng(lat2 * (180 / math.pi), lng2 * (180 / math.pi));
+}
+
+double _calculateNavigationBearing(LatLng currentPosition) {
+  if (_selectedShop == null || _polylinePoints.isEmpty) return 0;
+  
+  // Trouver l'index du point le plus proche sur l'itinéraire
+  int nearestIndex = _findNearestPointIndex(currentPosition);
+  
+  // Prendre les prochains points pour calculer la direction
+  LatLng targetPoint;
+  
+  if (nearestIndex < _polylinePoints.length - 5) {
+    // Prendre un point un peu plus loin pour une direction plus stable
+    targetPoint = _polylinePoints[nearestIndex + 3];
+  } else if (nearestIndex < _polylinePoints.length - 1) {
+    targetPoint = _polylinePoints[nearestIndex + 1];
+  } else {
+    // Si on est près de la fin, pointer vers la destination finale
+    targetPoint = LatLng(_selectedShop!.latitude, _selectedShop!.longitude);
+  }
+  
+  return Geolocator.bearingBetween(
+    currentPosition.latitude,
+    currentPosition.longitude,
+    targetPoint.latitude,
+    targetPoint.longitude,
+  );
+}
+
+
+Widget _buildNavigationArrowWidget(double bearing) {
+  return TweenAnimationBuilder<double>(
+    duration: const Duration(milliseconds: 1000),
+    tween: Tween<double>(begin: 0.9, end: 1.1),
+    builder: (context, scale, child) {
+      return Transform.scale(
+        scale: scale,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+               AppColors.primary,
+                AppColors.secondary,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.5),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(-2, -2),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white,
+              width: 3,
+            ),
+          ),
+          child: Center(
+            child: Transform.rotate(
+              angle: (bearing * math.pi) / 180,
+              child: Icon(
+                Icons.navigation,
+                color: Colors.white,
+                size: 24,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.5),
+                    offset: const Offset(1, 1),
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+Widget _buildConnectivityCheckWidget() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 20),
+        Text(
+          'Vérification de la connexion...',
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.onBackground,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 }

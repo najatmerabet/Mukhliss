@@ -185,7 +185,20 @@
  "exclusifs":"EXCLUSIVE",
   "pointsrequis":"REQUIRED POINTS",
    "benificier":"To benefit",
-    "points":"pts"
+    "points":"pts",
+  "ofline":"Offline mode",
+"noloadqrcode":"Could not load QR code",
+  "retry":"Retry",
+    "pasconnexioninternet":"No Internet connection",
+  "veuillezvzrifier":"Please check your connection and try again.",
+ "aucunoffre":"No offer used",
+  "aucunoffreutilise":"No rewards recently available",
+"langagechangedsuccessfully": "Language changed successfully",
+"uneconnexionnecessaire":"Login is required to load map and stores"
+
+
+
+
 }
 
 

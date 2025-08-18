@@ -1,6 +1,8 @@
 // lib/screens/settings_screen.dart
+import 'dart:async';
 import 'dart:math';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
@@ -33,6 +35,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+   bool _hasConnection = true;
+    StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  bool _isCheckingConnectivity = true;
 
   @override
   void initState() {
@@ -106,7 +111,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
     }
   }
 
+Future<void> _checkConnectivity() async {
+  try {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (mounted) {
+      setState(() {
+        _hasConnection = connectivityResult != ConnectivityResult.none;
+        _isCheckingConnectivity = false;
+      });
+    }
 
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      if (mounted) {
+        setState(() {
+          _hasConnection = result != ConnectivityResult.none;
+        });
+        // Rafraîchir les données si la connexion revient
+        if (_hasConnection) {
+         
+        }
+      }
+    });
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _hasConnection = false;
+        _isCheckingConnectivity = false;
+      });
+    }
+    debugPrint('Erreur de vérification de connectivité: $e');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +183,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: l10n?.theme ?? 'Thème sombre',
-                          subtitle: isDarkMode ? l10n?.active ?? 'Activé' :  'Désactivé',
+                          subtitle: isDarkMode ? l10n?.active ?? 'Activé' : l10n?.desactive ?? 'Désactivé',
                           trailing: Switch.adaptive(
                             value: isDarkMode,
                             onChanged: (value) {
@@ -422,9 +458,11 @@ Widget _buildPrivacySection({required String title, required String content}) {
   }
 
   Widget _buildModernSettingCard({required List<Widget> children}) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -447,6 +485,8 @@ Widget _buildPrivacySection({required String title, required String content}) {
     required Color iconColor,
     required Color iconBgColor,
   }) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return ListTile(
       leading: Container(
         width: 44,
@@ -463,8 +503,8 @@ Widget _buildPrivacySection({required String title, required String content}) {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xFF1F2937),
+        style: TextStyle(
+          color: isDarkMode ? Colors.white : Color(0xFF1F2937),
           fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
@@ -473,7 +513,7 @@ Widget _buildPrivacySection({required String title, required String content}) {
           ? Text(
               subtitle,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: isDarkMode ? Colors.white : Color(0xFF1F2937),
                 fontSize: 14,
               ),
             )
@@ -653,6 +693,7 @@ final themeMode = ref.read(themeProvider);
 }) {
   // Get the localizations before any async operations
   AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context);
   return ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     onTap: () {
@@ -668,7 +709,7 @@ final themeMode = ref.read(themeProvider);
         if (mounted) {
           showSuccessSnackbar(
             context: this.context, // Use the settings screen context
-            message: 'Language changed successfully', // Fallback message
+            message: l10n?.langagechangedsuccessfully ?? 'Language changed successfully', // Fallback message
           );
         }
       } else {

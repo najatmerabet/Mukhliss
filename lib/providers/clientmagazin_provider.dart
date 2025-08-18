@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/models/clientmagazin.dart';
 import 'package:mukhliss/services/clientmagazin_service.dart';

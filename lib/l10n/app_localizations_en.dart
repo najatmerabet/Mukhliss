@@ -565,4 +565,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get benificier => 'To benefit';
+
+  @override
+  String get ofline => 'Offline mode';
+
+  @override
+  String get noloadqrcode => 'Could not load QR code';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get pasconnexioninternet => 'No Internet connection';
+
+  @override
+  String get veuillezvzrifier => 'Please check your connection and try again.';
+
+  @override
+  String get aucunoffre => 'No offer used';
+
+  @override
+  String get aucunoffreutilise => 'No rewards recently available';
+
+  @override
+  String get langagechangedsuccessfully => 'Language changed successfully';
+
+  @override
+  String get uneconnexionnecessaire =>
+      'Login is required to load map and stores';
 }

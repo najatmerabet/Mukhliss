@@ -1,12 +1,14 @@
 // lib/screens/profile_screen.dart - Design moderne avec édition
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
@@ -51,101 +53,145 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _loadUserData() async {
-    try {
-      setState(() => _isLoading = true);
 
-      final authService = ref.read(authProvider);
-      final user = authService.currentUser;
-
-      if (user == null) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          Navigator.pushNamed(context, AppRouter.login);
-        }
-        return;
-      }
-
-      final response =
-          await authService.client
-              .from("clients")
-              .select()
-              .eq('id', user.id)
-              .single();
-
+Future<void> _loadUserData() async {
+  try {
+    setState(() => _isLoading = true);
+    
+    // Vérification de connexion plus robuste
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
       if (mounted) {
         setState(() {
-          _userData = response;
-          _firstNameController.text = response['prenom'] ?? '';
-          _lastNameController.text = response['nom'] ?? '';
-          _emailController.text = response['email'] ?? '';
-          _phoneController.text = response['telephone'] ?? '';
-          _addressController.text = response['adresse'] ?? '';
           _isLoading = false;
+          _userData = null;
         });
+        showErrorSnackbar(context: context, message: 'Connexion Internet requise');
       }
-    } catch (e) {
+      return;
+    }
+
+    final authService = ref.read(authProvider);
+    final user = authService.currentUser;
+
+    if (user == null) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
+        Navigator.pushNamed(context, AppRouter.login);
       }
+      return;
+    }
+
+    // Debug: Ajoutez des logs pour suivre le flux
+    debugPrint('Tentative de chargement des données utilisateur...');
+
+    final response = await authService.client
+        .from("clients")
+        .select()
+        .eq('id', user.id)
+        .single()
+        .timeout(const Duration(seconds: 10)); // Timeout pour éviter l'attente infinie
+
+    debugPrint('Données reçues: ${response.toString()}');
+
+    if (mounted) {
+      setState(() {
+        _userData = response;
+        _firstNameController.text = response['prenom'] ?? '';
+        _lastNameController.text = response['nom'] ?? '';
+        _emailController.text = response['email'] ?? '';
+        _phoneController.text = response['telephone'] ?? '';
+        _addressController.text = response['adresse'] ?? '';
+        _isLoading = false;
+      });
+    }
+  } on TimeoutException {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      showErrorSnackbar(
+        context: context,
+        message: 'Timeout - Vérifiez votre connexion',
+      );
+    }
+  } catch (e) {
+    debugPrint('Erreur lors du chargement: ${e.toString()}');
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _userData = null;
+      });
+      showErrorSnackbar(
+        context: context,
+        message: 'Erreur lors du chargement des données',
+      );
     }
   }
+}
 
   Future<void> _updateUserData() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    try {
-      setState(() => _isLoading = true);
-
-      final authService = ref.read(authProvider);
-      final user = authService.currentUser;
-
-      if (user == null) return;
-
-      final updatedData = {
-        'prenom': _firstNameController.text.trim(),
-        'nom': _lastNameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'telephone': _phoneController.text.trim(),
-        'adresse': _addressController.text.trim(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      await authService.client
-          .from("clients")
-          .update(updatedData)
-          .eq('id', user.id);
-
-      // Reload user data to reflect changes
-      await _loadUserData();
-
-      if (mounted) {
-        setState(() {
-          _isEditing = false;
-          _isLoading = false;
-        });
-        showSuccessSnackbar(
-          context: context, // N'oubliez pas le contexte
-          message: 'Informations mises à jour avec succès!',
-        );
-        // Close the modal
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
+  try {
+    setState(() => _isLoading = true);
+    
+    // Vérifier la connexion internet
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la mise à jour: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+        showErrorSnackbar(
+          context: context,
+          message: 'Pas de connexion internet. Impossible de sauvegarder.',
         );
       }
+      return;
+    }
+
+    final authService = ref.read(authProvider);
+    final user = authService.currentUser;
+
+    if (user == null) return;
+
+    final updatedData = {
+      'prenom': _firstNameController.text.trim(),
+      'nom': _lastNameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'telephone': _phoneController.text.trim(),
+      'adresse': _addressController.text.trim(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    await authService.client
+        .from("clients")
+        .update(updatedData)
+        .eq('id', user.id);
+
+    // Reload user data to reflect changes
+    await _loadUserData();
+
+    if (mounted) {
+      setState(() {
+        _isEditing = false;
+        _isLoading = false;
+      });
+      showSuccessSnackbar(
+        context: context,
+        message: 'Informations mises à jour avec succès!',
+      );
+      // Close the modal
+      Navigator.of(context).pop();
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      showErrorSnackbar(
+        context: context,
+        message: 'Erreur lors de la mise à jour: ${e.toString()}',
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +199,11 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     final l10n = AppLocalizations.of(context);
    final isDarkMode = themeMode == AppThemeMode.light;
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.darkSurface,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
+    return const Scaffold(
+      backgroundColor: AppColors.darkSurface,
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
     return Scaffold(
       backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
       body: CustomScrollView(
@@ -421,255 +466,293 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
   // Méthodes pour afficher les informations avec possibilité d'édition
-  void _showUserInfo() {
-      final l10n = AppLocalizations.of(context);
-    setState(() => _isEditing = false); // Reset editing state
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setModalState) => Container(
-                  height: MediaQuery.of(context).size.height * 0.85,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: GestureDetector(
-            behavior: HitTestBehavior.opaque, // Important pour que toute la zone soit cliquable
-            onTap: Navigator.of(context).pop,
-              child: Container(
-               width: double.infinity, // Prend toute la largeur
-            padding: const EdgeInsets.only(top: 12, bottom: 12), // Zone de touche plus grande
-      alignment: Alignment.center,
-      child: Container(
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    ),
-  ),
-                        ),
-                        // Header avec boutons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _isEditing
-                                  ? l10n?.mesinformation ?? 'Modifier mes informations'
-                                  : l10n?.modifiermesinformation ?? 'Mes Informations',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                if (!_isEditing)
-                                  IconButton(
-                                    onPressed: () {
-                                      setModalState(() => _isEditing = true);
-                                    },
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                if (_isEditing) ...[
-                                  IconButton(
-                                    onPressed: () {
-                                      setModalState(() => _isEditing = false);
-                                      // Reset controllers to original values
-                                      _firstNameController.text =
-                                          _userData?['prenom'] ?? '';
-                                      _lastNameController.text =
-                                          _userData?['nom'] ?? '';
-                                      _emailController.text =
-                                          _userData?['email'] ?? '';
-                                      _phoneController.text =
-                                          _userData?['telephone'] ?? '';
-                                      _addressController.text =
-                                          _userData?['adresse'] ?? '';
-                                    },
-                                    icon: const Icon(
-                                      Icons.close,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Form fields
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                if (_isEditing) ...[
-                               
-                                  AppFormFields.buildModernTextField(
-                                    context: context,
-                                    controller: _firstNameController,
-                                    label:l10n?.prenom ?? 'Prénom',
-                                    icon: Icons.person_outline,
-                                    validator: (value) {
-                                      if (value?.trim().isEmpty ?? true) {
-                                        return l10n?.requis ??'Le prénom est requis';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  AppFormFields.buildModernTextField(
-                                    context: context,
-                                    controller: _lastNameController,
-                                    label:l10n?.nom ?? 'Nom',
-                                    icon: Icons.person_outline,
-                                    validator: (value) {
-                                      if (value?.trim().isEmpty ?? true) {
-                                        return 'Le nom est requis';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  AppFormFields.buildModernTextField(
-                                    context: context,
-                                    controller: _emailController,
-                                    label:l10n?.email ?? 'Email',
-                                    icon: Icons.email_outlined,
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (value) {
-                                      if (value?.trim().isEmpty ?? true) {
-                                        return 'L\'email est requis';
-                                      }
-                                      if (!RegExp(
-                                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                      ).hasMatch(value!)) {
-                                        return 'Format d\'email invalide';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  AppFormFields.buildModernTextField(
-                                    context: context,
-                                    controller: _phoneController,
-                                    label:l10n?.phone ?? 'Téléphone',
-                                    icon: Icons.phone_outlined,
-                                    keyboardType: TextInputType.phone,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  AppFormFields.buildModernTextField(
-                                    context: context,
-                                    controller: _addressController,
-                                    label:l10n?.address ?? 'Adresse',
-                                    icon: Icons.location_on_outlined,
-                                    maxLines: 2,
-                                  ),
-                                ] else ...[
-                                  _buildInfoRow(
-                                    Icons.person_outline,
-                                 l10n?.prenom ??   'Prénom',
-                                    _userData?['prenom'] ?? '',
-                                  ),
-                                  _buildInfoRow(
-                                    Icons.person_outline,
-                                   l10n?.nom ?? 'Nom',
-                                    _userData?['nom'] ?? '',
-                                  ),
-                                  _buildInfoRow(
-                                    Icons.email_outlined,
-                                   l10n?.email ?? 'Email',
-                                    _userData?['email'] ?? '',
-                                  ),
-                                  _buildInfoRow(
-                                    Icons.phone_outlined,
-                                    l10n?.phone ?? 'Téléphone',
-                                    _userData?['telephone'] ?? '',
-                                  ),
-                                  _buildInfoRow(
-                                    Icons.location_on_outlined,
-                                    l10n?.address ?? 'Adresse',
-                                    _userData?['adresse'] ?? '',
-                                  ),
-                                  _buildInfoRow(
-                                    Icons.calendar_today_outlined,
-                                    l10n?.membredepuis ?? 'Membre depuis',
-                                    _userData?['created_at'] != null
-                                        ? DateTime.parse(
-                                          _userData!['created_at'],
-                                        ).toLocal().toString().split(' ')[0]
-                                        : '',
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Save button when editing
-                        if (_isEditing) ...[
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _updateUserData,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child:
-                                  _isLoading
-                                      ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                      :  Text(
-                                     l10n?.sauvgarder ??   'Sauvegarder',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-          ),
-    );
+void _showUserInfo() {
+  final l10n = AppLocalizations.of(context);
+   if (_userData == null) {
+    _showNoConnectionSnackbar();
+    return;
   }
+  setState(() => _isEditing = false);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setModalState) {
+        if (_userData == null) {
+          return Container(
+            height: 300,
+            child: Center(
+              child: Text('Données utilisateur non disponibles'),
+            ),
+          );
+        }
+        return StreamBuilder<ConnectivityResult>(
+          stream: Connectivity().onConnectivityChanged,
+          initialData: ConnectivityResult.none,
+          builder: (context, connectivitySnapshot) {
+             final isOffline = connectivitySnapshot.data == ConnectivityResult.none;
+            final hasData = connectivitySnapshot.hasData;
+          final isInitialData = connectivitySnapshot.connectionState == ConnectionState.waiting;
+          // Ne pas afficher la bannière pendant le chargement initial
+          final shouldShowBanner = hasData && !isInitialData && isOffline;
+           debugPrint('''
+Connectivity status: 
+- State: ${connectivitySnapshot.connectionState}
+- Data: ${connectivitySnapshot.data}
+- HasData: $hasData
+- IsInitial: $isInitialData
+- IsOffline: $isOffline
+- ShouldShowBanner: $shouldShowBanner
+''');
+            final canEdit = !isOffline; // Édition possible seulement en ligne
+          if (_userData == null) {
+                return _buildNoConnectionWidget(); // Widget personnalisé pour "pas de connexion"
+             }
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle de fermeture
+                  Center(
+                    child: GestureDetector(
+                      onTap: Navigator.of(context).pop,
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // En-tête avec statut connexion
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isEditing 
+                            ? l10n?.mesinformation ?? 'Modifier mes informations'
+                            : l10n?.modifiermesinformation ?? 'Mes Informations',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (!_isEditing)
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          color: canEdit ? AppColors.primary : Colors.grey,
+                          onPressed: () async {
+                            // Vérification active de la connexion
+                          //   final result = await Connectivity().checkConnectivity();
+                          //   if (result == ConnectivityResult.none) {
+                          //     _showNoConnectionSnackbar();
+                          //     return;
+                          //   }
+                          //   setModalState(() => _isEditing = true);
+                          // },
+                          // tooltip: canEdit 
+                          //     ? 'Modifier les informations'
+                          //     : 'Connexion requise pour modifier',
+                           setModalState(() { _isEditing = true ; });
+                          }
+
+                        ),
+                    ],
+                  ),
+                  
+                  // Bannière d'alerte si hors ligne
+                  if (shouldShowBanner) ...[
+                    const SizedBox(height: 12),
+                    _buildConnectionAlertBanner(l10n),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Contenu principal
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: _isEditing 
+                            ? _buildEditableFields(l10n, context)
+                            : _buildReadOnlyFields(l10n),
+                      ),
+                    ),
+                  ),
+
+                  // Bouton de sauvegarde (seulement si édition ET en ligne)
+                  if (_isEditing) 
+                    _buildSaveButton(l10n),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    
+      }
+    )
+  );
+
+  }
+
+Widget _buildNoConnectionWidget() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.wifi_off, size: 64, color: Colors.orange),
+        SizedBox(height: 20),
+        Text(
+          'Connexion Internet requise',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Veuillez vous connecter à Internet pour afficher vos informations',
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _loadUserData,
+          child: Text('Réessayer'),
+        ),
+      ],
+    ),
+  );
+}
+// Méthodes auxiliaires
+Widget _buildConnectionAlertBanner(AppLocalizations? l10n) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.orange.shade50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.orange.shade200),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.wifi_off, color: Colors.orange.shade600),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n?.pasconnexioninternet ?? 'Pas de connexion Internet',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange.shade700,
+                ),
+              ),
+              Text(
+               
+                'Connectez-vous pour modifier vos informations',
+                style: TextStyle(
+                  color: Colors.orange.shade600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showNoConnectionSnackbar() {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Veuillez vérifier votre connexion internet'),
+      backgroundColor: Colors.orange,
+    ),
+  );
+}
+
+List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) {
+  return [
+    AppFormFields.buildModernTextField(
+      controller: _firstNameController,
+      label: l10n?.prenom ?? 'Prénom',
+      icon: Icons.person_outline,
+      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      context: context,
+    ),
+    const SizedBox(height: 16),
+   AppFormFields.buildModernTextField(
+      controller: _lastNameController,
+      label: l10n?.nom ?? 'Nom',
+      icon: Icons.person_outline,
+      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      context: context,
+    ),
+       const SizedBox(height: 16),
+    AppFormFields.buildModernTextField(
+      controller: _emailController,
+      label: l10n?.email ?? 'Email',
+      icon: Icons.email_outlined,
+      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      context: context,
+    ),
+           const SizedBox(height: 16),
+    AppFormFields.buildModernTextField(
+      controller: _addressController,
+      label: l10n?.address ?? 'Adresse',
+      icon: Icons.location_on_outlined,
+      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      context: context,
+    ),
+           const SizedBox(height: 16),
+    AppFormFields.buildModernTextField(
+      controller: _phoneController,
+      label: l10n?.phone ?? 'Téléphone',
+      icon: Icons.phone_outlined,
+      validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+      context: context,
+    ),
+    
+  ];
+}
+
+List<Widget> _buildReadOnlyFields(AppLocalizations? l10n) {
+  return [
+    _buildInfoRow(Icons.person_outline, 'Prénom', _userData?['prenom'] ?? ''),
+    _buildInfoRow(Icons.person_outline, 'Nom', _userData?['nom'] ?? ''),
+    _buildInfoRow(Icons.email_outlined, 'Email', _userData?['email'] ?? ''),
+    _buildInfoRow(Icons.location_on_outlined, 'Adresse', _userData?['adresse'] ?? ''),
+    _buildInfoRow(Icons.phone_outlined, 'Téléphone', _userData?['telephone'] ?? ''),
+  ];
+}
+
+Widget _buildSaveButton(AppLocalizations? l10n) {
+  return SizedBox(
+    width: double.infinity,
+    child: ElevatedButton(
+      onPressed: _isLoading ? null : _updateUserData,
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: _isLoading
+          ? const CircularProgressIndicator()
+          : Text(l10n?.sauvgarder ?? 'Sauvegarder'),
+    ),
+  );
+}
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Container(

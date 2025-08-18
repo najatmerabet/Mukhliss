@@ -571,4 +571,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get benificier => 'À bénéficier';
+
+  @override
+  String get ofline => 'Offline mode - Using cached data';
+
+  @override
+  String get noloadqrcode => 'Could not load QR code';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get pasconnexioninternet => 'Pas de connexion Internet';
+
+  @override
+  String get veuillezvzrifier =>
+      'Veuillez vérifier votre connexion et réessayer';
+
+  @override
+  String get aucunoffre => 'Aucune offre utilisée';
+
+  @override
+  String get aucunoffreutilise => 'Aucune récompense récemment disponible';
+
+  @override
+  String get langagechangedsuccessfully => 'Language changed successfully';
+
+  @override
+  String get uneconnexionnecessaire =>
+      'Une connexion est nécessaire pour charger la carte et les magasins';
 }

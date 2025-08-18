@@ -15,7 +15,6 @@ import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/utils/geticategoriesbyicon.dart';
 import 'package:tuple/tuple.dart';
@@ -31,7 +30,7 @@ final GlobalKey<NavigatorState> navigatorKey;
 final Function(Store?, Categories?)? onStoreSelected;
 final Function(Categories?, Store?) onCategorySelected;
 final VoidCallback onClose;
-
+final bool isMinimized;
  // Nouveau paramètre
 CategoriesBottomSheet({
   super.key,
@@ -43,6 +42,7 @@ CategoriesBottomSheet({
   this.searchResults,
   required this.onCategorySelected,
   required this.onClose,
+  this.isMinimized = false, // Par défaut, non minimisé
 });
 
   
@@ -105,7 +105,7 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
       final isDarkMode = themeMode == AppThemeMode.light;
      return  DraggableScrollableSheet(
       controller: _draggableController,
-      initialChildSize: 0.5,
+      initialChildSize: widget.isMinimized ? 0.3 : 0.5,
       minChildSize: 0.3,
       maxChildSize: 0.9,
       snap: true,
@@ -120,17 +120,6 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // SliverToBoxAdapter(
-            //   child: Row(
-            //     children: [
-            //       IconButton(
-            //         icon: const Icon(Icons.close),
-            //         onPressed:widget. onClose,
-            //       ),
-            //     ],
-            //   ),
-            //  ),
-            
             // Handle du BottomSheet
             SliverToBoxAdapter(
               child: Center(
@@ -165,15 +154,15 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
               ),
             ),
             
-         // Liste HORIZONTALE des catégories - MULTILINGUE
-            SliverToBoxAdapter(
-              child: Consumer(
+         // Liste HORIZONTALE des catégories - MULTILINGUE - FIXED VERSION
+              Consumer(
                 builder: (context, ref, child) {
                   final categoriesAsync = ref.watch(categoriesListProvider);
                   
-                  return categoriesAsync.when(
-                    data: (categories) {
-                      return  SizedBox(
+                  return SliverToBoxAdapter(
+                    child: categoriesAsync.when(
+                      data: (categories) {
+                        return SizedBox(
                           height: 120,
                           child: ListView(
                             scrollDirection: Axis.horizontal,
@@ -226,16 +215,12 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
                             ],
                           ),
                         );
-                      
-                    },
-                    loading: () => SliverToBoxAdapter(
-                      child: SizedBox(
+                      },
+                      loading: () => SizedBox(
                         height: 120,
                         child: const Center(child: CircularProgressIndicator()),
                       ),
-                    ),
-                    error: (error, stack) => SliverToBoxAdapter(
-                      child: SizedBox(
+                      error: (error, stack) => SizedBox(
                         height: 120,
                         child: Center(
                           child: Text(
@@ -250,8 +235,6 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
                   );
                 },
               ),
-            ),
-              
             
             // Titre "Magasins les plus proches"
             SliverToBoxAdapter(
@@ -689,617 +672,6 @@ Widget _buildPlaceholderIcon() {
 
 
 
-  double _calculateDistance(Store shop) {
-    if (widget.currentPosition == null) return 0;
-    
-    return Geolocator.distanceBetween(
-   widget. currentPosition!.latitude,
-   widget. currentPosition!.longitude,
-    shop.latitude,    // Utilisez les nouveaux getters
-    shop.longitude,   // Utilisez les nouveaux getters
-  );
-  }
 
-// Future<void> _showShopDetails({ required BuildContext context,
-//   required WidgetRef ref,
-//   required Store shop,
-//   required TickerProvider vsync,
-//   required Position? currentPosition,
-//   required bool isRouting,
-//   required Function(Store) initiateRouting,} )
-//    async {
-//   final l10n = AppLocalizations.of(context);
-//   final themeMode = ref.watch(themeProvider);
-//   final isDarkMode = themeMode == AppThemeMode.light;
-//   final currentLocale = ref.watch(languageProvider);
-//   final offersRepo = ref.watch(offersProvider);
-//   String? cleanLogoUrl = ref.read(storeLogoUrlProvider(shop.logoUrl ?? ''));
-//   List<Offers>? storeOffers;
-  
-//   try {
-//     storeOffers = await offersRepo.getOffresByMagasin(shop.id);
-//   } catch (e) {
-//     debugPrint('Erreur récupération offres: $e');
-//   }
 
-//   // Animations améliorées
-//   final animationController = AnimationController(
-//     vsync: vsync,
-//     duration: const Duration(milliseconds: 800),
-//   );
-  
-//   final slideAnimation = Tween<Offset>(
-//     begin: const Offset(0, 1),
-//     end: Offset.zero,
-//   ).animate(CurvedAnimation(
-//     parent: animationController,
-//     curve: Curves.easeOutQuart,
-//   ));
-
-//   final fadeAnimation = Tween<double>(
-//     begin: 0,
-//     end: 1,
-//   ).animate(CurvedAnimation(
-//     parent: animationController,
-//     curve: const Interval(0.1, 1.0, curve: Curves.easeOut),
-//   ));
-
-//   final scaleAnimation = Tween<double>(
-//     begin: 0.95,
-//     end: 1.0,
-//   ).animate(CurvedAnimation(
-//     parent: animationController,
-//     curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
-//   ));
-
-//   final distance = _calculateDistance(shop);
-//   final category = CategoryHelpers.getCategory(ref, shop.Categorieid);
-//   final localizedName = category.getName(currentLocale.languageCode);
-
-//   await showModalBottomSheet(
-//     context: context,
-//     isScrollControlled: true,
-//     backgroundColor: Colors.transparent,
-//     isDismissible: true,
-//     enableDrag: true,
-//     useSafeArea: true,
-//     builder: (context) {
-//       animationController.forward();
-      
-//       return SlideTransition(
-//         position: slideAnimation,
-//         child: Container(
-//           height: MediaQuery.of(context).size.height * 0.92,
-//           decoration: BoxDecoration(
-//             color: isDarkMode ? const Color(0xFF121212) : Colors.white,
-//             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-//             boxShadow: [
-//               BoxShadow(
-//                 color: Colors.black.withOpacity(0.3),
-//                 blurRadius: 40,
-//                 offset: const Offset(0, -20),
-//               ),
-//             ],
-//           ),
-//           child: Column(
-//             children: [
-//               // Handle bar élégant
-//               Container(
-//                 margin: const EdgeInsets.only(top: 12, bottom: 8),
-//                 child: Container(
-//                   width: 60,
-//                   height: 5,
-//                   decoration: BoxDecoration(
-//                     color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade400,
-//                     borderRadius: BorderRadius.circular(4),
-//                   ),
-//                 ),
-//               ),
-              
-//               Expanded(
-//                 child: SingleChildScrollView(
-//                   physics: const BouncingScrollPhysics(),
-//                   child: FadeTransition(
-//                     opacity: fadeAnimation,
-//                     child: ScaleTransition(
-//                       scale: scaleAnimation,
-//                       child: Column(
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                         children: [
-//                           // Hero Section avec morphisme moderne
-//                           Container(
-//                             margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-//                             decoration: BoxDecoration(
-//                               borderRadius: BorderRadius.circular(28),
-//                               gradient: LinearGradient(
-//                                 begin: Alignment.topLeft,
-//                                 end: Alignment.bottomRight,
-//                                 colors: [
-//                                   CategoryMarkers.getPinColor(localizedName).withOpacity(0.9),
-//                                   CategoryMarkers.getPinColor(localizedName),
-//                                 ],
-//                               ),
-//                               boxShadow: [
-//                                 BoxShadow(
-//                                   color: CategoryMarkers.getPinColor(localizedName).withOpacity(0.3),
-//                                   blurRadius: 30,
-//                                   offset: const Offset(0, 15),
-//                                 ),
-//                               ],
-//                             ),
-//                             child: Stack(
-//                               children: [
-//                                 // Effet de profondeur
-//                                 Positioned.fill(
-//                                   child: Container(
-//                                     decoration: BoxDecoration(
-//                                       borderRadius: BorderRadius.circular(28),
-//                                       gradient: LinearGradient(
-//                                         begin: Alignment.topCenter,
-//                                         end: Alignment.bottomCenter,
-//                                         colors: [
-//                                           Colors.transparent,
-//                                           Colors.black.withOpacity(0.15),
-//                                         ],
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-                                
-//                                 Padding(
-//                                   padding: const EdgeInsets.all(24),
-//                                   child: Column(
-//                                     crossAxisAlignment: CrossAxisAlignment.start,
-//                                     children: [
-//                                       // En-tête avec logo et badge
-//                                       Row(
-//                                         crossAxisAlignment: CrossAxisAlignment.start,
-//                                         children: [
-//                                           // Logo avec effet de verre
-//                                           Container(
-//                                             width: 80,
-//                                             height: 80,
-//                                             decoration: BoxDecoration(
-//                                               borderRadius: BorderRadius.circular(24),
-//                                               color: Colors.white.withOpacity(0.15),
-//                                               border: Border.all(
-//                                                 color: Colors.white.withOpacity(0.25),
-//                                                 width: 1.5,
-//                                               ),
-//                                             ),
-//                                             child: ClipRRect(
-//                                               borderRadius: BorderRadius.circular(24),
-//                                               child: cleanLogoUrl != null 
-//                                                 ? CachedNetworkImage(
-//                                                     imageUrl: cleanLogoUrl,
-//                                                     fit: BoxFit.cover,
-//                                                     placeholder: (_, __) => _buildPlaceholderIcon(),
-//                                                     errorWidget: (_, __, ___) => _buildPlaceholderIcon(),
-//                                                   )
-//                                                 : _buildPlaceholderIcon(),
-//                                             ),
-//                                           ),
-                                          
-//                                           const Spacer(),
-                                          
-//                                           // Badge catégorie
-//                                           Container(
-//                                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//                                             decoration: BoxDecoration(
-//                                               color: Colors.white.withOpacity(0.15),
-//                                               borderRadius: BorderRadius.circular(20),
-//                                               border: Border.all(color: Colors.white.withOpacity(0.25)),
-//                                             ),
-//                                             child: Row(
-//                                               mainAxisSize: MainAxisSize.min,
-//                                               children: [
-//                                                 Icon(
-//                                                   CategoryMarkers.getPinIcon(localizedName),
-//                                                   color: Colors.white,
-//                                                   size: 16,
-//                                                 ),
-//                                                 const SizedBox(width: 8),
-//                                                 Text(
-//                                                   localizedName,
-//                                                   style: const TextStyle(
-//                                                     color: Colors.white,
-//                                                     fontSize: 14,
-//                                                     fontWeight: FontWeight.w600,
-//                                                   ),
-//                                                 ),
-//                                               ],
-//                                             ),
-//                                           ),
-//                                         ],
-//                                       ),
-                                      
-//                                       const SizedBox(height: 24),
-                                      
-//                                       // Nom du magasin
-//                                       Text(
-//                                         shop.nom_enseigne,
-//                                         style: const TextStyle(
-//                                           fontSize: 28,
-//                                           fontWeight: FontWeight.w800,
-//                                           color: Colors.white,
-//                                           height: 1.1,
-//                                         ),
-//                                       ),
-                                      
-//                                       const SizedBox(height: 16),
-                                      
-//                                       // Informations pratiques
-//                                       Column(
-//                                         crossAxisAlignment: CrossAxisAlignment.start,
-//                                         children: [
-//                                           _buildInfoChip(
-//                                             icon: Icons.location_on_rounded,
-//                                             text: shop.adresse,
-//                                             isDarkMode: isDarkMode,
-//                                           ),
-//                                               SizedBox(height: 12), // Espacement vertical
-
-//                                           _buildInfoChip(
-//                                             icon: Icons.near_me_rounded,
-//                                             text: '${distance < 1000 ? '${distance.toStringAsFixed(0)} m' : '${(distance / 1000).toStringAsFixed(1)} km'}',
-//                                             isDarkMode: isDarkMode,
-//                                           ),
-                                         
-//                                         ],
-//                                       ),
-//                                     ],
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-
-//                           // Section Offres
-//                           if (storeOffers != null && storeOffers.isNotEmpty) ...[
-//                             const SizedBox(height: 32),
-//                             Padding(
-//                               padding: const EdgeInsets.symmetric(horizontal: 24),
-//                               child: Row(
-//                                 children: [
-//                                   Icon(
-//                                     Icons.local_offer_rounded,
-//                                     color: Colors.orange.shade400,
-//                                     size: 28,
-//                                   ),
-//                                   const SizedBox(width: 12),
-//                                   Text(
-//                                     l10n?.offredisponible ?? 'Offres spéciales',
-//                                     style: TextStyle(
-//                                       fontSize: 22,
-//                                       fontWeight: FontWeight.w700,
-//                                       color: isDarkMode ? Colors.white : Colors.black87,
-//                                     ),
-//                                   ),
-//                                   const Spacer(),
-//                                   Container(
-//                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-//                                     decoration: BoxDecoration(
-//                                       color: Colors.orange.withOpacity(0.1),
-//                                       borderRadius: BorderRadius.circular(12),
-//                                     ),
-//                                     child: Text(
-//                                       '${storeOffers.length}',
-//                                       style: TextStyle(
-//                                         color: Colors.orange.shade400,
-//                                         fontWeight: FontWeight.bold,
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                             ),
-                            
-//                             const SizedBox(height: 16),
-                            
-//                             SizedBox(
-//                               height: 220,
-//                               child: ListView.builder(
-//                                 scrollDirection: Axis.horizontal,
-//                                 padding: const EdgeInsets.symmetric(horizontal: 24),
-//                                 physics: const BouncingScrollPhysics(),
-//                                 itemCount: storeOffers.length,
-//                                 itemBuilder: (context, index) {
-//                                   final offer = storeOffers![index];
-//                                   return _buildModernOfferCard(offer, isDarkMode, index);
-//                                 },
-//                               ),
-//                             ),
-//                           ],
-
-//                           const SizedBox(height: 32),
-
-//                           // Boutons d'action
-//                           Padding(
-//                             padding: const EdgeInsets.symmetric(horizontal: 24),
-//                             child: Row(
-//                               children: [
-//                                 // Bouton Fermer
-//                                 Expanded(
-//                                   child: OutlinedButton(
-//                                     onPressed: () => Navigator.pop(context),
-//                                     style: OutlinedButton.styleFrom(
-//                                       padding: const EdgeInsets.symmetric(vertical: 16),
-//                                       shape: RoundedRectangleBorder(
-//                                         borderRadius: BorderRadius.circular(16),
-//                                       ),
-//                                       side: BorderSide(
-//                                         color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
-//                                         width: 1.5,
-//                                       ),
-//                                     ),
-//                                     child: Text(
-//                                       l10n?.fermer ?? 'Fermer',
-//                                       style: TextStyle(
-//                                         fontSize: 16,
-//                                         fontWeight: FontWeight.w600,
-//                                         color: isDarkMode ? Colors.white70 : Colors.black87,
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-                                
-//                                 if (currentPosition != null) ...[
-//                                   const SizedBox(width: 16),
-                                  
-//                                   // Bouton Itinéraire
-//                                   Expanded(
-//                                     child: AnimatedContainer(
-//                                       duration: const Duration(milliseconds: 300),
-//                                       decoration: BoxDecoration(
-//                                         borderRadius: BorderRadius.circular(16),
-//                                         gradient: isRouting 
-//                                           ? null 
-//                                           : const LinearGradient(
-//                                               colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-//                                               begin: Alignment.topLeft,
-//                                               end: Alignment.bottomRight,
-//                                             ),
-//                                         color: isRouting ? Colors.grey.shade600 : null,
-//                                         boxShadow: isRouting
-//                                           ? null
-//                                           : [
-//                                               BoxShadow(
-//                                                 color: const Color(0xFF6366F1).withOpacity(0.3),
-//                                                 blurRadius: 15,
-//                                                 offset: const Offset(0, 8),
-//                                               ),
-//                                             ],
-//                                       ),
-//                                       child: Material(
-//                                         color: Colors.transparent,
-//                                         borderRadius: BorderRadius.circular(16),
-//                                         child: InkWell(
-//                                           borderRadius: BorderRadius.circular(16),
-//                                           onTap: isRouting
-//                                             ? null
-//                                             : () {
-//                                                 Navigator.pop(context);
-//                                                 if (widget.onStoreSelected != null) {
-//                                                     // Utilisez le callback pour déclencher la navigation
-//                                                     widget.onStoreSelected!(shop,_selectedCategory);
-//                                                  }
-//                                               },
-//                                           child: Padding(
-//                                             padding: const EdgeInsets.symmetric(vertical: 16),
-//                                             child: Center(
-//                                               child: isRouting
-//                                                 ? const SizedBox(
-//                                                     width: 24,
-//                                                     height: 24,
-//                                                     child: CircularProgressIndicator(
-//                                                       strokeWidth: 3,
-//                                                       color: Colors.white,
-//                                                     ),
-//                                                   )
-//                                                 : Row(
-//                                                     mainAxisAlignment: MainAxisAlignment.center,
-//                                                     children: [
-//                                                       const Icon(
-//                                                         Icons.directions_rounded,
-//                                                         color: Colors.white,
-//                                                         size: 22,
-//                                                       ),
-//                                                       const SizedBox(width: 8),
-//                                                       Text(
-//                                                         l10n?.iterinaire ?? 'Itinéraire',
-//                                                         style: const TextStyle(
-//                                                           color: Colors.white,
-//                                                           fontWeight: FontWeight.w600,
-//                                                         ),
-//                                                       ),
-//                                                     ],
-//                                                   ),
-//                                             ),
-//                                           ),
-//                                         ),
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ],
-//                             ),
-//                           ),
-
-//                           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 24),
-//                         ],
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       );
-//     },
-//   ).whenComplete(() => animationController.dispose());
-// }
-
-Widget _buildInfoChip({
-  required IconData icon,
-  required String text,
-  required bool isDarkMode,
-}) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: Colors.white.withOpacity(0.9)),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.white.withOpacity(0.95),
-            fontWeight: FontWeight.w500,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildModernOfferCard(Offers offer, bool isDarkMode, int index) {
-  final gradients = [
-    [const Color(0xFFFF6B6B), const Color(0xFFFF8E53)], // Rouge/Orange
-    [const Color(0xFF4ECDC4), const Color(0xFF44A08D)], // Turquoise/Vert
-    [const Color(0xFF45B7D1), const Color(0xFF96C93D)], // Bleu/Vert
-    [const Color(0xFFFF9A9E), const Color(0xFFFAD0C4)], // Rose/Pêche
-  ];
-  
-  final gradient = gradients[index % gradients.length];
-  
-  return Container(
-    width: 280,
-    margin: const EdgeInsets.only(right: 16),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(24),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: gradient,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: gradient[0].withOpacity(0.3),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-      ],
-    ),
-    child: Stack(
-      children: [
-        // Badge
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: const Text(
-              'OFFRE',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ),
-        
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Montant minimum
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Dépensez ${offer.min_amount}€',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Points à gagner
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${offer.points_given}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          'points à gagner',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
     }
-

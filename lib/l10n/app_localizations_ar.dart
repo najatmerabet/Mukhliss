@@ -563,4 +563,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get benificier => 'للاستفادة ';
+
+  @override
+  String get ofline => 'وضع عدم الاتصال';
+
+  @override
+  String get noloadqrcode => 'تعذر تحميل رمز الاستجابة السريعة';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get pasconnexioninternet => 'لا يوجد اتصال بالإنترنت';
+
+  @override
+  String get veuillezvzrifier => 'يرجى التحقق من الاتصال وإعادة المحاولة';
+
+  @override
+  String get aucunoffre => 'لم يتم استخدام أي عرض';
+
+  @override
+  String get aucunoffreutilise => 'لا توجد مكافآت متاحة في الوقت الحالي';
+
+  @override
+  String get langagechangedsuccessfully => 'تم تغيير اللغة بنجاح';
+
+  @override
+  String get uneconnexionnecessaire =>
+      'يلزم وجود اتصال لتحميل الخريطة والمتاجر';
 }

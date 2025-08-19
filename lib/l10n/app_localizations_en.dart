@@ -549,7 +549,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'You have the right to:\n - Access your data\n- Request its correction\n  - Delete your account\n - Export your data\n - Object to its processing\n -Contact us at  mukhlissfidelite@gmail.com  for any requests.';
 
   @override
-  String get compris => 'I understand';
+  String get compris => 'Understood';
 
   @override
   String get deconnextion => 'Disconnect';
@@ -593,4 +593,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get uneconnexionnecessaire =>
       'Login is required to load map and stores';
+
+  @override
+  String get connexionrequise => 'Connection required';
+
+  @override
+  String get connecterinternet =>
+      'To access device management, you must be connected to the internet.';
+
+  @override
+  String get verifier => 'Please check:';
+
+  @override
+  String get wifi =>
+      '• Your Wi-Fi connection\n•Your mobile data\n• Your network signalt';
+
+  @override
+  String get vereficationconnexion => 'Checking the connection...';
 }

@@ -194,7 +194,15 @@
  "aucunoffre":"No offer used",
   "aucunoffreutilise":"No rewards recently available",
 "langagechangedsuccessfully": "Language changed successfully",
-"uneconnexionnecessaire":"Login is required to load map and stores"
+"uneconnexionnecessaire":"Login is required to load map and stores",
+"connexionrequise":"Connection required",
+"connecterinternet":"To access device management, you must be connected to the internet.",
+"verifier":"Please check:",
+"wifi":"• Your Wi-Fi connection\n•Your mobile data\n• Your network signalt",
+"compris":"Understood",
+"vereficationconnexion":"Checking the connection..."
+
+
 
 
 

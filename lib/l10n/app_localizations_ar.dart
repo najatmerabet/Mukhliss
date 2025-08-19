@@ -547,7 +547,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لديك الحق في:\n - الوصول إلى بياناتك\n- طلب تصحيحها\n  - حذف حسابك\n - تصدير بياناتك\n - الاعتراض على معالجتها\n -يرجى التواصل معنا عبر البريد الإلكتروني :  mukhlissfidelite@gmail.com  لأي طلب متعلق ببياناتك.';
 
   @override
-  String get compris => 'فهمت';
+  String get compris => 'مفهوم';
 
   @override
   String get deconnextion => 'تسجيل الخروج ';
@@ -591,4 +591,21 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get uneconnexionnecessaire =>
       'يلزم وجود اتصال لتحميل الخريطة والمتاجر';
+
+  @override
+  String get connexionrequise => 'مطلوب اتصال بالإنترنت';
+
+  @override
+  String get connecterinternet =>
+      'للوصول إلى إدارة الأجهزة، يجب أن تكون متصلاً بالإنترنت.';
+
+  @override
+  String get verifier => 'يرجى التحقق:';
+
+  @override
+  String get wifi =>
+      '• اتصال Wi-Fi الخاص بك\n•بيانات الهاتف المحمول الخاصة بك\n• إشارة الشبكة الخاصة بك';
+
+  @override
+  String get vereficationconnexion => 'جارٍ التحقق من الاتصال…';
 }

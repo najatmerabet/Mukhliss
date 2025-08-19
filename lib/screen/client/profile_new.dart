@@ -108,10 +108,7 @@ Future<void> _loadUserData() async {
   } on TimeoutException {
     if (mounted) {
       setState(() => _isLoading = false);
-      showErrorSnackbar(
-        context: context,
-        message: 'Timeout - Vérifiez votre connexion',
-      );
+     
     }
   } catch (e) {
     debugPrint('Erreur lors du chargement: ${e.toString()}');

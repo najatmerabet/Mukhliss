@@ -1159,7 +1159,7 @@ abstract class AppLocalizations {
   /// No description provided for @compris.
   ///
   /// In en, this message translates to:
-  /// **'I understand'**
+  /// **'Understood'**
   String get compris;
 
   /// No description provided for @deconnextion.
@@ -1245,6 +1245,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login is required to load map and stores'**
   String get uneconnexionnecessaire;
+
+  /// No description provided for @connexionrequise.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection required'**
+  String get connexionrequise;
+
+  /// No description provided for @connecterinternet.
+  ///
+  /// In en, this message translates to:
+  /// **'To access device management, you must be connected to the internet.'**
+  String get connecterinternet;
+
+  /// No description provided for @verifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check:'**
+  String get verifier;
+
+  /// No description provided for @wifi.
+  ///
+  /// In en, this message translates to:
+  /// **'• Your Wi-Fi connection\n•Your mobile data\n• Your network signalt'**
+  String get wifi;
+
+  /// No description provided for @vereficationconnexion.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the connection...'**
+  String get vereficationconnexion;
 }
 
 class _AppLocalizationsDelegate

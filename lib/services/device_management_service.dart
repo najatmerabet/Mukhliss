@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -299,52 +300,53 @@ class DeviceManagementService {
   }
 
   /// À appeler au démarrage pour recharger currentDeviceId
-  Future<void> initCurrentDeviceFromSession() async {
-    try {
-      final session = _supabase.auth.currentSession;
-      if (session == null) {
-        debugPrint('⚠️ [DeviceService] Pas de session active');
-        return;
-      }
-      
-      // D'abord essayer de récupérer depuis la session
-      final row = await _supabase
-          .from('user_sessions')
-          .select('device_id')
-          .eq('session_token', session.accessToken)
-          .eq('is_active', true)
-          .maybeSingle();
-      
-      if (row != null && row['device_id'] != null) {
-        _currentDeviceId = row['device_id'] as String;
-        
-        // Sauvegarder le deviceId récupéré
-        await _saveCurrentDeviceId(_currentDeviceId!);
-        
-        if (!_isMonitoringInitialized) {
-          await initializeRealtimeMonitoring();
-        }
-        debugPrint('✅ [DeviceService] currentDeviceId rechargé depuis session: $_currentDeviceId');
-      } else {
-        debugPrint('⚠️ [DeviceService] Aucune session active trouvée pour ce token');
-        
-        // Essayer de récupérer depuis les préférences
-        await _loadCurrentDeviceId();
-        
-        if (_currentDeviceId != null) {
-          // Vérifier que ce deviceId est toujours valide
-          final isValid = await _validateDeviceId(_currentDeviceId!);
-          if (!isValid) {
-            debugPrint('⚠️ [DeviceService] DeviceId stocké n\'est plus valide');
-            _currentDeviceId = null;
-            await _clearStoredDeviceId();
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ [DeviceService] Erreur init depuis session: $e');
+ Future<void> initCurrentDeviceFromSession() async {
+  try {
+    // Vérifier d'abord la connexion internet
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      debugPrint('📵 [DeviceService] Mode hors ligne - Chargement depuis le cache');
+      await _loadCurrentDeviceId(); // Charger depuis le stockage local
+      return;
     }
+
+    final session = _supabase.auth.currentSession;
+    if (session == null) {
+      debugPrint('⚠️ [DeviceService] Pas de session active');
+      return;
+    }
+    
+    final row = await _supabase
+        .from('user_sessions')
+        .select('device_id')
+        .eq('session_token', session.accessToken)
+        .eq('is_active', true)
+        .maybeSingle()
+        .timeout(const Duration(seconds: 10)); // Timeout pour éviter l'attente infinie
+    
+    if (row != null && row['device_id'] != null) {
+      _currentDeviceId = row['device_id'] as String;
+      await _saveCurrentDeviceId(_currentDeviceId!);
+      
+      if (!_isMonitoringInitialized) {
+        await initializeRealtimeMonitoring();
+      }
+      debugPrint('✅ [DeviceService] DeviceId actualisé depuis le serveur');
+    } else {
+      debugPrint('⚠️ [DeviceService] Aucune session active trouvée');
+      await _loadCurrentDeviceId(); // Fallback sur le cache local
+    }
+  } on TimeoutException {
+    debugPrint('⏱️ [DeviceService] Timeout - Utilisation du cache local');
+    await _loadCurrentDeviceId();
+  } on SocketException catch (e) {
+    debugPrint('📵 [DeviceService] Erreur réseau: ${e.message}');
+    await _loadCurrentDeviceId(); // Fallback sur le cache local
+  } catch (e) {
+    debugPrint('❌ [DeviceService] Erreur inattendue: $e');
+    await _loadCurrentDeviceId(); // Fallback sur le cache local
   }
+}
 
   /// Nettoie les ressources et efface les données stockées
   void dispose() {

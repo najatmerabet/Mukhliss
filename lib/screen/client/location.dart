@@ -500,7 +500,7 @@ void _navigateToStoreAndShowDetails(Store store) async {
                                   height: 48,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color:Colors.blue.withOpacity(0.2),
+                                    color:Colors.blue..withOpacity(0.2),
                                   ),
                                 ),
                                 Container(
@@ -909,8 +909,8 @@ Widget _buildSearchResults() {
                 CategoryHelpers.getCategoryName(ref, store.Categorieid),
               ),
             ),
-            title: Text(store.nom_enseigne),
-            subtitle: Text(store.adresse),
+            title: Text(store.nom_enseigne!),
+            subtitle: Text(store.adresse!),
             trailing: Text(
               distance < 1000
                   ? '${distance.toStringAsFixed(0)} m'

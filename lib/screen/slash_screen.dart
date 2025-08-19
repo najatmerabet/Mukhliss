@@ -1,8 +1,9 @@
 // splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/screen/auth/login_page.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 
@@ -53,7 +54,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(isDarkMode.toString()),
+              // Text(isDarkMode.toString()),
               Text(
                 l10n?.hello ?? 'Bienvenue sur MUKHLISS',
                 style: TextStyle(

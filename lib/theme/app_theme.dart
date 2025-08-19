@@ -97,14 +97,14 @@ AppColors.surface
     ),
 
     // Cards
-    cardTheme: CardTheme(
-      color: Colors.white,
-      elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
+    // cardTheme: CardTheme(
+    //   color: Colors.white,
+    //   elevation: 4,
+    //   shadowColor: Colors.black.withOpacity(0.05),
+    //   shape: RoundedRectangleBorder(
+    //     borderRadius: BorderRadius.circular(16),
+    //   ),
+    // ),
 
     // Boutons élevés
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -210,14 +210,14 @@ AppColors.surface
     ),
 
     // Cards
-    cardTheme: CardTheme(
-      color: const Color(0xFF1F2937),
-      elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
+    // cardTheme: CardTheme(
+    //   color: const Color(0xFF1F2937),
+    //   elevation: 4,
+    //   shadowColor: Colors.black.withOpacity(0.3),
+    //   shape: RoundedRectangleBorder(
+    //     borderRadius: BorderRadius.circular(16),
+    //   ),
+    // ),
 
     // Boutons élevés
     elevatedButtonTheme: ElevatedButtonThemeData(

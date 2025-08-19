@@ -4,12 +4,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/utils/error_handler.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 enum OtpVerificationType { signup, passwordReset }
 
 class OtpVerificationPage extends ConsumerStatefulWidget {

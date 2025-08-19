@@ -6,15 +6,15 @@
 class Store{
 
 final String id;
-  final String nom_enseigne;
-  final String siret ;
-  final String adresse;
-  final String ville ;
-  final String code_postal ;
-  final String telephone ;
-  final String description ;
-   final Map<String, dynamic> geom;
-  final int Categorieid;
+  final String? nom_enseigne;
+  final String? siret ;
+  final String? adresse;
+  final String? ville ;
+  final String? code_postal ;
+  final String? telephone ;
+  final String? description ;
+   final Map<String, dynamic>? geom;
+  final int? Categorieid;
   final String? logoUrl; // Ajout de l'URL du logo
 
   const Store({
@@ -32,8 +32,8 @@ final String id;
   });
 
    double get latitude {
-    if (geom['coordinates'] != null && geom['coordinates'] is List) {
-      List coordinates = geom['coordinates'];
+    if (geom?['coordinates'] != null && geom?['coordinates'] is List) {
+      List coordinates = geom?['coordinates'];
       if (coordinates.length >= 2) {
         return coordinates[1].toDouble(); // Latitude est en position 1
       }
@@ -43,8 +43,8 @@ final String id;
 
   // Getter pour obtenir la longitude depuis geom
   double get longitude {
-    if (geom['coordinates'] != null && geom['coordinates'] is List) {
-      List coordinates = geom['coordinates'];
+    if (geom?['coordinates'] != null && geom?['coordinates'] is List) {
+      List coordinates = geom?['coordinates'];
       if (coordinates.length >= 2) {
         return coordinates[0].toDouble(); // Longitude est en position 0
       }

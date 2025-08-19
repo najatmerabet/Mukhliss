@@ -1,11 +1,23 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mukhliss/models/categories.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CategoriesService {
   final SupabaseClient _client = Supabase.instance.client;
-  
+    Future<bool> _hasInternetConnection() async {
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      return connectivityResult != ConnectivityResult.none;
+    } catch (e) {
+      print('Erreur lors de la vérification de la connectivité: $e');
+      return false;
+    }
+  }
   Future<List<Categories>> fetchCategories() async {
     try {
+      if (!await _hasInternetConnection()) {
+        throw Exception('no_internet_connection');
+      }
       final response = await _client
           .from('categories')
           .select();

@@ -192,7 +192,14 @@
  "aucunoffre":"لم يتم استخدام أي عرض",
   "aucunoffreutilise":"لا توجد مكافآت متاحة في الوقت الحالي",
 "langagechangedsuccessfully": "تم تغيير اللغة بنجاح",
-"uneconnexionnecessaire":"يلزم وجود اتصال لتحميل الخريطة والمتاجر"
+"uneconnexionnecessaire":"يلزم وجود اتصال لتحميل الخريطة والمتاجر",
+"connexionrequise":"مطلوب اتصال بالإنترنت",
+"connecterinternet":"للوصول إلى إدارة الأجهزة، يجب أن تكون متصلاً بالإنترنت.",
+"verifier":"يرجى التحقق:",
+"wifi":"• اتصال Wi-Fi الخاص بك\n•بيانات الهاتف المحمول الخاصة بك\n• إشارة الشبكة الخاصة بك",
+"compris":"مفهوم",
+"vereficationconnexion":"جارٍ التحقق من الاتصال…"
+
 
 
 

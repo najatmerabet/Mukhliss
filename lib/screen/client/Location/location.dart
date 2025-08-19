@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
@@ -597,7 +598,7 @@ void _navigateToStoreAndShowDetails(Store store) async {
  if (_isCheckingConnectivity) {
     return Scaffold(
       backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
-      body: _buildConnectivityCheckWidget(),
+      body: _buildConnectivityCheckWidget(context),
     );
   }
   if (!_hasConnection) {
@@ -1317,7 +1318,8 @@ Widget _buildNavigationArrowWidget(double bearing) {
     },
   );
 }
-Widget _buildConnectivityCheckWidget() {
+Widget _buildConnectivityCheckWidget(BuildContext context) {
+  final L10n = AppLocalizations.of(context);
   return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1325,7 +1327,7 @@ Widget _buildConnectivityCheckWidget() {
         const CircularProgressIndicator(),
         const SizedBox(height: 20),
         Text(
-          'Vérification de la connexion...',
+         L10n?.vereficationconnexion ?? 'Vérification de la connexion...',
           style: TextStyle(
             fontSize: 16,
             color: Theme.of(context).colorScheme.onBackground,

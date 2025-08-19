@@ -565,7 +565,7 @@ Widget _buildUsedOffersNoConnectionWidget(AppLocalizations? l10n, bool isDarkMod
         
         // Titre avec meilleure typographie
         Text(
-          'Connexion requise',
+          l10n?.connectionRequired ?? 'Connexion requise',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -846,7 +846,7 @@ Widget _buildErrorWidget(dynamic error, AppLocalizations? l10n, bool isDarkMode,
               ),
             ),
             child: Text(
-              error.toString(),
+              'veuillez vérifier votre connexion Internet',
               style: TextStyle(
                 color: isDarkMode 
                   ? AppColors.surface.withOpacity(0.7) 
@@ -894,148 +894,9 @@ Widget _buildErrorWidget(dynamic error, AppLocalizations? l10n, bool isDarkMode,
 
 
 
-Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.orange.shade100,
-            Colors.orange.shade50,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.orange.shade200,
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade200.withOpacity(0.5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.wifi_off_rounded,
-              size: 40,
-              color: Colors.orange.shade700,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n?.pasconnexioninternet ?? 'Pas de connexion Internet',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange.shade800,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n?.veuillezvzrifier ?? 'Veuillez vérifier votre connexion pour voir vos offres',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.orange.shade700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () => _checkConnectivity(),
-            icon: const Icon(Icons.refresh),
-            label: Text(l10n?.retry ?? 'Réessayer'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade600,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-   // Widget pour le message de pas de connexion
-Widget _buildMainContent(AppLocalizations? l10n, bool isDarkMode) {
-  // 1. Vérifier l'état de la connexion d'abord
-  if (_isCheckingConnectivity) {
-    return _buildConnectivityCheckWidget();
-  }
 
-  if (!_hasConnection) {
-    return _buildNoConnectionWidget(context, l10n, isDarkMode);
-  }
-
-  // 2. Si on a une connexion, charger les données
-  final clientAsync = ref.watch(authProvider).currentUser;
-  final clientoffreAsync = ref.watch(
-    clientAsync?.id != null
-      ? clientOffresProvider(clientAsync!.id)
-      : FutureProvider((ref) => Future.value([])),
-  );
   
-  final rewardsAsync = ref.watch(recentRewardsProvider);
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Section des récompenses disponibles
-      rewardsAsync.when(
-        data: (rewards) => rewards.isNotEmpty 
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n?.offredisponible ?? 'Offres Disponibles',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.surface : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...rewards.map((offer) => _buildOfferCard(offer, context, ref)),
-              ],
-            )
-          : _buildNoRewardsWidget(l10n, isDarkMode, false),
-        loading: () => _buildLoadingWidget(),
-        error: (error, _) => _buildErrorWidget(error, l10n, isDarkMode, true),
-      ),
-      
-      const SizedBox(height: 24),
-      
-      // Section des offres utilisées
-      clientoffreAsync.when(
-        data: (clientoffre) => clientoffre.isNotEmpty 
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n?.offreutilise ?? 'Offres Utilisées',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...clientoffre.map((offer) => _buildOfferCardutilise(offer, context)),
-              ],
-            )
-          : _buildNoRewardsWidget(l10n, isDarkMode, true),
-        loading: () => _buildLoadingWidget(),
-        error: (error, _) => _buildErrorWidget(error, l10n, isDarkMode, false),
-      ),
-    ],
-  );
-}
 
   Widget _buildConnectivityCheckWidget() {
     return Container(

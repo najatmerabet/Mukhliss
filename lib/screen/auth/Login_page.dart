@@ -51,6 +51,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   } catch (e) {
     // Delegate *all* errors (AuthException, PostgrestException,
     // SocketException, TimeoutException, anything else) to your handler:
+    // ignore: use_build_context_synchronously
     final errorMessage = AuthErrorHandler(context).handle(e);
     if (mounted) {
       showErrorSnackbar(

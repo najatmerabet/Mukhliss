@@ -180,10 +180,7 @@ Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bo
         decoration: BoxDecoration(
           color: isDarkMode ? AppColors.error.withOpacity(0.1) : Colors.orange.shade50,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isDarkMode ? AppColors.error : Colors.orange.shade300,
-            width: 2,
-          ),
+          
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -193,25 +190,8 @@ Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bo
               size: 64,
               color: isDarkMode ? AppColors.error : Colors.orange.shade700,
             ),
-            const SizedBox(height: 24),
-            Text(
-              l10n?.pasconnexioninternet ?? 'Pas de connexion Internet',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? AppColors.error : Colors.orange.shade800,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Une connexion est nécessaire pour charger la carte et les magasins',
-              style: TextStyle(
-                fontSize: 16,
-                color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            
+            
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _checkConnectivity,

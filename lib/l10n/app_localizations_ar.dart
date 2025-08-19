@@ -608,4 +608,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get vereficationconnexion => 'جارٍ التحقق من الاتصال…';
+
+  @override
+  String get verificationinternet => 'يرجى التحقق من اتصالك بالإنترنت';
+
+  @override
+  String get horsligne => 'أنت غير متصل - يلزم الاتصال بالإنترنت';
 }

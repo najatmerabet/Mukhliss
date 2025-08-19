@@ -303,7 +303,7 @@ Future<bool> _testSingleEndpoint(String url) async {
                           title:l10n?.gestionappariels ?? 'Gestion des appareils ',
                           subtitle: _hasConnection
                               ? l10n?.apparielsconnecte ?? 'Appareils connectés'
-                              : 'Hors ligne - Connexion requise',
+                              : l10n?.horsligne??'Hors ligne - Connexion requise',
 onTap: () => _handleDeviceManagement(context),
                           iconColor: const Color(0xFF3B82F6),
                           // ignore: deprecated_member_use
@@ -330,12 +330,15 @@ onTap: () => _handleDeviceManagement(context),
     );
   }
 void _handleDeviceManagement(BuildContext context) {
-  
+  final l10n = AppLocalizations.of(context);
+  final themeMode = ref.watch(themeProvider);
+  final isDarkMode = themeMode == AppThemeMode.light;
+
   debugPrint('Status connexion: $_hasConnection');
   
   if (!_hasConnection) {
     // Afficher un dialogue informatif au lieu de permettre l'accès
-    _showConnectionRequiredDialog(context);
+    _showNoConnectionDialog(context, l10n, isDarkMode);
     return;
   }
   
@@ -351,125 +354,51 @@ void _navigateToDeviceManagement(BuildContext context) {
   );
 }
 
-void _showConnectionRequiredDialog(BuildContext context) {
-  final l10n = AppLocalizations.of(context);
-  final themeMode = ref.watch(themeProvider);
-  final isDarkMode = themeMode == AppThemeMode.light;
-  
+void _showNoConnectionDialog(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
   showDialog(
     context: context,
-    barrierDismissible: true,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
-        shape: RoundedRectangleBorder(
+    barrierDismissible: true, // Permet de fermer en cliquant à l'extérieur
+    builder: (context) => Dialog(
+      backgroundColor: isDarkMode ? AppColors.darkSurface : Colors.white, // Fond transparent pour le dialog
+      insetPadding: const EdgeInsets.all(40), // Espace autour du container
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color:isDarkMode ? AppColors.darkSurface : Colors.white, 
           borderRadius: BorderRadius.circular(20),
         ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.wifi_off,
-                color: Colors.orange,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-              l10n?.connexionrequise ??  'Connexion requise',
-                style: TextStyle(
-                  color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
+        child: Column(
+          
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n?.connecterinternet ?? 'Pour accéder à la gestion des appareils, vous devez être connecté à Internet.',
-              style: TextStyle(
-                color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
-                fontSize: 16,
-                height: 1.4,
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 64,
+              color: isDarkMode ? AppColors.error : Colors.orange.shade700,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fermer le dialog
+                _checkConnectivity(); // Vérifier la connexion
+              },
+              icon: const Icon(Icons.refresh),
+              label: Text(l10n?.retry ?? 'Réessayer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDarkMode ? AppColors.error : Colors.orange.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.blue.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                   l10n?.veuillezvzrifier ?? 'Veuillez vérifier :',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                  l10n?.wifi ??  '• Votre connexion Wi-Fi\n• Vos données mobiles\n• Votre signal réseau',
-                    style: TextStyle(
-                      color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
-                      fontSize: 14,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Optionnel : relancer la vérification de connectivité
-              _checkConnectivity();
-            },
-            child: Text(
-             l10n?.retry ?? 'Réessayer',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDarkMode ? AppColors.surface : AppColors.darkSurface,
-              foregroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 0,
-            ),
-            child: Text(l10n?.compris??'Compris'),
-          ),
-        ],
-      );
-    },
+      ),
+    ),
   );
 }
 
@@ -914,7 +843,7 @@ final themeMode = ref.read(themeProvider);
 }) {
   // Get the localizations before any async operations
   AppLocalizations.of(context);
-  final l10n = AppLocalizations.of(context);
+
   return ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     onTap: () {
@@ -925,14 +854,7 @@ final themeMode = ref.read(themeProvider);
         // Change the language
         ref.read(languageProvider.notifier).changeLanguage(locale);
         
-        // Show success message immediately with current localizations
-        // The UI will rebuild with the new language automatically
-        // if (mounted) {
-        //   showSuccessSnackbar(
-        //     context: this.context, // Use the settings screen context
-        //     message: l10n?.langagechangedsuccessfully  ?? '', // Fallback message
-        //   );
-        // }
+     
       } else {
         // Just close if the same language is selected
         Navigator.of(context).pop();

@@ -200,7 +200,11 @@
 "verifier":"Please check:",
 "wifi":"• Your Wi-Fi connection\n•Your mobile data\n• Your network signalt",
 "compris":"Understood",
-"vereficationconnexion":"Checking the connection..."
+"vereficationconnexion":"Checking the connection...",
+"verificationinternet":"Please check your internet connection",
+"horsligne":"Hors ligne - Connexion requise"
+
+
 
 
 

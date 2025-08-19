@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -39,6 +40,9 @@ Future<AuthResponse> signUpClient({
   required String address,
 }) async {
   try {
+     if (!await _hasInternetConnection()) {
+        throw Exception('no_internet_connection');
+      }
     final authResponse = await _client.auth.signUp(
       email: email,
       password: password,
@@ -69,9 +73,22 @@ Future<AuthResponse> signUpClient({
     rethrow;
   }
 }
+
+ Future<bool> _hasInternetConnection() async {
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      return connectivityResult != ConnectivityResult.none;
+    } catch (e) {
+      print('Erreur lors de la vérification de la connectivité: $e');
+      return false;
+    }
+  }
 /// Connexion avec email et mot de passe
 Future<AuthResponse> login(String email, String password) async {
   try {
+     if (!await _hasInternetConnection()) {
+        throw Exception('no_internet_connection');
+      }
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,

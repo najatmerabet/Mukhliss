@@ -185,5 +185,20 @@
    "exclusifs":"EXCLUSIF",
    "pointsrequis":"POINTS REQUIS",
     "benificier":"À bénéficier",
-    "points":"pts"
+    "points":"pts",
+    "ofline":"Offline mode - Using cached data",
+  "noloadqrcode":"Could not load QR code",
+  "retry":"Réessayer",
+  "pasconnexioninternet":"Pas de connexion Internet",
+  "veuillezvzrifier":"Veuillez vérifier votre connexion et réessayer",
+ "aucunoffre":"Aucune offre utilisée",
+ "aucunoffreutilise":"Aucune récompense récemment disponible",
+"langagechangedsuccessfully": "Language changed successfully",
+"uneconnexionnecessaire":"Une connexion est nécessaire pour charger la carte et les magasins",
+"connexionrequise":"Connexion requise",
+"connecterinternet":"Pour accéder à la gestion des appareils, vous devez être connecté à Internet.",
+"verifier":"Veuillez vérifier :",
+"wifi":"• Votre connexion Wi-Fi\n• Vos données mobiles\n• Votre signal réseau",
+"compris":"Compris",
+"vereficationconnexion":"Vérification de la connexion..."
 }

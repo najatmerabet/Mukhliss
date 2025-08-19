@@ -1,4 +1,5 @@
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mukhliss/models/clientoffre.dart';
 import 'package:mukhliss/models/rewards.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,10 +7,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class  ClientoffreService {
 final SupabaseClient _client = Supabase.instance.client;
 
-
+  Future<bool> _hasInternetConnection() async {
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      return connectivityResult != ConnectivityResult.none;
+    } catch (e) {
+      print('Erreur lors de la vérification de la connectivité: $e');
+      return false;
+    }
+  }
 //recuperer les recompenses pris par client
 Future<List<ClientOffre>> getClientOffres(String clientId) async {
   try {
+     if (!await _hasInternetConnection()) {
+        throw Exception('no_internet_connection');
+      }
+      
     print('clientId: $clientId');
     final response = await _client
         .from('reward_claims')

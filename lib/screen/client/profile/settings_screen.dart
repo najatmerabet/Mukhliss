@@ -1,8 +1,11 @@
 // lib/screens/settings_screen.dart
+import 'dart:async';
 import 'dart:math';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
@@ -33,6 +36,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
   final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+   bool _hasConnection = true;
+    StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  bool _isCheckingConnectivity = true;
 
   @override
   void initState() {
@@ -45,6 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
+    _checkConnectivity(); 
   }
 
   @override
@@ -106,8 +113,122 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
     }
   }
 
+Future<void> _checkConnectivity() async {
+  setState(() {
+    _isCheckingConnectivity = true;
+  });
 
+  try {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    bool hasInternet = false;
+    
+    // Si connecté à un réseau, vérifier l'accès Internet
+    if (connectivityResult != ConnectivityResult.none) {
+      hasInternet = await _checkInternetAccess();
+    }
+  print('hasinternet ${hasInternet}');
+    if (mounted) {
+      setState(() {
+        _hasConnection = hasInternet;
+        _isCheckingConnectivity = false;
+      });
+    }
 
+    // Écouter les changements de connectivité
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) async {
+      debugPrint('Connectivity changed to: $result');
+      
+      bool newConnection = false;
+      
+      if (result != ConnectivityResult.none) {
+        // Attendre un peu pour que la connexion se stabilise
+        await Future.delayed(const Duration(seconds: 2));
+        newConnection = await _checkInternetAccess();
+      }
+
+      if (mounted) {
+        setState(() {
+          _hasConnection = newConnection;
+        });
+        debugPrint('Internet access: $newConnection');
+      }
+    });
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _hasConnection = false;
+        _isCheckingConnectivity = false;
+      });
+    }
+    debugPrint('Erreur de vérification de connectivité: $e');
+  }
+}
+
+// Méthode améliorée pour vérifier l'accès internet réel
+Future<bool> _checkInternetAccess() async {
+  try {
+    debugPrint('Checking internet access...');
+    
+    // Utiliser des endpoints plus fiables et rapides
+    final testEndpoints = [
+      'https://httpbin.org/status/200',
+      'https://jsonplaceholder.typicode.com/posts/1',
+      'https://api.github.com',
+      'https://8.8.8.8', // Google DNS (mais nécessite une requête HTTP)
+    ];
+    
+    // Essayer plusieurs endpoints en parallèle avec un timeout plus approprié
+    final futures = testEndpoints.map((url) => _testSingleEndpoint(url));
+    
+    try {
+      // Si au moins un endpoint répond correctement dans les 5 secondes
+      final results = await Future.wait(
+        futures,
+        eagerError: false,
+      ).timeout(const Duration(seconds: 5));
+      
+      final hasConnection = results.any((result) => result == true);
+      debugPrint('Internet check result: $hasConnection');
+      return hasConnection;
+      
+    } on TimeoutException {
+      debugPrint('Internet check timeout');
+      return false;
+    }
+    
+  } catch (e) {
+    debugPrint('Erreur lors de la vérification internet: $e');
+    return false;
+  }
+}
+Future<bool> _testSingleEndpoint(String url) async {
+  try {
+    final uri = Uri.parse(url);
+    debugPrint('Testing endpoint: $url');
+    
+    final request = http.Request('HEAD', uri); // Utiliser HEAD au lieu de GET
+    request.headers.addAll({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'User-Agent': 'MukhlissApp/1.0',
+    });
+    
+    final response = await request.send().timeout(
+      const Duration(seconds: 3),
+    );
+    
+    final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
+    debugPrint('Endpoint $url returned: ${response.statusCode} - Success: $isSuccess');
+    
+    return isSuccess;
+    
+  } catch (e) {
+    debugPrint('Endpoint $url failed: $e');
+    return false;
+  }
+}
   @override
   Widget build(BuildContext context) {
       final themeMode = ref.watch(themeProvider);
@@ -147,7 +268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: l10n?.theme ?? 'Thème sombre',
-                          subtitle: isDarkMode ? l10n?.active ?? 'Activé' :  'Désactivé',
+                          subtitle: isDarkMode ? l10n?.active ?? 'Activé' : l10n?.desactive ?? 'Désactivé',
                           trailing: Switch.adaptive(
                             value: isDarkMode,
                             onChanged: (value) {
@@ -180,8 +301,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
                         _buildModernSettingTile(
                           icon: Icons.devices_outlined,
                           title:l10n?.gestionappariels ?? 'Gestion des appareils ',
-                          subtitle:l10n?.apparielsconnecte ?? 'Appareils connectés',
-                          onTap: () => _showDeviceManagement(context),
+                          subtitle: _hasConnection
+                              ? l10n?.apparielsconnecte ?? 'Appareils connectés'
+                              : 'Hors ligne - Connexion requise',
+onTap: () => _handleDeviceManagement(context),
                           iconColor: const Color(0xFF3B82F6),
                           // ignore: deprecated_member_use
                           iconBgColor: const Color(0xFF3B82F6).withOpacity(0.1),
@@ -206,13 +329,147 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> with TickerProv
       ),
     );
   }
-
- void _showDeviceManagement(BuildContext context) {
+void _handleDeviceManagement(BuildContext context) {
+  
+  debugPrint('Status connexion: $_hasConnection');
+  
+  if (!_hasConnection) {
+    // Afficher un dialogue informatif au lieu de permettre l'accès
+    _showConnectionRequiredDialog(context);
+    return;
+  }
+  
+  // Si connecté, procéder normalement
+  _navigateToDeviceManagement(context);
+}
+void _navigateToDeviceManagement(BuildContext context) {
   Navigator.push(
     context,
     MaterialPageRoute(
       builder: (context) => const DevicesScreen(),
     ),
+  );
+}
+
+void _showConnectionRequiredDialog(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  final themeMode = ref.watch(themeProvider);
+  final isDarkMode = themeMode == AppThemeMode.light;
+  
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.wifi_off,
+                color: Colors.orange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+              l10n?.connexionrequise ??  'Connexion requise',
+                style: TextStyle(
+                  color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n?.connecterinternet ?? 'Pour accéder à la gestion des appareils, vous devez être connecté à Internet.',
+              style: TextStyle(
+                color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.blue.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                   l10n?.veuillezvzrifier ?? 'Veuillez vérifier :',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                  l10n?.wifi ??  '• Votre connexion Wi-Fi\n• Vos données mobiles\n• Votre signal réseau',
+                    style: TextStyle(
+                      color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
+                      fontSize: 14,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Optionnel : relancer la vérification de connectivité
+              _checkConnectivity();
+            },
+            child: Text(
+             l10n?.retry ?? 'Réessayer',
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDarkMode ? AppColors.surface : AppColors.darkSurface,
+              foregroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: Text(l10n?.compris??'Compris'),
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -422,9 +679,11 @@ Widget _buildPrivacySection({required String title, required String content}) {
   }
 
   Widget _buildModernSettingCard({required List<Widget> children}) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -447,6 +706,8 @@ Widget _buildPrivacySection({required String title, required String content}) {
     required Color iconColor,
     required Color iconBgColor,
   }) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return ListTile(
       leading: Container(
         width: 44,
@@ -463,8 +724,8 @@ Widget _buildPrivacySection({required String title, required String content}) {
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xFF1F2937),
+        style: TextStyle(
+          color: isDarkMode ? Colors.white : Color(0xFF1F2937),
           fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
@@ -473,7 +734,7 @@ Widget _buildPrivacySection({required String title, required String content}) {
           ? Text(
               subtitle,
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: isDarkMode ? Colors.white : Color(0xFF1F2937),
                 fontSize: 14,
               ),
             )
@@ -653,6 +914,7 @@ final themeMode = ref.read(themeProvider);
 }) {
   // Get the localizations before any async operations
   AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context);
   return ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     onTap: () {
@@ -665,12 +927,12 @@ final themeMode = ref.read(themeProvider);
         
         // Show success message immediately with current localizations
         // The UI will rebuild with the new language automatically
-        if (mounted) {
-          showSuccessSnackbar(
-            context: this.context, // Use the settings screen context
-            message: 'Language changed successfully', // Fallback message
-          );
-        }
+        // if (mounted) {
+        //   showSuccessSnackbar(
+        //     context: this.context, // Use the settings screen context
+        //     message: l10n?.langagechangedsuccessfully  ?? '', // Fallback message
+        //   );
+        // }
       } else {
         // Just close if the same language is selected
         Navigator.of(context).pop();

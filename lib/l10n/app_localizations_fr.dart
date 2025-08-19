@@ -555,7 +555,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez le droit de :\n - Accéder à vos données\n- Demander leur correction\n  - Supprimer votre compte\n - Exporter vos données\n - Vous opposer au traitement\n - Contactez-nous à mukhlissfidelite@gmail.com pour toute demande.';
 
   @override
-  String get compris => 'J\'ai compris';
+  String get compris => 'Compris';
 
   @override
   String get deconnextion => 'Déconnexion';
@@ -571,4 +571,50 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get benificier => 'À bénéficier';
+
+  @override
+  String get ofline => 'Offline mode - Using cached data';
+
+  @override
+  String get noloadqrcode => 'Could not load QR code';
+
+  @override
+  String get retry => 'Réessayer';
+
+  @override
+  String get pasconnexioninternet => 'Pas de connexion Internet';
+
+  @override
+  String get veuillezvzrifier =>
+      'Veuillez vérifier votre connexion et réessayer';
+
+  @override
+  String get aucunoffre => 'Aucune offre utilisée';
+
+  @override
+  String get aucunoffreutilise => 'Aucune récompense récemment disponible';
+
+  @override
+  String get langagechangedsuccessfully => 'Language changed successfully';
+
+  @override
+  String get uneconnexionnecessaire =>
+      'Une connexion est nécessaire pour charger la carte et les magasins';
+
+  @override
+  String get connexionrequise => 'Connexion requise';
+
+  @override
+  String get connecterinternet =>
+      'Pour accéder à la gestion des appareils, vous devez être connecté à Internet.';
+
+  @override
+  String get verifier => 'Veuillez vérifier :';
+
+  @override
+  String get wifi =>
+      '• Votre connexion Wi-Fi\n• Vos données mobiles\n• Votre signal réseau';
+
+  @override
+  String get vereficationconnexion => 'Vérification de la connexion...';
 }

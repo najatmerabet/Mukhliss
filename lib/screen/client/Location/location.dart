@@ -171,43 +171,73 @@ void _updateConnectionStatus(ConnectivityResult result) {
   }
 }
 
-Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
+Widget _buildNoConnectionWidget(
+    BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
   return Center(
     child: SingleChildScrollView(
       child: Container(
         margin: const EdgeInsets.all(20),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDarkMode ? AppColors.error.withOpacity(0.1) : Colors.orange.shade50,
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 64,
-              color: isDarkMode ? AppColors.error : Colors.orange.shade700,
+            // Icône d’avertissement
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: Colors.red.withOpacity(0.1),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                size: 64,
+                color: Colors.red,
+              ),
             ),
-            
-            
+
+            const SizedBox(height: 20),
+
+            // Texte principal
+            Text(
+              l10n?.somethingwrong ?? "Something went wrong",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _checkConnectivity,
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n?.retry ?? 'Réessayer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDarkMode ? AppColors.error : Colors.orange.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+
+            // Bouton "Réessayer"
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _checkConnectivity,
+                
+                label: Text(
+                  l10n?.retry ?? 'Réessayer',
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      AppColors.error ,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-           
           ],
         ),
       ),

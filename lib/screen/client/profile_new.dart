@@ -678,7 +678,7 @@ void _showNoConnectionSnackbar() {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(l10n?.verificationinternet ?? 'Veuillez vérifier votre connexion internet'),
-      backgroundColor: Colors.orange,
+      backgroundColor: AppColors.error,
     ),
   );
 }

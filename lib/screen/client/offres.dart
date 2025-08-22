@@ -197,50 +197,61 @@ Widget _buildNoConnectionHistoryWidget(AppLocalizations? l10n, bool isDarkMode) 
       child: Container(
         margin: const EdgeInsets.all(20),
         padding: const EdgeInsets.all(24),
-      
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.amber.shade50,
-              Colors.amber.shade100.withOpacity(0.5),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
+           color: isDarkMode ? Colors.grey[850] : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Important pour Column dans Center
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade100.withOpacity(0.3),
-                shape: BoxShape.circle,
-              ),
+            // Icône d’avertissement
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: Colors.red.withOpacity(0.1),
               child: Icon(
-                Icons.wifi_off_rounded,
+                Icons.warning_amber_rounded,
                 size: 64,
-                color:Colors.orange.shade700,
+                color: Colors.red,
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _checkConnectivity(),
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: Text(l10n?.retry ?? 'Réessayer'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+            const SizedBox(height: 20),
+
+            // Texte principal
+            Text(
+              l10n?.somethingwrong ?? "Something went wrong",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Bouton "Réessayer"
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _checkConnectivity,
+                label: Text(
+                  l10n?.retry ?? 'Réessayer',
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -248,6 +259,7 @@ Widget _buildNoConnectionHistoryWidget(AppLocalizations? l10n, bool isDarkMode) 
     ),
   );
 }
+
 
 
 

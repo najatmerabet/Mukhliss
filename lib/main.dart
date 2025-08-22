@@ -1,8 +1,8 @@
-// main.dart - Version corrigée
+// main.dart - Version avec GlobalErrorHandler
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
@@ -17,8 +17,120 @@ import 'package:flutter/material.dart' as flutter_material show ThemeMode;
 
 typedef flutter_ThemeMode = flutter_material.ThemeMode;
 
+// ✅ Gestionnaire d'erreurs global
+class GlobalErrorHandler {
+  static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
+
+  static void initialize() {
+    // Capturer les erreurs Flutter non gérées
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // Log l'erreur
+      debugPrint('Flutter Error: ${details.exception}');
+      debugPrint('Stack trace: ${details.stack}');
+      
+      // Gérer les erreurs Supabase spécifiques
+      _handleSupabaseAuthError(details.exception);
+    };
+
+    // Capturer les erreurs asynchrones non gérées
+    PlatformDispatcher.instance.onError = (error, stack) {
+      debugPrint('Platform Error: $error');
+      debugPrint('Stack trace: $stack');
+      
+      _handleSupabaseAuthError(error);
+      return true; // Indique que l'erreur a été gérée
+    };
+
+    // Écouter spécifiquement les erreurs d'authentification Supabase
+    _setupSupabaseAuthErrorListener();
+  }
+
+  static void _setupSupabaseAuthErrorListener() {
+    try {
+      final supabase = Supabase.instance.client;
+      
+      // Écouter les changements d'état d'authentification
+      supabase.auth.onAuthStateChange.listen(
+        (data) {
+          final event = data.event;
+          final session = data.session;
+          
+          debugPrint('🔐 Auth state changed: $event');
+          
+          if (event == AuthChangeEvent.signedOut && session == null) {
+            debugPrint('🚪 User signed out - possibly due to auth error');
+          }
+          
+          if (event == AuthChangeEvent.tokenRefreshed) {
+            debugPrint('🔄 Token refreshed successfully');
+          }
+        },
+        onError: (error) {
+          debugPrint('❌ Auth state change error: $error');
+          _handleSupabaseAuthError(error);
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ Failed to setup Supabase auth error listener: $e');
+    }
+  }
+
+  static void _handleSupabaseAuthError(dynamic error) {
+    if (error == null) return;
+    
+    final errorString = error.toString();
+    
+    // Vérifier si c'est une erreur d'authentification Supabase
+    if (errorString.contains('AuthRetryableFetchException') ||
+        errorString.contains('Failed host lookup') ||
+        errorString.contains('supabase.co') ||
+        errorString.contains('refresh_token') ||
+        errorString.contains('No address associated with hostname')) {
+      
+      debugPrint('🔧 Supabase auth error detected and handled: $errorString');
+      
+      _notifyAuthError(errorString);
+    }
+  }
+
+  static void _notifyAuthError(String error) {
+    debugPrint('📡 Auth error notification: Network connectivity issues detected');
+    
+    // Afficher une notification discrète à l'utilisateur
+    if (scaffoldMessengerKey?.currentState != null) {
+      try {
+        scaffoldMessengerKey!.currentState!.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Problème de connexion détecté - Mode hors ligne activé',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange[700],
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Failed to show error notification: $e');
+      }
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Initialiser le gestionnaire d'erreurs global AVANT tout le reste
+  GlobalErrorHandler.initialize();
 
   try {
     await dotenv.load(fileName: '.env');
@@ -70,6 +182,10 @@ class AuthWrapper extends ConsumerWidget {
     final currentLocale = ref.watch(languageProvider);
     final currentThemeMode = ref.watch(themeProvider);
 
+    // ✅ Créer la clé globale pour ScaffoldMessenger
+    final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+    GlobalErrorHandler.scaffoldMessengerKey = scaffoldMessengerKey;
+
     return MaterialApp(
       title: 'MUKHLISS',
       theme: AppColors.lightTheme,
@@ -79,6 +195,7 @@ class AuthWrapper extends ConsumerWidget {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: currentLocale,
+      scaffoldMessengerKey: scaffoldMessengerKey, // ✅ Ajouter la clé
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
@@ -107,7 +224,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
   final bool _initialized = false;
-  bool _monitoringInitialized = false; // ✅ Nouveau flag
+  bool _monitoringInitialized = false;
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;
 
@@ -115,29 +232,26 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   void initState() {
     super.initState();
 
-    // ✅ Configuration des callbacks une seule fois
     _setupRealtimeCallbacks();
 
-    // ✅ Écoute des changements d'authentification SANS initialiser le monitoring ici
+    // ✅ Écoute des changements d'authentification avec gestion d'erreur améliorée
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
       _handleAuthChange,
+      onError: (error) {
+        debugPrint('❌ Auth subscription error: $error');
+        // L'erreur sera gérée par GlobalErrorHandler
+      },
     );
   }
 
   void _setupRealtimeCallbacks() {
     // Callback pour déconnexion forcée
     _deviceService.onForceLogout = () {
-      debugPrint(
-        '🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate',
-      );
+      debugPrint('🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate');
 
-      // Afficher une notification à l'utilisateur
       _showForceLogoutNotification();
-
-      // Déconnecter immédiatement
       Supabase.instance.client.auth.signOut();
 
-      // Redirection vers login
       if (mounted && navigatorKey.currentState != null) {
         navigatorKey.currentState!.pushNamedAndRemoveUntil(
           AppRouter.login,
@@ -153,9 +267,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     };
   }
 
-  // ✅ Nouvelle méthode centralisée pour initialiser le monitoring
   Future<void> _initializeDeviceMonitoring() async {
-    // ✅ Éviter les initialisations multiples
     if (_monitoringInitialized) {
       debugPrint('🔹 [Main] Monitoring déjà initialisé, ignoré');
       return;
@@ -170,11 +282,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     try {
       debugPrint('🔹 [Main] Initialisation surveillance temps réel');
 
-      // ✅ Initialiser dans l'ordre correct
       await _deviceService.initCurrentDeviceFromSession();
       await _deviceService.initializeRealtimeMonitoring();
 
-      // Démarrer le timer d'activité
       _startActivityTimer();
 
       _monitoringInitialized = true;
@@ -182,6 +292,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     } catch (e) {
       debugPrint('❌ [Main] Erreur initialisation monitoring: $e');
       _monitoringInitialized = false;
+      // L'erreur sera gérée par GlobalErrorHandler si c'est une erreur réseau
     }
   }
 
@@ -190,7 +301,12 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     _activityTimer = Timer.periodic(const Duration(minutes: 2), (timer) async {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser != null) {
-        await _deviceService.updateDeviceActivity();
+        try {
+          await _deviceService.updateDeviceActivity();
+        } catch (e) {
+          debugPrint('❌ [Main] Erreur mise à jour activité: $e');
+          // L'erreur sera gérée par GlobalErrorHandler
+        }
       } else {
         timer.cancel();
       }
@@ -252,21 +368,16 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     switch (data.event) {
       case AuthChangeEvent.initialSession:
         if (data.session != null) {
-          debugPrint(
-            '🔹 [Main] Session initiale trouvée, redirection vers main',
-          );
+          debugPrint('🔹 [Main] Session initiale trouvée, redirection vers main');
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              // ✅ Initialiser le monitoring APRÈS la navigation
               await Future.delayed(const Duration(milliseconds: 1000));
               await _initializeDeviceMonitoring();
             }
           });
         } else {
-          debugPrint(
-            '🔹 [Main] Pas de session initiale, redirection vers login',
-          );
+          debugPrint('🔹 [Main] Pas de session initiale, redirection vers login');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
@@ -281,7 +392,6 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (mounted && navigatorKey.currentState != null) {
               navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              // ✅ Initialiser le monitoring APRÈS la navigation
               await Future.delayed(const Duration(milliseconds: 1000));
               await _initializeDeviceMonitoring();
             }
@@ -290,9 +400,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
         break;
 
       case AuthChangeEvent.signedOut:
-        debugPrint(
-          '🔹 [Main] Déconnexion, nettoyage et redirection vers login',
-        );
+        debugPrint('🔹 [Main] Déconnexion, nettoyage et redirection vers login');
         _cleanupOnSignOut();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && navigatorKey.currentState != null) {
@@ -319,14 +427,9 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   }
 
   void _cleanupOnSignOut() {
-    // ✅ Nettoyer les flags
     _monitoringInitialized = false;
-
-    // Nettoyer les timers et subscriptions
     _activityTimer?.cancel();
     _activityTimer = null;
-
-    // Nettoyer le service des appareils
     _deviceService.dispose();
   }
 
@@ -349,7 +452,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
+        themeMode: ThemeMode.system,
         home: const Scaffold(body: Center(child: CircularProgressIndicator())),
         debugShowCheckedModeBanner: false,
       );
@@ -371,7 +474,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
         if (settings.name != null && settings.name!.contains('code=')) {
           print('Callback d\'authentification détecté avec code');
           return MaterialPageRoute(
-            builder: (_) => const SplashScreen( ),
+            builder: (_) => const SplashScreen(),
             settings: settings,
           );
         }

@@ -614,4 +614,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get horsligne => 'أنت غير متصل - يلزم الاتصال بالإنترنت';
+
+  @override
+  String get somethingwrong => 'حدث خطأ ما';
 }

@@ -1287,6 +1287,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hors ligne - Connexion requise'**
   String get horsligne;
+
+  /// No description provided for @somethingwrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingwrong;
 }
 
 class _AppLocalizationsDelegate

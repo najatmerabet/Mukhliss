@@ -616,4 +616,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get horsligne => 'Hors ligne - Connexion requise';
+
+  @override
+  String get somethingwrong => 'Something went wrong';
 }

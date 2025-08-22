@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import 'package:mukhliss/models/user_device.dart';
 import 'package:mukhliss/services/device_management_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -40,9 +38,6 @@ Future<AuthResponse> signUpClient({
   required String address,
 }) async {
   try {
-     if (!await hasInternetConnection()) {
-        throw Exception('no_internet_connection');
-      }
     final authResponse = await _client.auth.signUp(
       email: email,
       password: password,
@@ -73,65 +68,28 @@ Future<AuthResponse> signUpClient({
     rethrow;
   }
 }
-/// Gère les exceptions liées à la connexion réseau
-dynamic _handleNetworkErrors(Function operation) async {
-  try {
-    if (!await hasInternetConnection()) {
-      throw AuthException('no_internet_connection');
-    }
-    return await operation();
-  } on AuthException catch (e) {
-    if (e.message == 'no_internet_connection') {
-      rethrow;
-    }
-    _logError('Erreur auth', e);
-    rethrow;
-  } catch (e) {
-    // Vérifie si c'est une erreur de réseau
-    if (e.toString().contains('SocketException') ||
-        e.toString().contains('Failed host lookup') ||
-        e.toString().contains('Network is unreachable')) {
-      throw AuthException('no_internet_connection');
-    }
-    _logError('Erreur inattendue', e);
-    rethrow;
-  }
-}
-// Rendez cette méthode publique
-Future<bool> hasInternetConnection() async {
-  try {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      return false;
-    }
-    
-    // Vérification de l'accès internet réel
-    final response = await http.get(
-      Uri.parse('https://www.google.com'),
-      headers: {'Cache-Control': 'no-cache'},
-    ).timeout(const Duration(seconds: 3));
-    
-    return response.statusCode == 200;
-  } catch (e) {
-    return false;
-  }
-}
 /// Connexion avec email et mot de passe
 Future<AuthResponse> login(String email, String password) async {
-  return await _handleNetworkErrors(() async {
+  try {
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
     );
 
     if (response.user != null) {
+      // Enregistrer automatiquement l'appareil
       await _deviceService.registerCurrentDevice();     
+      // Démarrer le suivi d'activité
       _startActivityTracking();
+      
       _log('Connexion réussie avec enregistrement appareil ✅');
     }
 
     return response;
-  });
+  } catch (e) {
+    _logError('Erreur connexion', e);
+    rethrow;
+  }
 }
 // ============= DEVICE MANAGEMENT =============
 

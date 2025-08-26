@@ -9,6 +9,11 @@ version: 1.0.0+1
 environment:
   sdk: ^3.7.2
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "images/withoutbg.png"
+
 dependencies:
   flutter:
     sdk: flutter
@@ -46,6 +51,7 @@ dev_dependencies:
   flutter_gen_runner: ^5.10.0  
   build_runner: ^2.4.15
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
   
 
 flutter:

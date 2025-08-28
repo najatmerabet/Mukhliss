@@ -69,8 +69,54 @@ Future<AuthResponse> signUpClient({
   }
 }
 /// Connexion avec email et mot de passe
+// Future<AuthResponse> login(String email, String password) async {
+//   try {
+//     final response = await _client.auth.signInWithPassword(
+//       email: email,
+//       password: password,
+//     );
+
+//     if (response.user != null) {
+//       // Enregistrer automatiquement l'appareil
+//       await _deviceService.registerCurrentDevice();     
+//       // Démarrer le suivi d'activité
+//       _startActivityTracking();
+      
+//       _log('Connexion réussie avec enregistrement appareil ✅');
+//     }
+
+//     return response;
+//   } catch (e) {
+//     _logError('Erreur connexion', e);
+//     rethrow;
+//   }
+// }
 Future<AuthResponse> login(String email, String password) async {
   try {
+    // 1. Première vérification : existe-t-il dans la table client ?
+    _log('Vérification de l\'existence du client pour: $email');
+    
+    final clientCheck = await _client
+        .from('client')
+        .select('email') // Vous pouvez aussi vérifier un statut actif
+        .eq('email', email)
+        .maybeSingle();
+
+    // Si l'email n'existe pas dans la table client
+    if (clientCheck == null) {
+      _logError('Connexion refusée', 'Email $email non trouvé dans la table client');
+      throw Exception('Accès non autorisé. Votre compte n\'est pas enregistré dans le système.');
+    }
+
+    // Optionnel : vérifier si le client est actif
+    if (clientCheck['active'] == false) {
+      _logError('Connexion refusée', 'Compte client désactivé pour: $email');
+      throw Exception('Votre compte est désactivé. Veuillez contacter l\'administrateur.');
+    }
+
+    _log('Client vérifié dans la table ✅ Tentative d\'authentification...');
+
+    // 2. Si l'email existe dans client, procéder à l'authentification Supabase
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -82,10 +128,17 @@ Future<AuthResponse> login(String email, String password) async {
       // Démarrer le suivi d'activité
       _startActivityTracking();
       
-      _log('Connexion réussie avec enregistrement appareil ✅');
+      _log('Connexion réussie avec vérification client et enregistrement appareil ✅');
     }
 
     return response;
+  } on PostgrestException catch (e) {
+    _logError('Erreur base de données lors de la vérification client', e);
+    throw Exception('Erreur de connexion à la base de données. Veuillez réessayer.');
+  } on AuthException catch (e) {
+    _logError('Erreur authentification', e);
+    // L'erreur d'auth sera plus spécifique (mot de passe incorrect, etc.)
+    rethrow;
   } catch (e) {
     _logError('Erreur connexion', e);
     rethrow;

@@ -1,8 +1,10 @@
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/models/clientoffre.dart';
 import 'package:mukhliss/models/rewards.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
@@ -11,26 +13,83 @@ import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
-class MyOffersScreen extends ConsumerWidget  {
-    MyOffersScreen({Key? key}) : super(key: key);
+class MyOffersScreen extends ConsumerStatefulWidget   {
+   MyOffersScreen({Key? key}) : super(key: key);
  
+  @override
+  ConsumerState<MyOffersScreen> createState() => _MyOffersScreenState();
+}
+
+class _MyOffersScreenState extends ConsumerState<MyOffersScreen> {
+    bool _hasConnection = true;
+    StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  bool _isCheckingConnectivity = true;
 
   @override
-  Widget build(BuildContext context , WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _checkConnectivity();
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+
+Future<void> _checkConnectivity() async {
+  try {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (mounted) {
+      setState(() {
+        _hasConnection = connectivityResult != ConnectivityResult.none;
+        _isCheckingConnectivity = false;
+      });
+    }
+
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      if (mounted) {
+        setState(() {
+          _hasConnection = result != ConnectivityResult.none;
+        });
+        // Rafraîchir les données si la connexion revient
+        if (_hasConnection) {
+          ref.invalidate(clientOffresProvider);
+          ref.invalidate(recentRewardsProvider);
+        }
+      }
+    });
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _hasConnection = false;
+        _isCheckingConnectivity = false;
+      });
+    }
+    debugPrint('Erreur de vérification de connectivité: $e');
+  }
+}
+
+  
+  @override
+  Widget build(BuildContext context) {
      final l10n = AppLocalizations.of(context);
      final themeMode = ref.watch(themeProvider);
       final isDarkMode = themeMode == AppThemeMode.light;
     final clientAsync = ref.watch(authProvider).currentUser;
-        final clientoffreAsync = ref.watch(
-             clientAsync?.id != null
-               ? clientOffresProvider(clientAsync!.id)
-                : FutureProvider((ref) => Future.value([])),
-                   );
+        // final clientoffreAsync = ref.watch(
+        //      clientAsync?.id != null
+        //        ? clientOffresProvider(clientAsync!.id)
+        //         : FutureProvider((ref) => Future.value([])),
+        //            );
     
     // provider des recompences
-    final rewardsAsync = ref.watch(recentRewardsProvider);
+    // final rewardsAsync = ref.watch(recentRewardsProvider);
     return Scaffold(
       backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
       body: CustomScrollView(
@@ -39,55 +98,258 @@ class MyOffersScreen extends ConsumerWidget  {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
-              child:Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: <Widget>[
-    
-    
-    // Le reste du contenu (scrollable via le parent CustomScrollView)
-    rewardsAsync.when(
-      data: (rewards) => rewards.isNotEmpty ? Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+              child: _buildContent(l10n, isDarkMode, clientAsync)
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+Widget _buildContent(AppLocalizations? l10n, bool isDarkMode, User? clientAsync) {
+  // Vérifier d'abord l'état de la connexion globale
+  if (_isCheckingConnectivity) {
+    return _buildConnectivityCheckWidget();
+  }
+
+  if (!_hasConnection) {
+    return Column(
+      children: [
+       
+        _buildNoConnectionHistoryWidget(l10n, isDarkMode),
+      ],
+    );
+  }
+  // Si on a une connexion, afficher le contenu normal
+  final clientoffreAsync = ref.watch(
+    clientAsync?.id != null
+      ? clientOffresProvider(clientAsync!.id)
+      : FutureProvider((ref) => Future.value([])),
+  );
+  
+  final rewardsAsync = ref.watch(recentRewardsProvider);
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Section des récompenses disponibles
+      rewardsAsync.when(
+        data: (rewards) => rewards.isNotEmpty 
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n?.offredisponible ?? 'Offres Disponibles',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? AppColors.surface : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...rewards.map((offer) => _buildOfferCard(offer, context, ref)),
+              ],
+            )
+          : _buildNoRewardsWidget(l10n, isDarkMode, false),
+        loading: () => _buildLoadingWidget(),
+        error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
+      ),
+      
+      const SizedBox(height: 24),
+      
+      // Section des offres utilisées avec gestion spéciale de la connectivité
+      clientoffreAsync.when(
+        data: (clientoffre) => clientoffre.isNotEmpty 
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n?.offreutilise ?? 'Offres Utilisées',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...clientoffre.map((offer) => _buildOfferCardutilise(offer, context)),
+              ],
+            )
+          : _buildNoRewardsWidget(l10n, isDarkMode, true),
+        loading: () => _buildLoadingWidget(),
+        error: (error, _) {
+          // Vérifier si l'erreur est liée à la connexion
+          if (error.toString().contains('no_internet_connection')) {
+           return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
+          }
+          
+          return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
+        },
+      ),
+    ],
+  );
+}
+
+
+Widget _buildNoConnectionHistoryWidget(AppLocalizations? l10n, bool isDarkMode) {
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
+      
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.amber.shade50,
+              Colors.amber.shade100.withOpacity(0.5),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Important pour Column dans Center
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade100.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                size: 64,
+                color:Colors.orange.shade700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _checkConnectivity(),
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(l10n?.retry ?? 'Réessayer'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+
+
+// Nouveau widget spécifique pour les offres utilisées sans connexion
+
+// Dialogue d'information sur la connexion
+
+Widget _buildNoRewardsWidget(AppLocalizations? l10n, bool isDarkMode, bool isUsed) {
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+    decoration: BoxDecoration(
+      color: isDarkMode ? AppColors.darkGrey50 : Colors.grey.shade50,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        if (!isDarkMode)
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+      ],
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppColors.darkGrey50 : Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Icon(
+            isUsed ? Icons.history_rounded : Icons.emoji_events_rounded,
+            size: 36,
+            color: isDarkMode ? AppColors.surface : AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          isUsed 
+            ? l10n?.aucunoffre ?? 'Aucune offre utilisée' 
+            :l10n?.aucunoffreutilise ?? 'Aucune récompense récemment disponible',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+       
+      ],
+    ),
+  );
+}
+
+Widget _buildLoadingWidget() {
+  return const Center(
+    child: Padding(
+      padding: EdgeInsets.all(20.0),
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
+
+
+
+  Widget _buildConnectivityCheckWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
         children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+          const SizedBox(width: 16),
           Text(
-            l10n?.offredisponible ?? 'Offres Disponibles',
+            'Vérification de la connexion...',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? AppColors.surface : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...rewards.map((offer) => _buildOfferCard(offer, context, ref)),
-        ],
-      ) : const SizedBox.shrink(),
-      loading: () => const SizedBox.shrink(),
-      error: (error, _) => const SizedBox.shrink(),
-    ),
-    
-    const SizedBox(height: 24),
-    
-    clientoffreAsync.when(
-      data: (clientoffre) => clientoffre.isNotEmpty ? Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-           Text(
-            l10n?.offreutilise ?? 'Offres Utilisées',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...clientoffre.map((offer) => _buildOfferCardutilise(offer, context)),
-        ],
-      ) : const SizedBox.shrink(),
-      loading: () => const SizedBox.shrink(),
-      error: (error, _) => const SizedBox.shrink(),
-    ),
-  ],
-),
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -96,7 +358,9 @@ class MyOffersScreen extends ConsumerWidget  {
   }
 
 
-  
+
+
+
   
 Widget _buildOfferCard(Rewards offer, BuildContext context , WidgetRef ref) {
     final l10n = AppLocalizations.of(context);

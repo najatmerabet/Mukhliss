@@ -1275,6 +1275,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking the connection...'**
   String get vereficationconnexion;
+
+  /// No description provided for @verificationinternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your internet connection'**
+  String get verificationinternet;
+
+  /// No description provided for @horsligne.
+  ///
+  /// In en, this message translates to:
+  /// **'Hors ligne - Connexion requise'**
+  String get horsligne;
 }
 
 class _AppLocalizationsDelegate

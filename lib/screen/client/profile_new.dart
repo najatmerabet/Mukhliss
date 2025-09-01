@@ -54,7 +54,9 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   }
 
 
+
 Future<void> _loadUserData() async {
+  
   try {
     setState(() => _isLoading = true);
     
@@ -66,7 +68,7 @@ Future<void> _loadUserData() async {
           _isLoading = false;
           _userData = null;
         });
-        showErrorSnackbar(context: context, message: 'Connexion Internet requise');
+        // showErrorSnackbar(context: context, message: 'Pas de connexion internet');
       }
       return;
     }
@@ -672,9 +674,10 @@ Widget _buildConnectionAlertBanner(AppLocalizations? l10n) {
 }
 
 void _showNoConnectionSnackbar() {
+  final l10n = AppLocalizations.of(context);
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text('Veuillez vérifier votre connexion internet'),
+      content: Text(l10n?.verificationinternet ?? 'Veuillez vérifier votre connexion internet'),
       backgroundColor: Colors.orange,
     ),
   );

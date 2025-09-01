@@ -610,4 +610,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vereficationconnexion => 'Checking the connection...';
+
+  @override
+  String get verificationinternet => 'Please check your internet connection';
+
+  @override
+  String get horsligne => 'Hors ligne - Connexion requise';
 }

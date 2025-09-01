@@ -617,4 +617,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vereficationconnexion => 'Vérification de la connexion...';
+
+  @override
+  String get verificationinternet =>
+      'Veuillez vérifier votre connexion internet';
+
+  @override
+  String get horsligne => 'Hors ligne - Connexion requise';
 }

@@ -67,28 +67,6 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (!_isOnline)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.amber[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.wifi_off, color: Colors.amber),
-                            const SizedBox(width: 8),
-                            Text(
-                            'Offline mode',
-                              style: const TextStyle(color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   // Carte QR Code principale
                   Container(
                     width: double.infinity,

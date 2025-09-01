@@ -617,4 +617,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get somethingwrong => 'حدث خطأ ما';
+
+  @override
+  String get signupSuccess => 'تم إنشاء حسابك بنجاح أهلاً وسهلاً بك!';
 }

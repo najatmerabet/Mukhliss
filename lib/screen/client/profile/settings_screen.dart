@@ -354,53 +354,85 @@ void _navigateToDeviceManagement(BuildContext context) {
   );
 }
 
-void _showNoConnectionDialog(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
+void _showNoConnectionDialog(
+    BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
   showDialog(
     context: context,
     barrierDismissible: true, // Permet de fermer en cliquant à l'extérieur
     builder: (context) => Dialog(
-      backgroundColor: isDarkMode ? AppColors.darkSurface : Colors.white, // Fond transparent pour le dialog
-      insetPadding: const EdgeInsets.all(40), // Espace autour du container
+      backgroundColor: Colors.transparent, // on garde la transparence derrière
+      insetPadding: const EdgeInsets.all(40), // marge autour
       child: Container(
-        margin: const EdgeInsets.all(20),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color:isDarkMode ? AppColors.darkSurface : Colors.white, 
+          color: isDarkMode ? AppColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
-          
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 64,
-              color: isDarkMode ? AppColors.error : Colors.orange.shade700,
+            // Icône wifi off dans un cercle rouge pâle
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: Colors.red.withOpacity(0.1),
+              child: Icon(
+                    Icons.warning_amber_rounded,
+                size: 64,
+                color: Colors.red,
+              ),
             ),
+            const SizedBox(height: 20),
+
+            // Texte d’erreur
+            Text(
+           l10n?.somethingwrong ??    "Something went wrong",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fermer le dialog
-                _checkConnectivity(); // Vérifier la connexion
-              },
-              icon: const Icon(Icons.refresh),
-              label: Text(l10n?.retry ?? 'Réessayer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDarkMode ? AppColors.error : Colors.orange.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+
+            // Bouton "Réessayer"
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Ferme le dialog
+                  _checkConnectivity(); // Vérifie la connexion
+                },
+                
+                label: Text(
+                  l10n?.retry ?? 'Réessayer',
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      AppColors.error ,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     ),
   );
 }
+
 
 void _showPrivacyPolicy(BuildContext context) {
   final themeMode = ref.watch(themeProvider);

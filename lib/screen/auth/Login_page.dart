@@ -210,7 +210,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                   ),
                 ),
                 child:  Text(
-                 l10n?.address ?? 'Envoyer le code',
+                 l10n?.envoiencours ?? 'Envoyer le code',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

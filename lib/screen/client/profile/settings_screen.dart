@@ -275,6 +275,8 @@ Future<bool> _testSingleEndpoint(String url) async {
                             ref.read(themeProvider.notifier).toggleTheme();
                             },
                             activeColor: const Color(0xFF6366F1),
+                            inactiveTrackColor: AppColors.darkWhite,
+                        
                           ),
                           iconColor: const Color(0xFF8B5CF6),
                           // ignore: deprecated_member_use

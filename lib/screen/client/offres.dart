@@ -105,6 +105,7 @@ Future<void> _checkConnectivity() async {
       ),
     );
   }
+
 Widget _buildContent(AppLocalizations? l10n, bool isDarkMode, User? clientAsync) {
   // Vérifier d'abord l'état de la connexion globale
   if (_isCheckingConnectivity) {
@@ -114,11 +115,11 @@ Widget _buildContent(AppLocalizations? l10n, bool isDarkMode, User? clientAsync)
   if (!_hasConnection) {
     return Column(
       children: [
-       
         _buildNoConnectionHistoryWidget(l10n, isDarkMode),
       ],
     );
   }
+  
   // Si on a une connexion, afficher le contenu normal
   final clientoffreAsync = ref.watch(
     clientAsync?.id != null
@@ -128,64 +129,63 @@ Widget _buildContent(AppLocalizations? l10n, bool isDarkMode, User? clientAsync)
   
   final rewardsAsync = ref.watch(recentRewardsProvider);
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Section des récompenses disponibles
-      rewardsAsync.when(
-        data: (rewards) => rewards.isNotEmpty 
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n?.offredisponible ?? 'Offres Disponibles',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.surface : AppColors.textSecondary,
-                  ),
+  return rewardsAsync.when(
+    data: (rewards) => clientoffreAsync.when(
+      data: (clientoffre) {
+        // Cas où il n'y a AUCUNE donnée des deux côtés
+        if (rewards.isEmpty && clientoffre.isEmpty) {
+          return Center(
+            child: _buildNoRewardsWidget(l10n, isDarkMode, false),
+          );
+        }
+        
+        // Cas normal où on a au moins une des deux listes
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section des récompenses disponibles
+            if (rewards.isNotEmpty) ...[
+              Text(
+                l10n?.offredisponible ?? 'Offres Disponibles',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? AppColors.surface : AppColors.textSecondary,
                 ),
-                const SizedBox(height: 16),
-                ...rewards.map((offer) => _buildOfferCard(offer, context, ref)),
-              ],
-            )
-          : _buildNoRewardsWidget(l10n, isDarkMode, false),
-        loading: () => _buildLoadingWidget(),
-        error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
-      ),
-      
-      const SizedBox(height: 24),
-      
-      // Section des offres utilisées avec gestion spéciale de la connectivité
-      clientoffreAsync.when(
-        data: (clientoffre) => clientoffre.isNotEmpty 
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n?.offreutilise ?? 'Offres Utilisées',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-                  ),
+              ),
+              const SizedBox(height: 16),
+              ...rewards.map((offer) => _buildOfferCard(offer, context, ref)),
+              const SizedBox(height: 24),
+            ] else
+              const SizedBox(),
+            
+            // Section des offres utilisées
+            if (clientoffre.isNotEmpty) ...[
+              Text(
+                l10n?.offreutilise ?? 'Offres Utilisées',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
                 ),
-                const SizedBox(height: 16),
-                ...clientoffre.map((offer) => _buildOfferCardutilise(offer, context)),
-              ],
-            )
-          : _buildNoRewardsWidget(l10n, isDarkMode, true),
-        loading: () => _buildLoadingWidget(),
-        error: (error, _) {
-          // Vérifier si l'erreur est liée à la connexion
-          if (error.toString().contains('no_internet_connection')) {
-           return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
-          }
-          
+              ),
+              const SizedBox(height: 16),
+              ...clientoffre.map((offer) => _buildOfferCardutilise(offer, context)),
+            ] else
+              const SizedBox(),
+          ],
+        );
+      },
+      loading: () => _buildLoadingWidget(),
+      error: (error, _) {
+        if (error.toString().contains('no_internet_connection')) {
           return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
-        },
-      ),
-    ],
+        }
+        return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
+      },
+    ),
+    loading: () => _buildLoadingWidget(),
+    error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
   );
 }
 

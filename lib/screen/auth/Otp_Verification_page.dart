@@ -176,7 +176,7 @@ Future<void> _verifyOtp() async {
       if (mounted) {
         showSuccessSnackbar(
           context: context,
-          message: l10n!.address, // ou string direct
+          message: l10n!.signupSuccess, // ou string direct
         );
         Navigator.pushReplacementNamed(context, AppRouter.main);
       }

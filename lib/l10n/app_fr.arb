@@ -203,5 +203,6 @@
 "vereficationconnexion":"Vérification de la connexion...",
 "verificationinternet":"Veuillez vérifier votre connexion internet",
 "horsligne":"Hors ligne - Connexion requise",
-"somethingwrong":"Quelque chose s'est mal passé"
+"somethingwrong":"Quelque chose s'est mal passé",
+"signupSuccess":"Votre compte a été créé avec succès Bienvenue !"
 }

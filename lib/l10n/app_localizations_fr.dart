@@ -627,4 +627,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get somethingwrong => 'Quelque chose s\'est mal passé';
+
+  @override
+  String get signupSuccess => 'Votre compte a été créé avec succès Bienvenue !';
 }

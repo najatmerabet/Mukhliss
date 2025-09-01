@@ -466,7 +466,9 @@ Future<void> _loadUserData() async {
 
   // Méthodes pour afficher les informations avec possibilité d'édition
 void _showUserInfo() {
+   final themeMode = ref.watch(themeProvider);
   final l10n = AppLocalizations.of(context);
+  final isDarkMode = themeMode == AppThemeMode.light;
    if (_userData == null) {
     _showNoConnectionSnackbar();
     return;
@@ -512,7 +514,7 @@ Connectivity status:
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
+              color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             padding: const EdgeInsets.all(20),
@@ -545,7 +547,8 @@ Connectivity status:
                         _isEditing 
                             ? l10n?.mesinformation ?? 'Modifier mes informations'
                             : l10n?.modifiermesinformation ?? 'Mes Informations',
-                        style: const TextStyle(
+                        style: TextStyle(
+                          color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -553,7 +556,7 @@ Connectivity status:
                       if (!_isEditing)
                         IconButton(
                           icon: Icon(Icons.edit),
-                          color: canEdit ? AppColors.primary : Colors.grey,
+                          color: canEdit ? AppColors.surface : Colors.grey,
                           onPressed: () async {
                             // Vérification active de la connexion
                           //   final result = await Connectivity().checkConnectivity();

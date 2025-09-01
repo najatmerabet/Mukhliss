@@ -1293,6 +1293,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong'**
   String get somethingwrong;
+
+  /// No description provided for @signupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been successfully created  Welcome!'**
+  String get signupSuccess;
 }
 
 class _AppLocalizationsDelegate

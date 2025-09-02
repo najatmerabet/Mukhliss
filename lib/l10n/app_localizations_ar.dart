@@ -600,7 +600,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'للوصول إلى إدارة الأجهزة، يجب أن تكون متصلاً بالإنترنت.';
 
   @override
-  String get verifier => 'يرجى التحقق:';
+  String get verifier => 'تحقق';
 
   @override
   String get wifi =>
@@ -620,4 +620,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signupSuccess => 'تم إنشاء حسابك بنجاح أهلاً وسهلاً بك!';
+
+  @override
+  String get verification => 'التحقق';
+
+  @override
+  String get renitialisation => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get codeverifecation => 'رمز التحقق';
+
+  @override
+  String get envoyerunode => 'لقد أرسلنا رمزًا إلى';
+
+  @override
+  String get renvoyercode => 'إعادة إرسال الرمز';
+
+  @override
+  String get codeexpire => 'انتهت صلاحية الرمز';
+
+  @override
+  String get codeexpiredans => 'ينتهي الرمز خلال';
+
+  @override
+  String get entrercode => 'أدخل الرمز';
+
+  @override
+  String get nouveaucodeenvoye => 'تم إرسال رمز جديد';
 }

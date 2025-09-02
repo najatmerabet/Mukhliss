@@ -204,5 +204,15 @@
 "verificationinternet":"Veuillez vérifier votre connexion internet",
 "horsligne":"Hors ligne - Connexion requise",
 "somethingwrong":"Quelque chose s'est mal passé",
-"signupSuccess":"Votre compte a été créé avec succès Bienvenue !"
+"signupSuccess":"Votre compte a été créé avec succès Bienvenue !",
+"verification":"Vérification",
+"renitialisation":"Réinitialisation",
+"codeverifecation":"Code de vérification",
+"envoyerunode":"Nous avons envoyé un code à",
+"verifier":"VÉRIFIER",
+"renvoyercode":"Renvoyer le code",
+"codeexpire":"Code expiré",
+"codeexpiredans":"Code expire dans",
+"entrercode":"Entrez le code",
+"nouveaucodeenvoye":"Nouveau code envoyé"
 }

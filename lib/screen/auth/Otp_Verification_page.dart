@@ -1,6 +1,7 @@
 // ignore_for_file: unrelated_type_equality_checks
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -194,6 +195,7 @@ Future<void> _verifyOtp() async {
 }
 
   Future<void> _resendOtp() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _remainingMinutes = 1;
       _remainingSeconds = 0;
@@ -217,7 +219,7 @@ Future<void> _verifyOtp() async {
       }
 
       if (mounted) {
-        _showSuccessSnackbar('Nouveau code envoyé');
+        _showSuccessSnackbar(l10n?.nouveaucodeenvoye ??'Nouveau code envoyé');
       }
     } catch (e) {
       if (mounted) {
@@ -264,40 +266,40 @@ Future<void> _verifyOtp() async {
     );
   }
 
-  Widget _buildOtpField(int index) {
-    return Container(
+Widget _buildOtpField(int index) {
+  return Directionality(
+    textDirection: TextDirection.ltr, // Force LTR pour chaque champ
+    child: Container(
       width: 50,
       height: 60,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color:
-              _focusNodes[index].hasFocus
-                  ? Theme.of(context).primaryColor
-                  : _controllers[index].text.isNotEmpty
-                  ? Colors.green.shade400
-                  : Colors.grey.shade300,
+          color: _focusNodes[index].hasFocus
+              ? Theme.of(context).primaryColor
+              : _controllers[index].text.isNotEmpty
+              ? Colors.green.shade400
+              : Colors.grey.shade300,
           width: _focusNodes[index].hasFocus ? 2 : 1,
         ),
-        color:
-            _controllers[index].text.isNotEmpty
-                ? Colors.green.shade50
-                : Colors.grey.shade50,
-        boxShadow:
-            _focusNodes[index].hasFocus
-                ? [
-                  BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    spreadRadius: 0,
-                  ),
-                ]
-                : null,
+        color: _controllers[index].text.isNotEmpty
+            ? Colors.green.shade50
+            : Colors.grey.shade50,
+        boxShadow: _focusNodes[index].hasFocus
+            ? [
+                BoxShadow(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
       ),
       child: TextField(
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr, // Force la direction du texte
         keyboardType: TextInputType.number,
         maxLength: 1,
         style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -330,12 +332,13 @@ Future<void> _verifyOtp() async {
           }
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTimerDisplay() {
     final bool isExpired = _remainingMinutes == 0 && _remainingSeconds == 0;
-
+    final l10n = AppLocalizations.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -366,7 +369,7 @@ Future<void> _verifyOtp() async {
               ),
               const SizedBox(width: 8),
               Text(
-                isExpired ? 'Code expiré' : 'Code expire dans',
+                isExpired ? l10n?.codeexpire??'Code expiré' : l10n?.codeexpiredans ??'Code expire dans',
                 style: TextStyle(
                   color: isExpired ? Colors.red.shade700 : Colors.blue.shade700,
                   fontWeight: FontWeight.w600,
@@ -446,12 +449,13 @@ Future<void> _verifyOtp() async {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bool isTimerFinished =
         _remainingMinutes == 0 && _remainingSeconds == 0;
     final title =
         widget.type == OtpVerificationType.passwordReset
-            ? 'Réinitialisation'
-            : 'Vérification';
+            ? (l10n?.renitialisation ?? l10n?.verification ?? 'Vérification')
+            : (l10n?.verification ?? 'Vérification');
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -510,7 +514,7 @@ Future<void> _verifyOtp() async {
 
                   // Title and Description
                   Text(
-                    'Code de vérification',
+                    l10n?.codeverifecation ?? 'Code de vérification',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
@@ -527,7 +531,7 @@ Future<void> _verifyOtp() async {
                         height: 1.5,
                       ),
                       children: [
-                        const TextSpan(text: 'Nous avons envoyé un code à '),
+                        TextSpan(text: l10n?.envoyerunode ?? 'Nous avons envoyé un code à '),
                         TextSpan(
                           text: widget.email,
                           style: TextStyle(
@@ -547,13 +551,31 @@ Future<void> _verifyOtp() async {
                   const SizedBox(height: 40),
 
                   // OTP Input Fields
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(
-                      6,
-                      (index) => _buildOtpField(index),
-                    ),
-                  ),
+                 Directionality(
+  textDirection: TextDirection.ltr,
+  child: Column(
+    children: [
+      // Titre optionnel en respectant la langue
+      Directionality(
+        textDirection: Directionality.of(context),
+        child: Text(
+          l10n?.entrercode ?? 'Entrez le code',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      SizedBox(height: 20),
+      // Champs OTP toujours LTR
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(
+          6,
+          (index) => _buildOtpField(index),
+        ),
+      ),
+    ],
+  ),
+),
+
 
                   const SizedBox(height: 40),
 
@@ -589,8 +611,8 @@ Future<void> _verifyOtp() async {
                                   strokeWidth: 2,
                                 ),
                               )
-                              : const Text(
-                                'VÉRIFIER',
+                              :  Text(
+                               l10n?.verifier ?? 'VÉRIFIER',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -610,8 +632,8 @@ Future<void> _verifyOtp() async {
                       onPressed:
                           isTimerFinished && !_isLoading ? _resendOtp : null,
                       icon: const Icon(Icons.refresh),
-                      label: const Text(
-                        'Renvoyer le code',
+                      label:  Text(
+                      l10n?.renvoyercode ??  'Renvoyer le code',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

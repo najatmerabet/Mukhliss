@@ -609,7 +609,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pour accéder à la gestion des appareils, vous devez être connecté à Internet.';
 
   @override
-  String get verifier => 'Veuillez vérifier :';
+  String get verifier => 'VÉRIFIER';
 
   @override
   String get wifi =>
@@ -630,4 +630,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get signupSuccess => 'Votre compte a été créé avec succès Bienvenue !';
+
+  @override
+  String get verification => 'Vérification';
+
+  @override
+  String get renitialisation => 'Réinitialisation';
+
+  @override
+  String get codeverifecation => 'Code de vérification';
+
+  @override
+  String get envoyerunode => 'Nous avons envoyé un code à';
+
+  @override
+  String get renvoyercode => 'Renvoyer le code';
+
+  @override
+  String get codeexpire => 'Code expiré';
+
+  @override
+  String get codeexpiredans => 'Code expire dans';
+
+  @override
+  String get entrercode => 'Entrez le code';
+
+  @override
+  String get nouveaucodeenvoye => 'Nouveau code envoyé';
 }

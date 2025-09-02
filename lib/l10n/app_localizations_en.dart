@@ -602,7 +602,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'To access device management, you must be connected to the internet.';
 
   @override
-  String get verifier => 'Please check:';
+  String get verifier => 'CHECK';
 
   @override
   String get wifi =>
@@ -623,4 +623,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get signupSuccess =>
       'Your account has been successfully created  Welcome!';
+
+  @override
+  String get verification => 'Verification';
+
+  @override
+  String get renitialisation => 'Reset';
+
+  @override
+  String get codeverifecation => 'Code de vérification';
+
+  @override
+  String get envoyerunode => 'We sent a code to';
+
+  @override
+  String get renvoyercode => 'Resend code';
+
+  @override
+  String get codeexpire => 'Expired code';
+
+  @override
+  String get codeexpiredans => 'Code expires in';
+
+  @override
+  String get entrercode => 'Enter the code';
+
+  @override
+  String get nouveaucodeenvoye => 'New code sent';
 }

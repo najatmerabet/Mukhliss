@@ -204,7 +204,20 @@
 "verificationinternet":"Please check your internet connection",
 "horsligne":"Hors ligne - Connexion requise",
 "somethingwrong":"Something went wrong",
-"signupSuccess":"Your account has been successfully created  Welcome!"
+"signupSuccess":"Your account has been successfully created  Welcome!",
+"verification":"Verification",
+"renitialisation":"Reset",
+"codeverifecation":"Code de vérification",
+"envoyerunode":"We sent a code to",
+"verifier":"CHECK",
+"renvoyercode":"Resend code",
+"codeexpire":"Expired code",
+"codeexpiredans":"Code expires in",
+"entrercode":"Enter the code",
+"nouveaucodeenvoye":"New code sent"
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mukhliss/models/user_device.dart';
@@ -10,9 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Service d'authentification gérant les connexions et inscriptions
 class AuthService {
   static const String _webClientId = 
-      '175331686220-np99oq9iq1pfd99glovuobbuj2bicpgd.apps.googleusercontent.com';
+      '520109420490-5g7rfpnt4bqnq4h8irnuocag7ho680gu.apps.googleusercontent.com';
   static const String _androidClientId = 
-      '175331686220-o9f5t46pna1nmnh0b42fjhdfles9qphh.apps.googleusercontent.com';
+      '520109420490-82h26lk91q5tg7641capb23gfet32t44.apps.googleusercontent.com';
     String? get currentDeviceId => _deviceService.currentDeviceId;
 
   static const List<String> _googleScopes = ['email', 'profile'];
@@ -434,45 +435,60 @@ Future<void> updatePasswordWithVerify({
   // ============= PRIVATE METHODS =============
   
   /// Authentification native avec Google
-  Future<void> _authenticateWithGoogle() async {
-    final googleSignIn = GoogleSignIn(
-      clientId: _androidClientId,
-      serverClientId: _webClientId,
-      scopes: _googleScopes,
-    );
+ Future<void> _authenticateWithGoogle() async {
+  final googleSignIn = GoogleSignIn(
+    clientId: _androidClientId,
+    serverClientId: _webClientId,
+    scopes: _googleScopes,
+  );
 
-    try {
-      // Nettoyer les tokens en cache
-      await googleSignIn.signOut();
+  try {
+    // Nettoyer les tokens en cache
+    await googleSignIn.signOut();
 
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        throw AuthException('Connexion annulée par l\'utilisateur');
-      }
-
-      _log('Utilisateur Google: ${googleUser.email}');
-
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      final accessToken = googleAuth.accessToken;
-
-      if (idToken == null || accessToken == null) {
-        throw AuthException('Tokens manquants');
-      }
-
-      await _client.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-    } catch (error) {
-      if (error.toString().contains('ApiException: 10')) {
-        _log('💡 DEVELOPER_ERROR - Vérifiez SHA-1 et configuration Google');
-      }
-      rethrow;
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      throw AuthException('Connexion annulée par l\'utilisateur');
     }
-  }
 
+    _log('Utilisateur Google: ${googleUser.email}');
+
+    final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    final accessToken = googleAuth.accessToken;
+
+    if (idToken == null || accessToken == null) {
+      throw AuthException('Tokens manquants (idToken: $idToken, accessToken: $accessToken)');
+    }
+
+    await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+  } catch (error) {
+    // _log('❌ Erreur d\'authentification Google:', error: error, stackTrace: stackTrace);
+    
+    if (error is PlatformException) {
+      _log('Détails de l\'erreur PlatformException:');
+      _log('Code: ${error.code}');
+      _log('Message: ${error.message}');
+      _log('Details: ${error.details}');
+    }
+
+    if (error.toString().contains('ApiException: 10')) {
+      _log('💡 DEVELOPER_ERROR - Vérifiez:');
+      _log('1. SHA-1 dans Firebase Console');
+      _log('2. Client ID dans Google Cloud Console');
+      _log('3. "supportEmail" dans android/app/build.gradle');
+    }
+
+    // Vous pouvez aussi afficher l'erreur à l'utilisateur via un SnackBar ou une AlertDialog
+    // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: ${error.toString()}')));
+    
+    rethrow;
+  }
+}
   /// Crée le profil client s'il n'existe pas déjà
   Future<void> _ensureClientProfileExists() async {
     final user = currentUser;

@@ -6,17 +6,13 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_device.dart';
 
 class DeviceManagementService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
-  final Uuid _uuid = const Uuid();
   
-  // Clé pour stocker le deviceId dans SharedPreferences
-  static const String _deviceIdKey = 'current_device_id';
   static const String _deviceIdUserKey = 'device_id_user_';
   
   DeviceManagementService._();
@@ -904,10 +900,6 @@ class DeviceManagementService {
     }
   }
 
-  String _generateSessionToken() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '${_uuid.v4()}_$timestamp';
-  }
 
   // ============= PRIVATE METHODS (VERSION ROBUSTE) =============
 

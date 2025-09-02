@@ -202,7 +202,20 @@
 "verificationinternet":"يرجى التحقق من اتصالك بالإنترنت",
 "horsligne":"أنت غير متصل - يلزم الاتصال بالإنترنت",
 "somethingwrong":"حدث خطأ ما",
-"signupSuccess":"تم إنشاء حسابك بنجاح أهلاً وسهلاً بك!"
+"signupSuccess":"تم إنشاء حسابك بنجاح أهلاً وسهلاً بك!",
+"verification":"التحقق",
+"renitialisation":"إعادة تعيين كلمة المرور",
+"codeverifecation":"رمز التحقق",
+"envoyerunode":"لقد أرسلنا رمزًا إلى",
+"verifier":"تحقق",
+"renvoyercode":"إعادة إرسال الرمز",
+"codeexpire":"انتهت صلاحية الرمز",
+"codeexpiredans":"ينتهي الرمز خلال",
+"entrercode":"أدخل الرمز",
+"nouveaucodeenvoye":"تم إرسال رمز جديد"
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 // ignore_for_file: unrelated_type_equality_checks
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -232,6 +233,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   Future<void> _resendOtp() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _remainingMinutes = 1;
       _remainingSeconds = 0;
@@ -254,7 +256,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
       }
 
       if (mounted) {
-        _showSuccessSnackbar('Nouveau code envoyé');
+        _showSuccessSnackbar(l10n?.nouveaucodeenvoye ??'Nouveau code envoyé');
       }
     } catch (e) {
       print('Erreur lors du renvoi: $e');
@@ -308,8 +310,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
     );
   }
 
-  Widget _buildOtpField(int index) {
-    return Container(
+Widget _buildOtpField(int index) {
+  return Directionality(
+    textDirection: TextDirection.ltr, // Force LTR pour chaque champ
+    child: Container(
       width: 50,
       height: 60,
       decoration: BoxDecoration(
@@ -318,8 +322,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
           color: _focusNodes[index].hasFocus
               ? Theme.of(context).primaryColor
               : _controllers[index].text.isNotEmpty
-                  ? Colors.green.shade400
-                  : Colors.grey.shade300,
+
+              ? Colors.green.shade400
+              : Colors.grey.shade300,
+
           width: _focusNodes[index].hasFocus ? 2 : 1,
         ),
         color: _controllers[index].text.isNotEmpty
@@ -339,6 +345,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr, // Force la direction du texte
         keyboardType: TextInputType.number,
         maxLength: 1,
         style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -373,12 +380,13 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
           }
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTimerDisplay() {
     final bool isExpired = _remainingMinutes == 0 && _remainingSeconds == 0;
-
+    final l10n = AppLocalizations.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -408,7 +416,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
               ),
               const SizedBox(width: 8),
               Text(
-                isExpired ? 'Code expiré' : 'Code expire dans',
+                isExpired ? l10n?.codeexpire??'Code expiré' : l10n?.codeexpiredans ??'Code expire dans',
                 style: TextStyle(
                   color: isExpired ? Colors.red.shade700 : Colors.blue.shade700,
                   fontWeight: FontWeight.w600,
@@ -488,11 +496,15 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bool isTimerFinished =
         _remainingMinutes == 0 && _remainingSeconds == 0;
-    final title = widget.type == OtpVerificationType.passwordReset
-        ? 'Réinitialisation'
-        : 'Vérification';
+
+    final title =
+        widget.type == OtpVerificationType.passwordReset
+            ? (l10n?.renitialisation ?? l10n?.verification ?? 'Vérification')
+            : (l10n?.verification ?? 'Vérification');
+
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -551,7 +563,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
                   // Title and Description
                   Text(
-                    'Code de vérification',
+                    l10n?.codeverifecation ?? 'Code de vérification',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.grey.shade800,
@@ -568,7 +580,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                             height: 1.5,
                           ),
                       children: [
-                        const TextSpan(text: 'Nous avons envoyé un code à '),
+                        TextSpan(text: l10n?.envoyerunode ?? 'Nous avons envoyé un code à '),
                         TextSpan(
                           text: widget.email,
                           style: TextStyle(
@@ -588,13 +600,31 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                   const SizedBox(height: 40),
 
                   // OTP Input Fields
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(
-                      6,
-                      (index) => _buildOtpField(index),
-                    ),
-                  ),
+                 Directionality(
+  textDirection: TextDirection.ltr,
+  child: Column(
+    children: [
+      // Titre optionnel en respectant la langue
+      Directionality(
+        textDirection: Directionality.of(context),
+        child: Text(
+          l10n?.entrercode ?? 'Entrez le code',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      SizedBox(height: 20),
+      // Champs OTP toujours LTR
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(
+          6,
+          (index) => _buildOtpField(index),
+        ),
+      ),
+    ],
+  ),
+),
+
 
                   const SizedBox(height: 40),
 
@@ -617,13 +647,26 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                             .primaryColor
                             .withOpacity(0.3),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              :  Text(
+                               l10n?.verifier ?? 'VÉRIFIER',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+
                                 ),
                                 strokeWidth: 2,
                               ),
@@ -649,8 +692,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
                       onPressed:
                           isTimerFinished && !_isLoading ? _resendOtp : null,
                       icon: const Icon(Icons.refresh),
-                      label: const Text(
-                        'Renvoyer le code',
+                      label:  Text(
+                      l10n?.renvoyercode ??  'Renvoyer le code',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

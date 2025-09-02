@@ -1261,7 +1261,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifier.
   ///
   /// In en, this message translates to:
-  /// **'Please check:'**
+  /// **'CHECK'**
   String get verifier;
 
   /// No description provided for @wifi.
@@ -1299,6 +1299,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account has been successfully created  Welcome!'**
   String get signupSuccess;
+
+  /// No description provided for @verification.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification'**
+  String get verification;
+
+  /// No description provided for @renitialisation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get renitialisation;
+
+  /// No description provided for @codeverifecation.
+  ///
+  /// In en, this message translates to:
+  /// **'Code de vérification'**
+  String get codeverifecation;
+
+  /// No description provided for @envoyerunode.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to'**
+  String get envoyerunode;
+
+  /// No description provided for @renvoyercode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get renvoyercode;
+
+  /// No description provided for @codeexpire.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired code'**
+  String get codeexpire;
+
+  /// No description provided for @codeexpiredans.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expires in'**
+  String get codeexpiredans;
+
+  /// No description provided for @entrercode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get entrercode;
+
+  /// No description provided for @nouveaucodeenvoye.
+  ///
+  /// In en, this message translates to:
+  /// **'New code sent'**
+  String get nouveaucodeenvoye;
 }
 
 class _AppLocalizationsDelegate

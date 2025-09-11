@@ -10,7 +10,7 @@ import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/routes/app_router.dart';
 import 'package:mukhliss/utils/error_handler.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 enum OtpVerificationType { signup, passwordReset }
 
@@ -19,7 +19,7 @@ class OtpVerificationPage extends ConsumerStatefulWidget {
   final OtpVerificationType type;
 
   const OtpVerificationPage({Key? key, required this.email, required this.type})
-      : super(key: key);
+    : super(key: key);
 
   @override
   ConsumerState<OtpVerificationPage> createState() =>
@@ -37,7 +37,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   bool _isLoading = false;
   int _remainingMinutes = 1;
   int _remainingSeconds = 0;
-  Timer? _timer;
+  late Timer _timer;
 
   late AnimationController _slideController;
   late AnimationController _fadeController;
@@ -55,9 +55,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
     // Auto-focus first field
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _focusNodes[0].requestFocus();
-      }
+      _focusNodes[0].requestFocus();
     });
   }
 
@@ -100,7 +98,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _timer.cancel();
     _slideController.dispose();
     _fadeController.dispose();
     _pulseController.dispose();
@@ -115,14 +113,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   void _startTimer() {
-    _timer?.cancel(); // Annuler le timer précédent s'il existe
     const oneSec = Duration(seconds: 1);
     _timer = Timer.periodic(oneSec, (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      
       if (_remainingMinutes == 0 && _remainingSeconds == 0) {
         setState(() => timer.cancel());
       } else {
@@ -140,41 +132,40 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
 
   String get _otpCode => _controllers.map((c) => c.text).join();
 
-  Future<void> _verifyOtp() async {
-    if (_otpCode.length != 6) {
-      _showErrorSnackbar('Le code doit contenir 6 chiffres');
-      return;
-    }
+// dans votre widget… 
 
-    setState(() => _isLoading = true);
+Future<void> _verifyOtp() async {
+  final l10n = AppLocalizations.of(context);
+  if (_otpCode.length != 6) {
+    _showErrorSnackbar('Le code doit contenir 6 chiffres');
+    return;
+  }
 
-    try {
-      if (widget.type == OtpVerificationType.passwordReset) {
-        await ref.read(authProvider)
-            .verifyPasswordResetOtp(email: widget.email, token: _otpCode);
-        
-        if (mounted) {
-          Navigator.pushReplacementNamed(
-            context,
-            AppRouter.passwordReset,
-            arguments: widget.email,
-          );
-        }
-      } else {
-        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        if (args == null) {
-          _showErrorSnackbar('Erreur: données manquantes');
-          return;
-        }
-        
-        print('Code OTP: $_otpCode');
-        
-        // Vérification OTP spécifique à Supabase
-        final auth = ref.read(authProvider);
-        await auth.verifySignupOtp(email: widget.email, token: _otpCode);
+  setState(() => _isLoading = true);
+  HapticFeedback.lightImpact();
 
-        // Compléter l'inscription
-        await auth.completeSignupAfterOtpVerification(
+
+  try {
+    if (widget.type == OtpVerificationType.passwordReset) {
+      await ref.read(authProvider)
+        .verifyPasswordResetOtp(email: widget.email, token: _otpCode);
+      
+      if (mounted) {
+        Navigator.pushReplacementNamed(
+          context,
+          AppRouter.passwordReset,
+          arguments: widget.email,
+        );
+      }
+
+    } else {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+      await ref.read(authProvider)
+        .verifySignupOtp(email: widget.email, token: _otpCode);
+
+      await ref.read(authProvider)
+        .completeSignupAfterOtpVerification(
           email: widget.email,
           password: args['password'],
           firstName: args['firstName'],
@@ -183,68 +174,40 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
           address: args['address'],
         );
 
-        if (mounted) {
-          showSuccessSnackbar(
-            context: context,
-            message: 'Inscription réussie!',
-          );
-          Navigator.pushReplacementNamed(context, AppRouter.main);
-        }
+      if (mounted) {
+        showSuccessSnackbar(
+          context: context,
+          message: l10n!.signupSuccess, // ou string direct
+        );
+        Navigator.pushReplacementNamed(context, AppRouter.main);
       }
-    } on AuthApiException catch (e) {
-      // Gestion spécifique des erreurs Supabase
-      print('Erreur Supabase: ${e.code} - ${e.message}');
-      
-      if (e.code == 'otp_expired') {
-        _showErrorSnackbar('Le code a expiré. Veuillez en demander un nouveau.');
-        setState(() {
-          _remainingMinutes = 0;
-          _remainingSeconds = 0;
-          _timer?.cancel();
-        });
-      } else if (e.code == 'invalid_otp') {
-        _showErrorSnackbar('Code invalide. Veuillez réessayer.');
-        // Effacer les champs pour permettre une nouvelle saisie
-        _clearOtpFields();
-      } else if (e.code == 'signup') {
-        _showErrorSnackbar('Erreur lors de l\'inscription: ${e.message}');
-      } else {
-        _showErrorSnackbar('Erreur: ${e.message}');
-      }
-    } on AuthException catch (e) {
-      print('Erreur Auth: ${e.message}');
-      _showErrorSnackbar('Erreur d\'authentification: ${e.message}');
-    } catch (e) {
-      print('Erreur inattendue: $e');
-      _showErrorSnackbar('Une erreur inattendue est survenue');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
-  }
 
-  void _clearOtpFields() {
-    for (var controller in _controllers) {
-      controller.clear();
-    }
-    if (mounted) {
-      _focusNodes[0].requestFocus();
-      setState(() {});
-    }
+  } catch (e) {
+        final errorMessage = AuthErrorHandler(context).handle(e);
+
+    // Qu’importe le type d’erreur, tout passe par votre handler
+    _showErrorSnackbar(errorMessage);
+    debugPrint('Erreur OTP: $e');
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   Future<void> _resendOtp() async {
     final l10n = AppLocalizations.of(context);
     setState(() {
       _remainingMinutes = 1;
       _remainingSeconds = 0;
+      _startTimer();
       _isLoading = true;
     });
 
     // Clear existing OTP
-    _clearOtpFields();
-    
-    // Redémarrer le timer
-    _startTimer();
+    for (var controller in _controllers) {
+      controller.clear();
+    }
+    _focusNodes[0].requestFocus();
 
     HapticFeedback.mediumImpact();
 
@@ -259,9 +222,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
         _showSuccessSnackbar(l10n?.nouveaucodeenvoye ??'Nouveau code envoyé');
       }
     } catch (e) {
-      print('Erreur lors du renvoi: $e');
       if (mounted) {
-        _showErrorSnackbar('Erreur lors du renvoi: ${e.toString()}');
+        _showErrorSnackbar('Erreur: ${e.toString()}');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -269,8 +231,6 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   }
 
   void _showErrorSnackbar(String message) {
-    if (!mounted) return;
-    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -284,14 +244,11 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
       ),
     );
   }
 
   void _showSuccessSnackbar(String message) {
-    if (!mounted) return;
-    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -305,7 +262,6 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -322,10 +278,8 @@ Widget _buildOtpField(int index) {
           color: _focusNodes[index].hasFocus
               ? Theme.of(context).primaryColor
               : _controllers[index].text.isNotEmpty
-
               ? Colors.green.shade400
               : Colors.grey.shade300,
-
           width: _focusNodes[index].hasFocus ? 2 : 1,
         ),
         color: _controllers[index].text.isNotEmpty
@@ -362,11 +316,9 @@ Widget _buildOtpField(int index) {
           }
 
           // Auto-verify when all fields are filled
-          if (_otpCode.length == 6 && !_isLoading) {
+          if (_otpCode.length == 6) {
             Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted && _otpCode.length == 6 && !_isLoading) {
-                _verifyOtp();
-              }
+              if (_otpCode.length == 6) _verifyOtp();
             });
           }
 
@@ -392,9 +344,10 @@ Widget _buildOtpField(int index) {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isExpired
-              ? [Colors.red.shade100, Colors.red.shade50]
-              : [Colors.blue.shade100, Colors.blue.shade50],
+          colors:
+              isExpired
+                  ? [Colors.red.shade100, Colors.red.shade50]
+                  : [Colors.blue.shade100, Colors.blue.shade50],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -499,12 +452,10 @@ Widget _buildOtpField(int index) {
     final l10n = AppLocalizations.of(context);
     final bool isTimerFinished =
         _remainingMinutes == 0 && _remainingSeconds == 0;
-
     final title =
         widget.type == OtpVerificationType.passwordReset
             ? (l10n?.renitialisation ?? l10n?.verification ?? 'Vérification')
             : (l10n?.verification ?? 'Vérification');
-
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -543,9 +494,9 @@ Widget _buildOtpField(int index) {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context)
-                                .primaryColor
-                                .withOpacity(0.3),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.3),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),
@@ -565,9 +516,9 @@ Widget _buildOtpField(int index) {
                   Text(
                     l10n?.codeverifecation ?? 'Code de vérification',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -576,9 +527,9 @@ Widget _buildOtpField(int index) {
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                            height: 1.5,
-                          ),
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
                       children: [
                         TextSpan(text: l10n?.envoyerunode ?? 'Nous avons envoyé un code à '),
                         TextSpan(
@@ -633,9 +584,10 @@ Widget _buildOtpField(int index) {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading || _otpCode.length != 6
-                          ? null
-                          : _verifyOtp,
+                      onPressed:
+                          _isLoading || _otpCode.length != 6
+                              ? null
+                              : _verifyOtp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
@@ -643,11 +595,10 @@ Widget _buildOtpField(int index) {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: _otpCode.length == 6 ? 4 : 0,
-                        shadowColor: Theme.of(context)
-                            .primaryColor
-                            .withOpacity(0.3),
+                        shadowColor: Theme.of(
+                          context,
+                        ).primaryColor.withOpacity(0.3),
                       ),
-
                       child:
                           _isLoading
                               ? const SizedBox(
@@ -666,19 +617,8 @@ Widget _buildOtpField(int index) {
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,
-
                                 ),
-                                strokeWidth: 2,
                               ),
-                            )
-                          : const Text(
-                              'VÉRIFIER',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
                     ),
                   ),
 

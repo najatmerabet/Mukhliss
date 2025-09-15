@@ -82,10 +82,12 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
   setState(() => _isLoading = true);
 
   try {
+      print('Envoi OTP pour: ${_emailController.text.trim()}');
+
     final authService = ref.read(authProvider);
     
     // 1. Envoyer l'OTP d'abord
-    await authService.sendSignupOtp(_emailController.text.trim());
+    await authService.sendSignupOtpWithRetry(_emailController.text.trim());
 
     // 2. Naviguer vers la page de vérification OTP
     if (mounted) {

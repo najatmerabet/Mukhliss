@@ -286,20 +286,40 @@ Future<void> logout() async {
 // ============== Signup With OTP =============
 
 /// Envoie un OTP pour la vérification d'email lors de l'inscription
-Future<void> sendSignupOtp(String email) async {
+Future<void> sendSignupOtpWithRetry(String email, {int maxRetries = 3}) async {
+  int attempt = 0;
+  
+  while (attempt < maxRetries) {
     try {
-      await _client.auth.signInWithOtp(
+      attempt++;
+      print('Tentative $attempt pour envoyer OTP à $email');
+      
+      final response = await _client.auth.signInWithOtp(
         email: email,
-        shouldCreateUser: true, // Critical for security
-        emailRedirectTo: kIsWeb ? null : 'yourapp://auth-callback',
+        shouldCreateUser: false,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException('Timeout lors de l\'envoi de l\'OTP');
+        },
       );
-    } on AuthException catch (e) {
-      if (e.message.contains('already registered')) {
-        throw AuthException('Email already registered');
+      
+      // Si on arrive ici, c'est réussi
+      print('OTP envoyé avec succès à $email');
+      return;
+      
+    } catch (e) {
+      print('Tentative $attempt échouée: $e');
+      
+      if (attempt >= maxRetries) {
+        throw Exception('Impossible d\'envoyer l\'OTP après $maxRetries tentatives');
       }
-      rethrow;
+      
+      // Attendre avant la prochaine tentative
+      await Future.delayed(Duration(seconds: attempt * 2));
     }
   }
+}
 
 /// Vérifie l'OTP pour l'inscription
 Future<AuthResponse> verifySignupOtp({

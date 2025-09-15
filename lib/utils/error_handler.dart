@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:mukhliss/utils/supabase_error_codes.dart';
-import 'package:postgrest/postgrest.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_localizations_ext.dart';

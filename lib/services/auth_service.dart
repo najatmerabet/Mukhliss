@@ -98,7 +98,7 @@ Future<AuthResponse> login(String email, String password) async {
     _log('Vérification de l\'existence du client pour: $email');
     
     final clientCheck = await _client
-        .from('client')
+        .from('clients')
         .select('email') // Vous pouvez aussi vérifier un statut actif
         .eq('email', email)
         .maybeSingle();

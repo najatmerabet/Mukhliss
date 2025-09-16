@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StoreService {
   final SupabaseClient _client = Supabase.instance.client;
-  static const String _bucketName = 'store-logo'; // Nom exact du bucket
+  static const String _bucketName = 'store-logo/logos'; // Nom exact du bucket
 
 Future<List<Store>> getStoresWithLogos() async {
   try {

@@ -120,6 +120,32 @@ void initState() {
     }
   });
 }
+void refreshData() {
+  if (_disposed) return;
+  
+  // Refresh both providers
+  ref.refresh(categoriesListProvider);
+  ref.refresh(storesListProvider);
+  
+  // Reset relevant state
+  _safeSetState(() {
+    _storesLoaded = false;
+    _categoriesBottomSheetShown = false;
+    _selectedCategory = null;
+    _selectedShop = null;
+    _bottomSheetState = BottomSheetState.none;
+  });
+  print("============> Refreshing data");
+  // Show feedback to user
+  final l10n = AppLocalizations.of(context);
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(l10n?.active ?? 'Données actualisées'),
+      backgroundColor: AppColors.success,
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
 
 Future<void> _checkConnectivity() async {
   try {
@@ -128,11 +154,18 @@ Future<void> _checkConnectivity() async {
     
     // Vérifie ensuite une connexion Internet réelle
     final reallyConnected = await _checkRealInternetConnection();
-    
+        final hadConnection = _hasConnection; // Store previous state
+
     _safeSetState(() {
       _hasConnection = connectivityResult != ConnectivityResult.none && reallyConnected;
       _isCheckingConnectivity = false;
     });
+    print(" ====>Connectivity checked: $hadConnection");
+    if ( _hasConnection) {
+      refreshData();
+      // Also get current location
+      controller.getCurrentLocation();
+    }
   } catch (e) {
     debugPrint('Connectivity error: $e');
     _safeSetState(() {
@@ -141,6 +174,7 @@ Future<void> _checkConnectivity() async {
     });
   }
 }
+
 Future<bool> _checkRealInternetConnection() async {
   try {
     // Teste une connexion à un serveur fiable avec timeout

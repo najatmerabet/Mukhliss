@@ -111,6 +111,7 @@ void initState() {
     if (mounted) {
       _checkConnectivity().then((_) {
         if (mounted) {
+          
           setState(() => _isCheckingConnectivity = false);
           if (_hasConnection) {
             controller.getCurrentLocation();
@@ -121,6 +122,7 @@ void initState() {
   });
 }
 
+
 Future<void> _checkConnectivity() async {
   try {
     // Vérifie d'abord la connectivité de base
@@ -128,11 +130,12 @@ Future<void> _checkConnectivity() async {
     
     // Vérifie ensuite une connexion Internet réelle
     final reallyConnected = await _checkRealInternetConnection();
-    
+
     _safeSetState(() {
       _hasConnection = connectivityResult != ConnectivityResult.none && reallyConnected;
       _isCheckingConnectivity = false;
     });
+   
   } catch (e) {
     debugPrint('Connectivity error: $e');
     _safeSetState(() {
@@ -141,6 +144,9 @@ Future<void> _checkConnectivity() async {
     });
   }
 }
+
+
+
 Future<bool> _checkRealInternetConnection() async {
   try {
     // Teste une connexion à un serveur fiable avec timeout
@@ -155,21 +161,6 @@ Future<bool> _checkRealInternetConnection() async {
   }
 }
 
-void _updateConnectionStatus(ConnectivityResult result) {
-  if (!mounted || _disposed) return;
-  
-  final newStatus = result != ConnectivityResult.none;
-  
-  _safeSetState(() {
-    _hasConnection = newStatus;
-  });
-
-  // Rafraîchir les données si la connexion revient
-  if (newStatus) {
-    ref.invalidate(storesListProvider);
-    controller.getCurrentLocation();
-  }
-}
 
 Widget _buildNoConnectionWidget(BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
   return Center(

@@ -485,14 +485,4 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     );
   }
 
-  ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
-    switch (appThemeMode) {
-      case AppThemeMode.light:
-        return ThemeMode.light;
-      case AppThemeMode.dark:
-        return ThemeMode.dark;
-      case AppThemeMode.system:
-        return ThemeMode.system;
-    }
-  }
 }

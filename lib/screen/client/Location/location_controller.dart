@@ -45,6 +45,7 @@ class LocationController {
     this.onLoadingChanged,
     this.onPolylineUpdated,
     this.onNavigatingUpdated,
+    
   );
 
   void dispose() {

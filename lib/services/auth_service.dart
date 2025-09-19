@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -10,10 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service d'authentification gérant les connexions et inscriptions
 class AuthService {
-  static const String _webClientId = 
-      '520109420490-5g7rfpnt4bqnq4h8irnuocag7ho680gu.apps.googleusercontent.com';
-  static const String _androidClientId = 
-      '520109420490-82h26lk91q5tg7641capb23gfet32t44.apps.googleusercontent.com';
+  // static const String _webClientId = 
     String? get currentDeviceId => _deviceService.currentDeviceId;
 
   static const List<String> _googleScopes = ['email', 'profile'];
@@ -457,8 +454,8 @@ Future<void> updatePasswordWithVerify({
   /// Authentification native avec Google
  Future<void> _authenticateWithGoogle() async {
   final googleSignIn = GoogleSignIn(
-    clientId: _androidClientId,
-    serverClientId: _webClientId,
+    clientId: dotenv.get('androidClientId'),
+    serverClientId: dotenv.get('webClientId'),
     scopes: _googleScopes,
   );
 

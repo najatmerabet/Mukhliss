@@ -30,13 +30,14 @@ class LocationController {
   Map<String, dynamic>? routeInfo;
   TransportMode selectedMode = TransportMode.walking;
   bool showTransportModes = false;
- 
+  bool _isMapReady =false;
   MapLayerType selectedMapLayer = MapLayerType.plan;
   bool isNavigating = false;
   double? currentBearing;
   StreamSubscription<Position>? positionStream;
   bool _disposed = false;
-
+ bool get isMapReady => _isMapReady;
+  // Removed isMapReady getter as MapController does not have a 'ready' property.
   LocationController(
     this.ref,
     this.context,
@@ -47,6 +48,12 @@ class LocationController {
     this.onNavigatingUpdated,
     
   );
+
+  void markMapAsReady() {
+    if (_disposed) return;
+    _isMapReady = true;
+    debugPrint('Carte marquée comme prête dans le controller');
+  }
 
   void dispose() {
     _disposed = true;
@@ -64,6 +71,13 @@ class LocationController {
     if (_disposed) return;
     if (!context.mounted) return;
     
+    // Attendre que la carte soit prête (utilisez VOTRE flag _isMapReady)
+    if (!_isMapReady) {
+      debugPrint('En attente que la carte soit prête...');
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (_disposed) return;
+    }
+    
     _safeCallback(onLoadingChanged, true);
     
     try {
@@ -78,11 +92,15 @@ class LocationController {
       _safeCallback(onPositionUpdated, position);
       _safeCallback(onLoadingChanged, false);
 
-      if (!_disposed) {
+      // Vérifier à nouveau que la carte est prête (votre flag)
+      if (!_disposed && _isMapReady) {
         mapController.move(
           LatLng(position.latitude, position.longitude),
           17.0,
         );
+        debugPrint('Carte déplacée vers la position actuelle');
+      } else {
+        debugPrint('Carte non prête, impossible de déplacer');
       }
     } catch (e) {
       if (!_disposed) {

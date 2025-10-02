@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageNotifier extends StateNotifier<Locale> {
-  LanguageNotifier() : super(const Locale('ar')) {
+  LanguageNotifier() : super(const Locale('fr ')) {
     _loadSavedLanguage();
   }
 

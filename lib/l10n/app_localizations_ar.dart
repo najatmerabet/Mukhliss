@@ -9,6 +9,43 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get onboarding_skip => 'تخطي';
+
+  @override
+  String get onboarding_next => 'التالي';
+
+  @override
+  String get onboarding_start => 'ابدأ';
+
+  @override
+  String get onboarding_page1_title => 'مرحبا بك في مخلص!';
+
+  @override
+  String get onboarding_page1_description =>
+      'بطاقة الولاء الذكية والمتصلة. بسّط مشترياتك واستمتع بمكافآت حصرية.';
+
+  @override
+  String get onboarding_page2_title => 'اكسب نقاطا مع كل عملية شراء';
+
+  @override
+  String get onboarding_page2_description =>
+      'امسح رمز الاستجابة السريعة الخاص بك لدى شركائنا واجمع النقاط وفقا لعروضهم الحصرية.';
+
+  @override
+  String get onboarding_page3_title => 'استبدل نقاطك بهدايا';
+
+  @override
+  String get onboarding_page3_description =>
+      'حوّل نقاطك إلى مكافآت حصرية في متاجرك المفضلة.';
+
+  @override
+  String get onboarding_page4_title => 'كلما كنت أكثر ولاءً، كلما ربحت أكثر!';
+
+  @override
+  String get onboarding_page4_description =>
+      'اكتشف العروض الحصرية القريبة منك وعظّم فوائدك.';
+
+  @override
   String get currentLanguage => 'اللغة العربية';
 
   @override

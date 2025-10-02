@@ -1,5 +1,18 @@
 {
-   "@@locale": "ar",
+
+  "@@locale": "ar",
+  "onboarding_skip": "تخطي",
+  "onboarding_next": "التالي",
+  "onboarding_start": "ابدأ",
+  "onboarding_page1_title": "مرحبا بك في مخلص!",
+  "onboarding_page1_description": "بطاقة الولاء الذكية والمتصلة. بسّط مشترياتك واستمتع بمكافآت حصرية.",
+  "onboarding_page2_title": "اكسب نقاطا مع كل عملية شراء",
+  "onboarding_page2_description": "امسح رمز الاستجابة السريعة الخاص بك لدى شركائنا واجمع النقاط وفقا لعروضهم الحصرية.",
+  "onboarding_page3_title": "استبدل نقاطك بهدايا",
+  "onboarding_page3_description": "حوّل نقاطك إلى مكافآت حصرية في متاجرك المفضلة.",
+  "onboarding_page4_title": "كلما كنت أكثر ولاءً، كلما ربحت أكثر!",
+  "onboarding_page4_description": "اكتشف العروض الحصرية القريبة منك وعظّم فوائدك.",
+
   "currentLanguage": "اللغة العربية",
   "errorsAuthInvalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
   "errorsAuthEmailNotConfirmed": "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول",

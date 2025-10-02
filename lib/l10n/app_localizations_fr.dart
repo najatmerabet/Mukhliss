@@ -9,6 +9,44 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get onboarding_skip => 'Passer';
+
+  @override
+  String get onboarding_next => 'Suivant';
+
+  @override
+  String get onboarding_start => 'Commencer';
+
+  @override
+  String get onboarding_page1_title => 'Bienvenue sur Mukhliss !';
+
+  @override
+  String get onboarding_page1_description =>
+      'Votre carte de fidélité intelligente et connectée. Simplifiez vos achats et profitez de récompenses exclusives.';
+
+  @override
+  String get onboarding_page2_title => 'Gagnez des points à chaque achat';
+
+  @override
+  String get onboarding_page2_description =>
+      'Scannez votre QR code chez nos partenaires et cumulez des points selon leurs offres exclusives.';
+
+  @override
+  String get onboarding_page3_title => 'Échangez vos points contre des cadeaux';
+
+  @override
+  String get onboarding_page3_description =>
+      'Transformez vos points en récompenses exclusives dans vos boutiques préférées.';
+
+  @override
+  String get onboarding_page4_title =>
+      'Plus vous êtes fidèle, plus vous gagnez !';
+
+  @override
+  String get onboarding_page4_description =>
+      'Découvrez des offres exclusives à proximité et maximisez vos avantages.';
+
+  @override
   String get currentLanguage => 'Français';
 
   @override
@@ -306,7 +344,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get arrivee => 'Vous êtes arrivé à';
 
   @override
-  String get points => 'pts';
+  String get points => 'Points';
 
   @override
   String get disponible => 'Disponible';

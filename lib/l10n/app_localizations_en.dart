@@ -9,6 +9,44 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get onboarding_skip => 'Skip';
+
+  @override
+  String get onboarding_next => 'Next';
+
+  @override
+  String get onboarding_start => 'Get Started';
+
+  @override
+  String get onboarding_page1_title => 'Welcome to Mukhliss!';
+
+  @override
+  String get onboarding_page1_description =>
+      'Your smart and connected loyalty card. Simplify your purchases and enjoy exclusive rewards.';
+
+  @override
+  String get onboarding_page2_title => 'Earn points with every purchase';
+
+  @override
+  String get onboarding_page2_description =>
+      'Scan your QR code at our partners and collect points according to their exclusive offers.';
+
+  @override
+  String get onboarding_page3_title => 'Redeem your points for gifts';
+
+  @override
+  String get onboarding_page3_description =>
+      'Transform your points into exclusive rewards at your favorite stores.';
+
+  @override
+  String get onboarding_page4_title =>
+      'The more loyal you are, the more you earn!';
+
+  @override
+  String get onboarding_page4_description =>
+      'Discover exclusive offers nearby and maximize your benefits.';
+
+  @override
   String get currentLanguage => 'English';
 
   @override

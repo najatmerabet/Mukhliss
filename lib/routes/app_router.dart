@@ -8,9 +8,15 @@ import 'package:mukhliss/screen/client/profile/settings_screen.dart';
 import 'package:mukhliss/screen/client/profile_new.dart';
 import 'package:mukhliss/screen/client/test_map.dart';
 import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+import 'package:mukhliss/screen/onboarding/language_selection_screen.dart';
+import 'package:mukhliss/screen/onboarding/onboarding_screen.dart';
+import 'package:mukhliss/screen/slash_screen.dart';
 
 class AppRouter {
-  static const String login = '/';
+    static const String splash = '/';
+  static const String languageSelection = '/language-selection';
+
+  static const String login = '/login';
   static const String signupClient = '/signup-client';
   static const String clientHome = '/home';
   static const String passwordReset = '/password-reset';
@@ -19,6 +25,7 @@ class AppRouter {
   static const String main = '/main'; // Route vers le layout principal
   static const String setting = '/setting'; // Route vers le layout principal
   static const String maptest = '/test'; // Route vers le layout principal
+  static const String onboarding = '/onboarding'; // Route vers le layout principal
 
   static Route<dynamic> unknownRoute() {
     return MaterialPageRoute(
@@ -40,6 +47,10 @@ class AppRouter {
     print('AppRouter - Route: ${settings.name}');
 
     switch (settings.name) {
+       case languageSelection:
+        return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
+      case splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case setting:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case login:
@@ -52,6 +63,9 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const ClientSignup());
           case maptest:
         return MaterialPageRoute(builder: (_) =>  MapScreen());
+
+        case onboarding: // ✅ NOUVEAU
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       case passwordReset:
         final email = settings.arguments as String;
         return MaterialPageRoute(

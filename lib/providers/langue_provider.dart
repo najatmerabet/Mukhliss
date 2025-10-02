@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageNotifier extends StateNotifier<Locale> {
-  LanguageNotifier() : super(const Locale('ar')) {
+  LanguageNotifier() : super(const Locale('fr')) {
     _loadSavedLanguage();
   }
 
@@ -36,7 +36,7 @@ class LanguageNotifier extends StateNotifier<Locale> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedLanguageCode = prefs.getString(_languageKey);
-      
+
       if (savedLanguageCode != null) {
         final savedLanguage = supportedLanguages.firstWhere(
           (lang) => lang.code == savedLanguageCode,
@@ -52,11 +52,24 @@ class LanguageNotifier extends StateNotifier<Locale> {
   Future<void> changeLanguage(Locale newLocale) async {
     try {
       state = newLocale;
-      
+
       // Sauvegarder la préférence
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, newLocale.languageCode);
-      
+
+      print('Langue changée vers: ${newLocale.languageCode}');
+    } catch (e) {
+      print('Erreur lors du changement de langue: $e');
+    }
+  }
+Future<void> setLocale(Locale newLocale) async {
+    try {
+      state = newLocale;
+
+      // Sauvegarder la préférence
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_languageKey, newLocale.languageCode);
+
       print('Langue changée vers: ${newLocale.languageCode}');
     } catch (e) {
       print('Erreur lors du changement de langue: $e');
@@ -70,6 +83,9 @@ class LanguageNotifier extends StateNotifier<Locale> {
     );
   }
 }
+
+
+
 
 class LanguageOption {
   final Locale locale;

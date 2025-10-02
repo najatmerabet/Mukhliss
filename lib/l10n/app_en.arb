@@ -1,5 +1,18 @@
 {
+
   "@@locale": "en",
+  "onboarding_skip": "Skip",
+  "onboarding_next": "Next",
+  "onboarding_start": "Get Started",
+  "onboarding_page1_title": "Welcome to Mukhliss!",
+  "onboarding_page1_description": "Your smart and connected loyalty card. Simplify your purchases and enjoy exclusive rewards.",
+  "onboarding_page2_title": "Earn points with every purchase",
+  "onboarding_page2_description": "Scan your QR code at our partners and collect points according to their exclusive offers.",
+  "onboarding_page3_title": "Redeem your points for gifts",
+  "onboarding_page3_description": "Transform your points into exclusive rewards at your favorite stores.",
+  "onboarding_page4_title": "The more loyal you are, the more you earn!",
+  "onboarding_page4_description": "Discover exclusive offers nearby and maximize your benefits.",
+
   "currentLanguage": "English",
   "cancel": "Cancel",
   "selectLanguage": "Select language",

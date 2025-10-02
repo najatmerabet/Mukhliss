@@ -209,21 +209,40 @@ class LocationScreenState extends ConsumerState<LocationScreen>
     }
   }
 
-  void _updateConnectionStatus(ConnectivityResult result) {
-    if (!mounted || _disposed) return;
+  // Dans votre LocationScreenState
+void _refreshStoresOnConnectionRestored() {
+  if (_hasConnection) {
+    debugPrint('🔄 Connexion restaurée - Rechargement des magasins');
+    // Invalider le provider pour forcer le rechargement
+    ref.invalidate(storesListProvider);
+    
+    // Optionnel: recharger aussi les catégories
+    ref.invalidate(categoriesListProvider);
+  }
+}
 
-    final newStatus = result != ConnectivityResult.none;
+// Modifiez votre méthode _updateConnectionStatus
+void _updateConnectionStatus(ConnectivityResult result) {
+  if (!mounted || _disposed) return;
+  
+  final newStatus = result != ConnectivityResult.none;
+  final wasDisconnected = !_hasConnection && newStatus;
+  
+  _safeSetState(() {
+    _hasConnection = newStatus;
+  });
 
-    _safeSetState(() {
-      _hasConnection = newStatus;
-    });
-
-    // Rafraîchir les données si la connexion revient
-    if (newStatus) {
-      ref.invalidate(storesListProvider);
+  // Rafraîchir les données si la connexion revient
+  if (wasDisconnected) {
+    debugPrint('📡 Connexion restaurée - Rafraîchissement des données');
+    _refreshStoresOnConnectionRestored();
+    
+    // Recharger aussi la position si nécessaire
+    if (_currentPosition == null) {
       controller.getCurrentLocation();
     }
   }
+}
 
   Widget _buildNoConnectionWidget(
     BuildContext context,
@@ -879,45 +898,48 @@ class LocationScreenState extends ConsumerState<LocationScreen>
                       ),
                     ),
                   ),
-                MarkerLayer(
-                  markers: storesAsync.maybeWhen(
-                    data: (stores) {
-                      List<Store> filteredStores = stores;
-                      if (_selectedCategory != null) {
-                        filteredStores =
-                            stores
-                                .where(
-                                  (store) =>
-                                      store.Categorieid ==
-                                      _selectedCategory!.id,
-                                )
-                                .toList();
-                      }
+                  MarkerLayer(
+  markers: _buildStoreMarkers(storesAsync),
+),
+                // MarkerLayer(
+                //   markers: storesAsync.maybeWhen(
+                //     data: (stores) {
+                //       List<Store> filteredStores = stores;
+                //       if (_selectedCategory != null) {
+                //         filteredStores =
+                //             stores
+                //                 .where(
+                //                   (store) =>
+                //                       store.Categorieid ==
+                //                       _selectedCategory!.id,
+                //                 )
+                //                 .toList();
+                //       }
 
-                      return filteredStores.map((store) {
-                        return Marker(
-                          point: LatLng(
-                            store.latitude.toDouble(),
-                            store.longitude.toDouble(),
-                          ),
-                          width: 40,
-                          height: 40,
-                          child: GestureDetector(
-                            onTap: () => _navigateToStoreAndShowDetails(store),
-                            child: CategoryMarkers.getPinWidget(
-                              CategoryHelpers.getCategoryName(
-                                ref,
-                                store.Categorieid,
-                              ),
-                              size: 40,
-                            ),
-                          ),
-                        );
-                      }).toList();
-                    },
-                    orElse: () => [],
-                  ),
-                ),
+                //       return filteredStores.map((store) {
+                //         return Marker(
+                //           point: LatLng(
+                //             store.latitude.toDouble(),
+                //             store.longitude.toDouble(),
+                //           ),
+                //           width: 40,
+                //           height: 40,
+                //           child: GestureDetector(
+                //             onTap: () => _navigateToStoreAndShowDetails(store),
+                //             child: CategoryMarkers.getPinWidget(
+                //               CategoryHelpers.getCategoryName(
+                //                 ref,
+                //                 store.Categorieid,
+                //               ),
+                //               size: 40,
+                //             ),
+                //           ),
+                //         );
+                //       }).toList();
+                //     },
+                //     orElse: () => [],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -1178,6 +1200,62 @@ class LocationScreenState extends ConsumerState<LocationScreen>
       ),
     );
   }
+
+  List<Marker> _buildStoreMarkers(AsyncValue<List<Store>> storesAsync) {
+  return storesAsync.when(
+    data: (stores) {
+      if (stores.isEmpty) {
+        debugPrint('Aucun magasin trouvé');
+        return [];
+      }
+      
+      List<Store> filteredStores = stores;
+      if (_selectedCategory != null) {
+        filteredStores = stores.where((store) => 
+          store.Categorieid == _selectedCategory!.id
+        ).toList();
+        debugPrint('${filteredStores.length} magasins filtrés pour la catégorie ${_selectedCategory!.id}');
+      }
+      
+      return filteredStores.map((store) {
+        return Marker(
+          point: LatLng(store.latitude.toDouble(), store.longitude.toDouble()),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () => _navigateToStoreAndShowDetails(store),
+            child: CategoryMarkers.getPinWidget(
+              CategoryHelpers.getCategoryName(ref, store.Categorieid),
+              size: 40,
+            ),
+          ),
+        );
+      }).toList();
+    },
+    loading: () {
+      debugPrint('Chargement des magasins en cours...');
+      return [];
+    },
+    error: (error, stack) {
+      debugPrint('❌ Erreur chargement magasins: $error');
+      
+      // Optionnel: Afficher un message d'erreur seulement si on a une connexion
+      if (_hasConnection) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_disposed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erreur chargement magasins: $error'),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        });
+      }
+      return [];
+    },
+  );
+}
 
   int _findNearestPointIndex(LatLng point) {
     double minDistance = double.infinity;

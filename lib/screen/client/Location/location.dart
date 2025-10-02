@@ -7,7 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
-import 'package:mukhliss/l10n/l10n.dart';
+
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
@@ -114,19 +114,25 @@ void initState() {
     },
   );
   
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted) {
-      _checkConnectivity().then((_) {
-        if (mounted) {
-          setState(() => _isCheckingConnectivity = false);
-          if (_hasConnection) {
-            controller.getCurrentLocation();
-          }
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted ) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted && !_disposed) {
+          _checkConnectivity().then((_) {
+            if (mounted && !_disposed) {
+              setState(() => _isCheckingConnectivity = false);
+              // if (_hasConnection) {
+              //   // Maintenant la carte devrait être rendue
+              //   controller.getCurrentLocation();
+              // }
+            }
+          });
         }
       });
     }
   });
 }
+
 
 Future<void> _checkConnectivity() async {
   try {
@@ -644,6 +650,22 @@ void _navigateToStoreAndShowDetails(Store store) async {
                         ? LatLng(_currentPosition!.latitude.toDouble(), _currentPosition!.longitude.toDouble())
                         : const LatLng(35.7595, -5.8340),
                     initialZoom: _currentPosition != null ? 17.0 : 13.0,
+                    onMapReady: () {
+                  debugPrint('🎯 Carte FlutterMap prête !');
+                  
+                  // Marquer la carte comme prête dans le controller
+                  controller.markMapAsReady();
+                  
+                  // Maintenant que la carte est prête, on peut obtenir la localisation
+                  if (_hasConnection && _currentPosition == null) {
+                    debugPrint('🔄 Démarrage de la localisation...');
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && !_disposed) {
+                        controller.getCurrentLocation();
+                      }
+                    });
+                  }
+                },
                   ),
                   children: [
                     // Map layers

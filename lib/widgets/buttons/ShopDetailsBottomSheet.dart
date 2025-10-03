@@ -28,7 +28,6 @@ import 'package:mukhliss/utils/geticategoriesbyicon.dart';
 import 'package:tuple/tuple.dart';
 import 'package:shimmer/shimmer.dart';
 
-
 class ShopDetailsBottomSheet extends ConsumerStatefulWidget {
   final Store? shop;
   final Position? currentPosition;
@@ -53,11 +52,12 @@ class ShopDetailsBottomSheet extends ConsumerStatefulWidget {
     this.selectedCategory,
     required this.initiateRouting,
     required this.navigatorKey,
-    required this.closeCategoriesSheet, 
+    required this.closeCategoriesSheet,
   });
 
   @override
-  ConsumerState<ShopDetailsBottomSheet> createState() => _ShopDetailsBottomSheetState();
+  ConsumerState<ShopDetailsBottomSheet> createState() =>
+      _ShopDetailsBottomSheetState();
 }
 
 class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
@@ -104,18 +104,21 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-     
-     final clientAsync=ref.watch(authProvider).currentUser;
-     final pointsAsync = ref.watch(clientMagazinPointsProvider(Tuple2(clientAsync?.id, widget.shop?.id)));
+    final clientAsync = ref.watch(authProvider).currentUser;
+    final pointsAsync = ref.watch(
+      clientMagazinPointsProvider(Tuple2(clientAsync?.id, widget.shop?.id)),
+    );
     if (widget.shop == null) {
       return _buildEmptyState(true); // Return empty container if shop is null
     }
-final rewardsAsync = widget.ref.watch(rewardsByMagasinProvider(widget.shop?.id ?? ''));
+    final rewardsAsync = widget.ref.watch(
+      rewardsByMagasinProvider(widget.shop?.id ?? ''),
+    );
 
-print('Watching rewards for shopId: ${widget.shop?.id}');
-print('Current rewardsAsync state: ${rewardsAsync.value}');
-print('Has error: ${rewardsAsync.hasError}');
-print('Is loading: ${rewardsAsync.isLoading}');
+    print('Watching rewards for shopId: ${widget.shop?.id}');
+    print('Current rewardsAsync state: ${rewardsAsync.value}');
+    print('Has error: ${rewardsAsync.hasError}');
+    print('Is loading: ${rewardsAsync.isLoading}');
     // Early return if shop is null
     if (widget.shop == null) {
       return _buildEmptyState(true); // or some other placeholder
@@ -153,247 +156,287 @@ print('Is loading: ${rewardsAsync.isLoading}');
           child: CustomScrollView(
             controller: scrollController,
             slivers: [
-             SliverToBoxAdapter(
-  child: GestureDetector(
-    behavior: HitTestBehavior.opaque, // Important pour que toute la zone soit cliquable
-    onTap: widget.closeCategoriesSheet,
-    child: Container(
-      width: double.infinity, // Prend toute la largeur
-      padding: const EdgeInsets.only(top: 12, bottom: 12), // Zone de touche plus grande
-      alignment: Alignment.center,
-      child: Container(
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    ),
-  ),
-),
-             SliverToBoxAdapter(
-               child: Padding(
-                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                 child: ConstrainedBox(
-                       constraints: BoxConstraints(
-                       maxHeight: MediaQuery.of(context).size.height * 0.8,
-                         ),
-                     child: SingleChildScrollView(
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           // En-tête avec logo et badge catégorie
-                           Row(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                           children: [
-                         // Logo avec effet glassmorphism
-                            Container(
-                          width: 85,
-                         height: 85,
-                          decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                       gradient: LinearGradient(
-                       begin: Alignment.topLeft,
-                         end: Alignment.bottomRight,
-                     colors: [
-                       Colors.white.withOpacity(0.25),
-                        Colors.white.withOpacity(0.1),
-                      ],
-                       ),
-                       border: Border.all(
-                     color: Colors.white.withOpacity(0.3),
-                        width: 1.5,
+              SliverToBoxAdapter(
+                child: GestureDetector(
+                  behavior:
+                      HitTestBehavior
+                          .opaque, // Important pour que toute la zone soit cliquable
+                  onTap: widget.closeCategoriesSheet,
+                  child: Container(
+                    width: double.infinity, // Prend toute la largeur
+                    padding: const EdgeInsets.only(
+                      top: 12,
+                      bottom: 12,
+                    ), // Zone de touche plus grande
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                            boxShadow: [
-                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                         blurRadius: 20,
-                           offset: const Offset(0, 10),
-                         ),
-                     ],
-                     ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: cleanLogoUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: cleanLogoUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => _buildShimmerPlaceholder(),
-                      errorWidget: (_, __, ___) => _buildPlaceholderIcon(),
-                    )
-                  : _buildPlaceholderIcon(),
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Informations principale et badge
-          Flexible(
-            fit:FlexFit.loose,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Badge de catégorie redesigné
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        CategoryMarkers.getPinColor(localizedName).withOpacity(0.25),
-                        CategoryMarkers.getPinColor(localizedName).withOpacity(0.15),
-                      ],
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        CategoryMarkers.getPinIcon(localizedName),
-                        color: CategoryMarkers.getPinColor(localizedName),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          localizedName,
-                          style:  TextStyle(
-                            color: isDarkMode ? AppColors.surface : AppColors.darkSurface,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-                
-                const SizedBox(height: 12),
-                
-                // Nom de l'enseigne avec effet
-                Text(
-                  widget.shop!.nom_enseigne ?? '',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: isDarkMode ?  AppColors.surface : AppColors.darkSurface,
-                    height: 1.1,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.3),
-                        offset: const Offset(0, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      
-      const SizedBox(height: 28),
-      
-      // Grille d'informations avec design moderne
-// Dans votre méthode build, remplacez la partie concernée par :
-
-// Grille d'informations avec design moderne
-Container(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-  child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      // Première ligne - Adresse
-      _buildInfoRow(
-        icon: Icons.location_on_rounded,
-        iconColor: Colors.blue,
-        title: l10n?.address ?? 'Adresse',
-        value: widget.shop!.adresse != null ? widget.shop!.adresse!.split(',').first : '',
-        isDarkMode: isDarkMode,
-      ),
-      
-      const SizedBox(height: 12),
-      
-      // Deuxième ligne - Distance et Points
-      Row(
-        children: [
-          Expanded(
-            child: _buildInfoRow(
-              icon: Icons.near_me_rounded,
-              iconColor: Colors.green,
-              title: l10n?.distance ?? 'Distance',
-              value: distance < 1000 
-                  ? '${distance.toStringAsFixed(0)} m' 
-                  : '${(distance / 1000).toStringAsFixed(1)} km',
-              isDarkMode: isDarkMode,
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          Expanded(
-            child: pointsAsync.when(
-              data: (clientMagazin) => _buildInfoRow(
-                icon: Icons.loyalty_rounded,
-                iconColor: Colors.amber,
-                title: 'Points',
-                value: '${clientMagazin?.cumulpoint ?? 0}',
-                isDarkMode: isDarkMode,
               ),
-              loading: () => _buildLoadingRow(isDarkMode),
-              error: (_, __) => _buildErrorRow(isDarkMode),
-            ),
-          ),
-        ],
-      ),
-    ],
-  ),
-),
-    ],
-  ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // En-tête avec logo et badge catégorie
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Logo avec effet glassmorphism
+                              Container(
+                                width: 85,
+                                height: 85,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white.withOpacity(0.25),
+                                      Colors.white.withOpacity(0.1),
+                                    ],
+                                  ),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(22),
+                                  child:
+                                      cleanLogoUrl != null
+                                          ? CachedNetworkImage(
+                                            imageUrl: cleanLogoUrl,
+                                            fit: BoxFit.cover,
+                                            placeholder:
+                                                (_, __) =>
+                                                    _buildShimmerPlaceholder(),
+                                            errorWidget:
+                                                (_, __, ___) =>
+                                                    _buildPlaceholderIcon(),
+                                          )
+                                          : _buildPlaceholderIcon(),
+                                ),
+                              ),
 
-          
-                  
-        ),
-      ),
-             ),
-             ),
+                              const SizedBox(width: 16),
 
-            
-            
-rewardsAsync.when(
-  loading: () {
-    final isFirstLoad = !rewardsAsync.hasValue;
-    return isFirstLoad
-        ? _buildFirstLoadState(isDarkMode)
-        : _buildRegularLoadingState(isDarkMode);
-  },
-  error: (error, stack) => _buildErrorState(error, stack, isDarkMode),
-  data: (rewards) => rewards.isEmpty
-      ? _buildEmptyState(isDarkMode)
-      : _buildOffersList(rewards, isDarkMode, l10n),
+                              // Informations principale et badge
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Badge de catégorie redesigné
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            CategoryMarkers.getPinColor(
+                                              localizedName,
+                                            ).withOpacity(0.25),
+                                            CategoryMarkers.getPinColor(
+                                              localizedName,
+                                            ).withOpacity(0.15),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.3),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            CategoryMarkers.getPinIcon(
+                                              localizedName,
+                                            ),
+                                            color: CategoryMarkers.getPinColor(
+                                              localizedName,
+                                            ),
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              localizedName,
+                                              style: TextStyle(
+                                                color:
+                                                    isDarkMode
+                                                        ? AppColors.surface
+                                                        : AppColors.darkSurface,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
-),
-// ajouter un espace 
-    
+                                    const SizedBox(height: 12),
+
+                                    // Nom de l'enseigne avec effet
+                                    Text(
+                                      widget.shop!.nom_enseigne ?? '',
+                                      style: TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        color:
+                                            isDarkMode
+                                                ? AppColors.surface
+                                                : AppColors.darkSurface,
+                                        height: 1.1,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black.withOpacity(
+                                              0.3,
+                                            ),
+                                            offset: const Offset(0, 2),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 28),
+
+                          // Grille d'informations avec design moderne
+                          // Dans votre méthode build, remplacez la partie concernée par :
+
+                          // Grille d'informations avec design moderne
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Première ligne - Adresse
+                                _buildInfoRow(
+                                  icon: Icons.location_on_rounded,
+                                  iconColor: Colors.blue,
+                                  title: l10n?.address ?? 'Adresse',
+                                  value:
+                                      widget.shop!.adresse != null
+                                          ? widget.shop!.adresse!
+                                              .split(',')
+                                              .first
+                                          : '',
+                                  isDarkMode: isDarkMode,
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Deuxième ligne - Distance et Points
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildInfoRow(
+                                        icon: Icons.near_me_rounded,
+                                        iconColor: Colors.green,
+                                        title: l10n?.distance ?? 'Distance',
+                                        value:
+                                            distance < 1000
+                                                ? '${distance.toStringAsFixed(0)} m'
+                                                : '${(distance / 1000).toStringAsFixed(1)} km',
+                                        isDarkMode: isDarkMode,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 16),
+
+                                    Expanded(
+                                      child: pointsAsync.when(
+                                        data:
+                                            (clientMagazin) => _buildInfoRow(
+                                              icon: Icons.loyalty_rounded,
+                                              iconColor: Colors.amber,
+                                              title: 'Points',
+                                              value:
+                                                  '${clientMagazin?.cumulpoint ?? 0}',
+                                              isDarkMode: isDarkMode,
+                                            ),
+                                        loading:
+                                            () => _buildLoadingRow(isDarkMode),
+                                        error:
+                                            (_, __) =>
+                                                _buildErrorRow(isDarkMode),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              rewardsAsync.when(
+                loading: () {
+                  final isFirstLoad = !rewardsAsync.hasValue;
+                  return isFirstLoad
+                      ? _buildFirstLoadState(isDarkMode)
+                      : _buildRegularLoadingState(isDarkMode);
+                },
+                error:
+                    (error, stack) =>
+                        _buildErrorState(error, stack, isDarkMode),
+                data:
+                    (rewards) =>
+                        rewards.isEmpty
+                            ? _buildEmptyState(isDarkMode)
+                            : _buildOffersList(rewards, isDarkMode, l10n),
+              ),
+              // ajouter un espace
+
               // Boutons d'action
               SliverToBoxAdapter(
                 child: Padding(
@@ -402,13 +445,12 @@ rewardsAsync.when(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                         onPressed: () {
-                           // 1. Fermer le bottom sheet
-                           widget.closeCategoriesSheet();
-      
-                          // 2. Recentrer la carte sur la position actuelle
-  
-                              },
+                          onPressed: () {
+                            // 1. Fermer le bottom sheet
+                            widget.closeCategoriesSheet();
+
+                            // 2. Recentrer la carte sur la position actuelle
+                          },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -472,13 +514,14 @@ rewardsAsync.when(
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(16),
                               child: InkWell(
-                             borderRadius: BorderRadius.circular(16),
-                             onTap: widget.isRouting
-                                          ? null
-                                          : ()  {
-                                            widget.initiateRouting(widget.shop!);
-                                          },
-                                        
+                                borderRadius: BorderRadius.circular(16),
+                                onTap:
+                                    widget.isRouting
+                                        ? null
+                                        : () {
+                                          widget.initiateRouting(widget.shop!);
+                                        },
+
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
@@ -539,505 +582,522 @@ rewardsAsync.when(
     );
   }
 
-Widget _buildInfoRow({
-  required IconData icon,
-  required Color iconColor,
-  required String title,
-  required String value,
-  required bool isDarkMode,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      children: [
-        Icon(
-          icon,
-          color: iconColor,
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildLoadingRow(bool isDarkMode) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      children: [
-        const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'Chargement...',
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildErrorRow(bool isDarkMode) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      children: [
-        Icon(
-          Icons.error_outline,
-          color: Colors.red,
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'Erreur',
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildFirstLoadState(bool isDarkMode) {
-  return SliverToBoxAdapter(
-    child: Container(
-      height: 200,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildInfoRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    required bool isDarkMode,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 20),
-          Text(
-            'Loading offers for the first time...',
-            style: TextStyle(
-              color: isDarkMode ? Colors.white70 : Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildRegularLoadingState(bool isDarkMode) {
-  return SliverToBoxAdapter(
-    child: Container(
-      height: 100,
-      alignment: Alignment.center,
-      child: const CircularProgressIndicator(),
-    ),
-  );
-}
-
-Widget _buildShimmerPlaceholder() {
-  return Shimmer.fromColors(
-    baseColor: Colors.grey[800]!,
-    highlightColor: Colors.grey[600]!,
-    child: Center(
-      child: Icon(
-        Icons.store_rounded,
-        size: 40,
-        color: Colors.white.withOpacity(0.5),
-      ),
-    ),
-  );
-}
- 
-
-
-  // 🎫 DESIGN 1: Style Ticket/Coupon
-Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
-  final l10n = AppLocalizations.of(context);
-  final isRTL = Directionality.of(context) == TextDirection.rtl;
-
-  return Container(
-    margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    height: 240,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: isRTL ? Alignment.topRight : Alignment.topLeft,
-        end: isRTL ? Alignment.topLeft : Alignment.topRight,
-        colors: AppColors.lightGradient,
-        stops: [0.0, 1.0],
-      ),
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.lightGradient[0].withOpacity(0.3),
-          blurRadius: 25,
-          spreadRadius: 0,
-          offset: Offset(0, 10),
-        ),
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 15,
-          spreadRadius: 0,
-          offset: Offset(0, 5),
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        children: [
-          // Arrière-plan décoratif - positionnement RTL-aware
-          Positioned(
-            right: isRTL ? null : -30,
-            left: isRTL ? -30 : null,
-            top: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-              ),
-            ),
-          ),
-          Positioned(
-            right: isRTL ? null : 20,
-            left: isRTL ? 20 : null,
-            bottom: -20,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
-              ),
-            ),
-          ),
-          
-          // Effet de lueur - positionnement RTL-aware
-          Positioned(
-            right: isRTL ? null : 0,
-            left: isRTL ? 0 : null,
-            top: 0,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.amber.withOpacity(0.2),
-                    Colors.transparent,
-                  ],
-                  stops: [0.0, 1.0],
-                ),
-              ),
-            ),
-          ),
-          
-          // Icône étoile - positionnement RTL-aware
-          Positioned(
-            right: isRTL ? null : 16,
-            left: isRTL ? 16 : null,
-            top: 16,
-            child: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.star_rounded,
-                size: 22,
-                color: AppColors.amber,
-              ),
-            ),
-          ),
-          
-          // Contenu principal
-          Padding(
-            padding: EdgeInsets.all(20),
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Section en-tête avec badges - direction RTL-aware
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                  children: [
-                    // Badge d'état
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: offer.is_active ? AppColors.success : AppColors.warning,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            offer.is_active ? l10n?.exclusifs ?? 'EXCLUSIF' : l10n?.limite ?? 'LIMITÉ',
-                            style: TextStyle(
-                              color: AppColors.darkSurface,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Indicateur de popularité
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                        children: [
-                          Icon(Icons.local_fire_department, 
-                              color: AppColors.amber, 
-                              size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            'HOT',
-                            style: TextStyle(
-                              color: AppColors.amber,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                
-                SizedBox(height: 16),
-                
-                // Titre principal - alignement RTL-aware
                 Text(
-                  offer.name,
+                  title,
                   style: TextStyle(
-                    color: AppColors.darkSurface,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   ),
-                  maxLines: 2,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
                   overflow: TextOverflow.ellipsis,
-                  textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                ),
-                
-                SizedBox(height: 8),
-                
-                // Description - alignement RTL-aware (CORRIGÉ)
-                Expanded(
-                  child: Text(
-                    offer.description ?? '',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: AppColors.darkSurface,
-                      fontSize: 14,
-                      height: 1.3,
-                    ),
-                    textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                  ),
-                ),
-                
-                SizedBox(height: 12),
-                
-                // Section points compacte - CORRIGÉ
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                    children: [
-                      // Points section compacte
-                      Row(
-                        textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Icône étoile compacte
-                          Container(
-                            padding: EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.amber,
-                                  AppColors.amber.withOpacity(0.8),
-                                ],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.star_rounded,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                          
-                          SizedBox(width: 8),
-                          
-                          // Informations des points compactes
-                          Column(
-                            crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                l10n?.pointsrequis ?? 'POINTS REQUIS',
-                                style: TextStyle(
-                                  color: AppColors.amber.withOpacity(0.9),
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${offer.points_required}',
-                                    style: TextStyle(
-                                      color: AppColors.darkSurface,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                  SizedBox(width: 2),
-                                  Text(
-                                  l10n?.points ??  'pts',
-                                    style: TextStyle(
-                                      color: AppColors.darkSurface,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      
-                      // Bouton d'action
-                      InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          // Votre logique ici
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Text(
-                            l10n?.benificier ?? 'À bénéficier',
-                            style: TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  maxLines: 1,
                 ),
               ],
             ),
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildLoadingRow(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Chargement...',
+            style: TextStyle(
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorRow(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red, size: 20),
+          const SizedBox(width: 12),
+          Text(
+            'Erreur',
+            style: TextStyle(
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFirstLoadState(bool isDarkMode) {
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 200,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(
+              'Loading offers for the first time...',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegularLoadingState(bool isDarkMode) {
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 100,
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[800]!,
+      highlightColor: Colors.grey[600]!,
+      child: Center(
+        child: Icon(
+          Icons.store_rounded,
+          size: 40,
+          color: Colors.white.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
+
+  // 🎫 DESIGN 1: Style Ticket/Coupon
+  Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
+    final l10n = AppLocalizations.of(context);
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      height: 240,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: isRTL ? Alignment.topRight : Alignment.topLeft,
+          end: isRTL ? Alignment.topLeft : Alignment.topRight,
+          colors: AppColors.lightGradient,
+          stops: [0.0, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.lightGradient[0].withOpacity(0.3),
+            blurRadius: 25,
+            spreadRadius: 0,
+            offset: Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Arrière-plan décoratif - positionnement RTL-aware
+            Positioned(
+              right: isRTL ? null : -30,
+              left: isRTL ? -30 : null,
+              top: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              right: isRTL ? null : 20,
+              left: isRTL ? 20 : null,
+              bottom: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+
+            // Effet de lueur - positionnement RTL-aware
+            Positioned(
+              right: isRTL ? null : 0,
+              left: isRTL ? 0 : null,
+              top: 0,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.amber.withOpacity(0.2),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
+            // Icône étoile - positionnement RTL-aware
+            Positioned(
+              right: isRTL ? null : 16,
+              left: isRTL ? 16 : null,
+              top: 16,
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.star_rounded,
+                  size: 22,
+                  color: AppColors.amber,
+                ),
+              ),
+            ),
+
+            // Contenu principal
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Section en-tête avec badges - direction RTL-aware
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    textDirection:
+                        isRTL ? TextDirection.rtl : TextDirection.ltr,
+                    children: [
+                      // Badge d'état
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          textDirection:
+                              isRTL ? TextDirection.rtl : TextDirection.ltr,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color:
+                                    offer.is_active
+                                        ? AppColors.success
+                                        : AppColors.warning,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              offer.is_active
+                                  ? l10n?.exclusifs ?? 'EXCLUSIF'
+                                  : l10n?.limite ?? 'LIMITÉ',
+                              style: TextStyle(
+                                color: AppColors.darkSurface,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Indicateur de popularité
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          textDirection:
+                              isRTL ? TextDirection.rtl : TextDirection.ltr,
+                          children: [
+                            Icon(
+                              Icons.local_fire_department,
+                              color: AppColors.amber,
+                              size: 14,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'HOT',
+                              style: TextStyle(
+                                color: AppColors.amber,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Titre principal - alignement RTL-aware
+                  Text(
+                    offer.name,
+                    style: TextStyle(
+                      color: AppColors.darkSurface,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                  ),
+
+                  SizedBox(height: 8),
+
+                  // Description - alignement RTL-aware (CORRIGÉ)
+                  Expanded(
+                    child: Text(
+                      offer.description ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.darkSurface,
+                        fontSize: 14,
+                        height: 1.3,
+                      ),
+                      textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                    ),
+                  ),
+
+                  SizedBox(height: 12),
+
+                  // Section points compacte - CORRIGÉ
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      textDirection:
+                          isRTL ? TextDirection.rtl : TextDirection.ltr,
+                      children: [
+                        // Points section compacte
+                        Row(
+                          textDirection:
+                              isRTL ? TextDirection.rtl : TextDirection.ltr,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Icône étoile compacte
+                            Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.amber,
+                                    AppColors.amber.withOpacity(0.8),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.star_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+
+                            SizedBox(width: 8),
+
+                            // Informations des points compactes
+                            Column(
+                              crossAxisAlignment:
+                                  isRTL
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  l10n?.pointsrequis ?? 'POINTS REQUIS',
+                                  style: TextStyle(
+                                    color: AppColors.amber.withOpacity(0.9),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                SizedBox(height: 2),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  textDirection:
+                                      isRTL
+                                          ? TextDirection.rtl
+                                          : TextDirection.ltr,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '${offer.points_required}',
+                                      style: TextStyle(
+                                        color: AppColors.darkSurface,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                    SizedBox(width: 2),
+                                    Text(
+                                      l10n?.points ?? 'pts',
+                                      style: TextStyle(
+                                        color: AppColors.darkSurface,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        // Bouton d'action
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            // Votre logique ici
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              l10n?.benificier ?? 'À bénéficier',
+                              style: TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   double _calculateDistance(Position? currentPosition, Store? shop) {
     if (currentPosition == null) return 0;
@@ -1050,8 +1110,6 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
     );
   }
 
-  
-
   Widget _buildPlaceholderIcon() {
     return Container(
       decoration: BoxDecoration(
@@ -1061,8 +1119,6 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
       child: const Icon(Icons.store_rounded, color: Colors.white, size: 36),
     );
   }
-
-
 
   Widget _buildErrorState(Object error, StackTrace? stack, bool isDarkMode) {
     return SliverToBoxAdapter(
@@ -1077,13 +1133,13 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
   }
 
   Widget _buildEmptyState(bool isDarkMode) {
-     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text(
-          l10n?.nooffre ??   'No offers available',
+            l10n?.nooffre ?? 'No offers available',
             style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
           ),
         ),
@@ -1091,7 +1147,6 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
     );
   }
 
- 
   Widget _buildOffersList(
     List<dynamic> offers,
     bool isDarkMode,
@@ -1153,14 +1208,8 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
             },
           ),
         ),
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
       ]),
-       
     );
-     
   }
-
-
-  
-
 }

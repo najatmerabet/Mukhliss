@@ -11,6 +11,7 @@ import 'package:mukhliss/screen/slash_screen.dart';
 import 'package:mukhliss/services/device_management_service.dart';
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
+import 'package:mukhliss/services/onboarding_service.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart' as flutter_material show ThemeMode;
@@ -359,73 +360,44 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     }
   }
 
-  void _handleAuthChange(AuthState data) {
-    if (!mounted) return;
+  // Remplacez la méthode _handleAuthChange dans _AuthStateHandlerState
 
-    debugPrint('🔹 [Main] Auth event: ${data.event}');
-    debugPrint('🔹 [Main] Session: ${data.session?.user.email ?? 'null'}');
+// Dans main.dart - Modifier _handleAuthChange
+void _handleAuthChange(AuthState data) async {
+  if (!mounted) return;
 
-    switch (data.event) {
-      case AuthChangeEvent.initialSession:
-        if (data.session != null) {
-          debugPrint('🔹 [Main] Session initiale trouvée, redirection vers main');
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (mounted && navigatorKey.currentState != null) {
-              navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              await Future.delayed(const Duration(milliseconds: 1000));
-              await _initializeDeviceMonitoring();
-            }
-          });
-        } else {
-          debugPrint('🔹 [Main] Pas de session initiale, redirection vers login');
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && navigatorKey.currentState != null) {
-              navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
-            }
-          });
-        }
-        break;
+  debugPrint('🔹 [Main] Auth event: ${data.event}');
+  debugPrint('🔹 [Main] Session: ${data.session?.user.email ?? 'null'}');
 
-      case AuthChangeEvent.signedIn:
-        if (data.session != null) {
-          debugPrint('🔹 [Main] Connexion réussie, redirection vers main');
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (mounted && navigatorKey.currentState != null) {
-              navigatorKey.currentState!.pushReplacementNamed(AppRouter.main);
-              await Future.delayed(const Duration(milliseconds: 1000));
-              await _initializeDeviceMonitoring();
-            }
-          });
-        }
-        break;
-
-      case AuthChangeEvent.signedOut:
-        debugPrint('🔹 [Main] Déconnexion, nettoyage et redirection vers login');
-        _cleanupOnSignOut();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && navigatorKey.currentState != null) {
-            navigatorKey.currentState!.pushNamedAndRemoveUntil(
-              AppRouter.login,
-              (route) => false,
-            );
-          }
-        });
-        break;
-
-      case AuthChangeEvent.passwordRecovery:
-      case AuthChangeEvent.tokenRefreshed:
-      case AuthChangeEvent.userUpdated:
-        debugPrint('🔹 [Main] Événement ${data.event} - pas de redirection');
-        break;
-
-      case AuthChangeEvent.userDeleted:
-        _cleanupOnSignOut();
-        break;
-      case AuthChangeEvent.mfaChallengeVerified:
-        break;
-    }
+  // ✅ Vérifier d'abord si la langue a été sélectionnée
+  final hasSelectedLanguage = await OnboardingService.hasSelectedLanguage();
+  
+  if (!hasSelectedLanguage) {
+    debugPrint('🎯 [Main] Langue non sélectionnée - Redirection vers language selection');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushReplacementNamed(AppRouter.languageSelection);
+      }
+    });
+    return;
   }
 
+  // ✅ Vérifier ensuite l'onboarding
+  final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
+  
+  if (!hasSeenOnboarding) {
+    debugPrint('🎯 [Main] Onboarding non vu - Redirection vers onboarding');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushReplacementNamed(AppRouter.onboarding);
+      }
+    });
+    return;
+  }
+
+  // ... reste du code existant pour la gestion d'authentification
+}
+  
   void _cleanupOnSignOut() {
     _monitoringInitialized = false;
     _activityTimer?.cancel();

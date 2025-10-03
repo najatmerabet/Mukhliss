@@ -12,6 +12,7 @@ import 'package:mukhliss/utils/validators.dart';
 
 import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -33,87 +34,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
- Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoading = true);
-  try {
-    await ref
-      .read(authProvider)
-      .login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(authProvider)
+          .login(_emailController.text.trim(), _passwordController.text.trim());
 
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, AppRouter.main);
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRouter.main);
+      }
+    } catch (e) {
+      // Delegate *all* errors (AuthException, PostgrestException,
+      // SocketException, TimeoutException, anything else) to your handler:
+      // ignore: use_build_context_synchronously
+      final errorMessage = AuthErrorHandler(context).handle(e);
+      if (mounted) {
+        showErrorSnackbar(context: context, message: errorMessage);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } catch (e) {
-    // Delegate *all* errors (AuthException, PostgrestException,
-    // SocketException, TimeoutException, anything else) to your handler:
-    // ignore: use_build_context_synchronously
-    final errorMessage = AuthErrorHandler(context).handle(e);
-    if (mounted) {
-      showErrorSnackbar(
-        context: context,
-        message: errorMessage,
-      );
-    }
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
   }
-}
-Widget _buildLanguageDropdown(BuildContext context) {
-  final currentLanguage = ref.watch(languageProvider.notifier).currentLanguageOption;
 
-  return PopupMenuButton<LanguageOption>(
-    icon: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        currentLanguage.flag,
-        style: const TextStyle(fontSize: 20),
-      ),
-    ),
-    onSelected: (LanguageOption option) {
-      ref.read(languageProvider.notifier).changeLanguage(option.locale);
-    },
-    itemBuilder: (BuildContext context) {
-      return LanguageNotifier.supportedLanguages.map((LanguageOption option) {
-        return PopupMenuItem<LanguageOption>(
-          value: option,
-          child: Row(
-            children: [
-              Text(option.flag, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 12),
-              Text(option.name),
-            ],
-          ),
-        );
-      }).toList();
-    },
-  );
-}
   void _showEmailResetDialog() {
     final emailController = TextEditingController(text: _emailController.text);
-  final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider);
     final l10n = AppLocalizations.of(context);
-   final isDarkMode = themeMode == AppThemeMode.light;
+    final isDarkMode = themeMode == AppThemeMode.light;
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-             backgroundColor:isDarkMode ? AppColors.darkPrimary :AppColors.surface,
+            backgroundColor:
+                isDarkMode ? AppColors.darkPrimary : AppColors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -130,7 +86,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                 TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(
-                    labelText:l10n?.email ?? 'Email',
+                    labelText: l10n?.email ?? 'Email',
                     hintText: 'votre@email.com',
                     prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
                     border: OutlineInputBorder(
@@ -149,7 +105,7 @@ Widget _buildLanguageDropdown(BuildContext context) {
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    Validators.validateEmaillogin(value,context);
+                    Validators.validateEmaillogin(value, context);
                     return null;
                   },
                 ),
@@ -167,7 +123,10 @@ Widget _buildLanguageDropdown(BuildContext context) {
                         'Un code OTP vous sera envoyé par email',
                         style: TextStyle(
                           fontSize: 14,
-                          color:isDarkMode ? AppColors.surface: Colors.grey.shade700,
+                          color:
+                              isDarkMode
+                                  ? AppColors.surface
+                                  : Colors.grey.shade700,
                         ),
                       ),
                     ),
@@ -180,7 +139,10 @@ Widget _buildLanguageDropdown(BuildContext context) {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   l10n?.cancel ?? 'Annuler',
-                  style: TextStyle(color:isDarkMode ? AppColors.surface : Colors.grey.shade700),
+                  style: TextStyle(
+                    color:
+                        isDarkMode ? AppColors.surface : Colors.grey.shade700,
+                  ),
                 ),
               ),
               ElevatedButton(
@@ -190,7 +152,9 @@ Widget _buildLanguageDropdown(BuildContext context) {
                     Navigator.pop(context);
                     showErrorSnackbar(
                       context: context,
-                      message:l10n?.emailinvalide ?? 'Veuillez entrer un email valide',
+                      message:
+                          l10n?.emailinvalide ??
+                          'Veuillez entrer un email valide',
                     );
                     return;
                   }
@@ -209,8 +173,8 @@ Widget _buildLanguageDropdown(BuildContext context) {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child:  Text(
-                 l10n?.envoiencours ?? 'Envoyer le code',
+                child: Text(
+                  l10n?.envoiencours ?? 'Envoyer le code',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
@@ -219,37 +183,39 @@ Widget _buildLanguageDropdown(BuildContext context) {
     );
   }
 
-Future<void> _sendResetOtpEmail(String email) async {
-  setState(() => _isLoading = true);
-  try {
-    await ref.read(authProvider).sendPasswordResetOtp(email);
+  Future<void> _sendResetOtpEmail(String email) async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authProvider).sendPasswordResetOtp(email);
 
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpVerificationPage(
-            email: email,
-            type: OtpVerificationType.passwordReset, // Add this parameter
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => OtpVerificationPage(
+                  email: email,
+                  type: OtpVerificationType.passwordReset, // Add this parameter
+                ),
           ),
-        ),
-      );
-    }
-  } catch (e) {
-    if (mounted) {
-      showErrorSnackbar(context: context, message: 'Erreur: ${e.toString()}');
-    }
-  } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackbar(context: context, message: 'Erreur: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
+
   @override
   Widget build(BuildContext context) {
-     final l10n = AppLocalizations.of(context);
-      final themeMode = ref.watch(themeProvider);
-   final isDarkMode = themeMode == AppThemeMode.light;
+    final l10n = AppLocalizations.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -257,11 +223,18 @@ Future<void> _sendResetOtpEmail(String email) async {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isDarkMode ? [AppColors.darkWhite,AppColors.darkGrey50 , AppColors.darkPurpleDark]: [
-             AppColors.lightWhite,
-             AppColors.lightGrey50,
-              AppColors.lightPurpleDark,
-            ],
+            colors:
+                isDarkMode
+                    ? [
+                      AppColors.darkWhite,
+                      AppColors.darkGrey50,
+                      AppColors.darkPurpleDark,
+                    ]
+                    : [
+                      AppColors.lightWhite,
+                      AppColors.lightGrey50,
+                      AppColors.lightPurpleDark,
+                    ],
           ),
         ),
         child: SafeArea(
@@ -272,12 +245,9 @@ Future<void> _sendResetOtpEmail(String email) async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                   padding: const EdgeInsets.only(top: 16.0),
-                     child: Align(
-                 alignment: Alignment.topRight,
-                     child: _buildLanguageDropdown(context),
-                    ),
-                    ),
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Align(alignment: Alignment.topRight),
+                  ),
                   const SizedBox(height: 40),
 
                   // Logo et titre
@@ -296,8 +266,7 @@ Future<void> _sendResetOtpEmail(String email) async {
                         ),
 
                         Text(
-                          l10n?.welcome ??
-                          'Bienvenue',
+                          l10n?.welcome ?? 'Bienvenue',
                           style: Theme.of(
                             context,
                           ).textTheme.headlineMedium?.copyWith(
@@ -308,7 +277,7 @@ Future<void> _sendResetOtpEmail(String email) async {
                         const SizedBox(height: 8),
                         Text(
                           l10n?.connectezvous ??
-                          'Connectez-vous pour continuer',
+                              'Connectez-vous pour continuer',
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(color: Colors.grey.shade600),
                         ),
@@ -326,15 +295,15 @@ Future<void> _sendResetOtpEmail(String email) async {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Label Email
-
                         AppFormFields.buildModernTextField(
                           context: context,
                           controller: _emailController,
-                          label:l10n?.email ?? 'Email',
+                          label: l10n?.email ?? 'Email',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator:
-                              (value) => Validators.validateEmaillogin(value,context),
+                              (value) =>
+                                  Validators.validateEmaillogin(value, context),
                           hintText: 'votre@email.com',
                         ),
                         const SizedBox(height: 24),
@@ -342,16 +311,16 @@ Future<void> _sendResetOtpEmail(String email) async {
                         AppFormFields.buildModernPasswordField(
                           context: context,
                           controller: _passwordController,
-                          label:l10n?.password ?? 'Mot de passe',
+                          label: l10n?.password ?? 'Mot de passe',
                           isObscure: _obscurePassword,
                           onToggleVisibility:
                               () => setState(
                                 () => _obscurePassword = !_obscurePassword,
                               ),
                           validator:
-                              (value) => Validators.validatePassword(value,context),
+                              (value) =>
+                                  Validators.validatePassword(value, context),
                           hintText: '••••••••',
-
                         ),
                         // Mot de passe oublié
                         Align(
@@ -364,8 +333,7 @@ Future<void> _sendResetOtpEmail(String email) async {
                               visualDensity: VisualDensity.compact,
                             ),
                             child: Text(
-                              l10n?.forgetpassword ??
-                              'Mot de passe oublié ?',
+                              l10n?.forgetpassword ?? 'Mot de passe oublié ?',
                               style: TextStyle(
                                 color: AppColors.purpleDark,
                                 fontWeight: FontWeight.w600,
@@ -407,9 +375,8 @@ Future<void> _sendResetOtpEmail(String email) async {
                                         strokeWidth: 2.5,
                                       ),
                                     )
-                                    :  Text(
-                                      l10n?.connecter ??
-                                      'Se connecter',
+                                    : Text(
+                                      l10n?.connecter ?? 'Se connecter',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -432,8 +399,7 @@ Future<void> _sendResetOtpEmail(String email) async {
                                 horizontal: 16,
                               ),
                               child: Text(
-                                l10n?.ou ??
-                                'ou',
+                                l10n?.ou ?? 'ou',
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontWeight: FontWeight.w500,
@@ -452,7 +418,9 @@ Future<void> _sendResetOtpEmail(String email) async {
                         Center(
                           child: _buildSocialButton(
                             imagePath: 'images/google_logo.png',
-                            label:l10n?.connecteravecgoogle ?? 'Se connecter avec Google',
+                            label:
+                                l10n?.connecteravecgoogle ??
+                                'Se connecter avec Google',
                             onPressed: () async {
                               setState(() => _isLoading = true);
                               try {
@@ -483,40 +451,49 @@ Future<void> _sendResetOtpEmail(String email) async {
                         ),
                         const SizedBox(height: 32),
                         // Inscription
-                       Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    Expanded(  // Add this
-      child: Text(
-        l10n?.pasdecompte ?? 'Pas encore de compte ?',
-        style: TextStyle(
-          color:isDarkMode? AppColors.lightGrey50 :AppColors.darkGrey50,
-          fontSize: 15,
-        ),
-        textAlign: TextAlign.center,  // Add this to center the text
-      ),
-    ),
-    TextButton(
-      onPressed: () {
-        Navigator.pushNamed(
-          context,
-          AppRouter.signupClient,
-        );
-      },
-      style: TextButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-      ),
-      child: Text(
-        l10n?.creecompte ?? 'Créer un compte',
-        style: TextStyle(
-          color:isDarkMode ? AppColors.lightPrimary:AppColors.darkPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 15,
-        ),
-      ),
-    ),
-  ],
-),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              // Add this
+                              child: Text(
+                                l10n?.pasdecompte ?? 'Pas encore de compte ?',
+                                style: TextStyle(
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.lightGrey50
+                                          : AppColors.darkGrey50,
+                                  fontSize: 15,
+                                ),
+                                textAlign:
+                                    TextAlign
+                                        .center, // Add this to center the text
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRouter.signupClient,
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              child: Text(
+                                l10n?.creecompte ?? 'Créer un compte',
+                                style: TextStyle(
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.lightPrimary
+                                          : AppColors.darkPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -525,7 +502,6 @@ Future<void> _sendResetOtpEmail(String email) async {
             ),
           ),
         ),
-        
       ),
     );
   }

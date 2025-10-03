@@ -100,6 +100,72 @@ abstract class AppLocalizations {
     Locale('fr'),
   ];
 
+  /// No description provided for @onboarding_skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboarding_skip;
+
+  /// No description provided for @onboarding_next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboarding_next;
+
+  /// No description provided for @onboarding_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboarding_start;
+
+  /// No description provided for @onboarding_page1_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Mukhliss!'**
+  String get onboarding_page1_title;
+
+  /// No description provided for @onboarding_page1_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Your smart and connected loyalty card. Simplify your purchases and enjoy exclusive rewards.'**
+  String get onboarding_page1_description;
+
+  /// No description provided for @onboarding_page2_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn points with every purchase'**
+  String get onboarding_page2_title;
+
+  /// No description provided for @onboarding_page2_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your QR code at our partners and collect points according to their exclusive offers.'**
+  String get onboarding_page2_description;
+
+  /// No description provided for @onboarding_page3_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem your points for gifts'**
+  String get onboarding_page3_title;
+
+  /// No description provided for @onboarding_page3_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Transform your points into exclusive rewards at your favorite stores.'**
+  String get onboarding_page3_description;
+
+  /// No description provided for @onboarding_page4_title.
+  ///
+  /// In en, this message translates to:
+  /// **'The more loyal you are, the more you earn!'**
+  String get onboarding_page4_title;
+
+  /// No description provided for @onboarding_page4_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover exclusive offers nearby and maximize your benefits.'**
+  String get onboarding_page4_description;
+
   /// No description provided for @currentLanguage.
   ///
   /// In en, this message translates to:

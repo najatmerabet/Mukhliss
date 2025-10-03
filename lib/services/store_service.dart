@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-
-=======
 import 'dart:async';
 import 'package:flutter/material.dart';
->>>>>>> 208f1a40e490935eeded42d2270eb886ca7b6aad
 import 'package:mukhliss/models/store.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,12 +28,6 @@ class StoreService {
             },
           );
 
-<<<<<<< HEAD
-    return response.map<Store>((item) {
-      try {
-        // Conversion sécurisée en Map
-        final json = (item as Map<String, dynamic>?) ?? {};
-=======
       debugPrint('📦 Batch reçu: ${response?.length ?? 0} items');
 
       if (response == null || response is! List) {
@@ -106,7 +96,6 @@ class StoreService {
     List<Store> allStores = [];
     int offset = 0;
     bool hasMore = true;
->>>>>>> 208f1a40e490935eeded42d2270eb886ca7b6aad
 
     try {
       while (hasMore) {

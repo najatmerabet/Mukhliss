@@ -49,6 +49,7 @@ class LocationScreenState extends ConsumerState<LocationScreen> with TickerProvi
   Position? _currentPosition;
   bool _isLocationLoading = false;
   bool _isRouting = false;
+  AnimationController? _orbitController;
   List<LatLng> _polylinePoints = [];
 Store? _selectedShop;
   Map<String, dynamic>? _routeInfo;
@@ -85,6 +86,12 @@ StreamSubscription<ConnectivityResult>? _connectivitySubscription;
 void initState() {
   super.initState();
    _disposed = false;
+
+    _orbitController = AnimationController(
+  vsync: this,
+  duration: const Duration(seconds: 6), // Plus lent pour un effet plus fluide
+)..repeat();
+
   controller = LocationController(
     ref, 
     context,
@@ -189,21 +196,6 @@ Future<bool> _checkRealInternetConnection() async {
   }
 }
 
-void _updateConnectionStatus(ConnectivityResult result) {
-  if (!mounted || _disposed) return;
-  
-  final newStatus = result != ConnectivityResult.none;
-  
-  _safeSetState(() {
-    _hasConnection = newStatus;
-  });
-
-  // Rafraîchir les données si la connexion revient
-  if (newStatus) {
-    ref.invalidate(storesListProvider);
-    controller.getCurrentLocation();
-  }
-}
 
 Widget _buildNoConnectionWidget(
     BuildContext context, AppLocalizations? l10n, bool isDarkMode) {
@@ -398,7 +390,8 @@ void dispose() {
    _connectivitySubscription?.cancel();
   // Set disposed flag first
   _disposed = true;
-  
+  _orbitController?.dispose();
+  _orbitController = null;
   // Cancel all streams and timers
   _positionStream?.cancel();
   _positionStream = null;
@@ -719,43 +712,45 @@ void _navigateToStoreAndShowDetails(Store store) async {
                     ),
                     // Current position marker
                    if (_currentPosition != null)
-  MarkerLayer(
+ MarkerLayer(
     markers: [
-      // Position actuelle
-      Marker(
-        point: LatLng(
-          _currentPosition!.latitude.toDouble(),
-          _currentPosition!.longitude.toDouble(),
-        ),
-        width: 48,
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blue.withOpacity(0.2),
-              ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blue.shade700,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3,
+      // Si on n'est PAS en navigation, affichage normal
+      if (!_isNavigating)
+        Marker(
+          point: LatLng(
+            _currentPosition!.latitude.toDouble(),
+            _currentPosition!.longitude.toDouble(),
+          ),
+          width: 48,
+          height: 48,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.withOpacity(0.2),
                 ),
               ),
-            ),
-          ],
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.shade700,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 3,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      // Flèche de navigation (séparée et conditionnelle)
+      
+      // Si on EST en navigation, utiliser les marqueurs avec flèche orbitale
       if (_isNavigating && _selectedShop != null && _polylinePoints.isNotEmpty)
         ..._buildNavigationMarkers(),
     ],
@@ -1225,75 +1220,242 @@ void _updateBottomSheetState(BottomSheetState newState) {
 }
 
 
-List<Marker> _buildNavigationMarkers() {
-  if (!_isNavigating || _currentPosition == null || _polylinePoints.isEmpty) {
-    return [];
-  }
 
-  // Position actuelle en LatLng
-  final currentLatLng = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
-  
-  // Calculer le bearing vers le prochain point de l'itinéraire
-  double bearing = _calculateNavigationBearing(currentLatLng);
-  
-  // Trouver une position légèrement devant la position actuelle sur l'itinéraire
-  // pour afficher la flèche
-  LatLng arrowPosition = _calculateArrowPosition(currentLatLng, bearing);
 
-  return [
-    Marker(
-      point: arrowPosition,
-      width: 40,
-      height: 40,
-      child: _buildNavigationArrowWidget(bearing),
-    ),
-  ];
+Widget _buildPositionMarkerWithArrow(double? bearing) {
+  return Stack(
+    alignment: Alignment.center,
+    children: [
+      // Cercle extérieur avec effet de pulsation (seulement en navigation)
+      if (_isNavigating && _orbitController != null)
+        AnimatedBuilder(
+          animation: _orbitController!,
+          builder: (context, child) {
+            return Container(
+              width: 48 + (8 * math.sin(_orbitController!.value * 2 * math.pi)),
+              height: 48 + (8 * math.sin(_orbitController!.value * 2 * math.pi)),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _isNavigating 
+                    ? AppColors.primary.withOpacity(0.2)
+                    : Colors.blue.withOpacity(0.2),
+              ),
+            );
+          },
+        ),
+      
+      // Cercle de base (toujours visible)
+      if (!_isNavigating)
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.blue.withOpacity(0.2),
+          ),
+        ),
+      
+      // Point central de position
+      Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _isNavigating ? AppColors.primary : Colors.blue.shade700,
+          border: Border.all(
+            color: Colors.white,
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (_isNavigating ? AppColors.primary : Colors.blue).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ),
+      
+      // Flèche de navigation (seulement en navigation)
+      if (_isNavigating && bearing != null && _orbitController != null)
+        AnimatedBuilder(
+          animation: _orbitController!,
+          builder: (context, child) {
+            return Transform.rotate(
+              angle: bearing * (math.pi / 180),
+              child: Container(
+                width: 35,
+                height: 35,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.9),
+                  border: Border.all(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.navigation,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+            );
+          },
+        ),
+    ],
+  );
 }
 
-LatLng _calculateArrowPosition(LatLng currentPosition, double bearing) {
-  // Distance en mètres pour placer la flèche devant la position actuelle
-  const double distanceAhead = 30.0; // 30 mètres devant
-  
-  // Convertir le bearing en radians
+LatLng _calculateArrowOrbitPosition(LatLng centerPosition, double bearing) {
+  // Rayon orbital en degrés (ajustez selon le niveau de zoom)
+  // 0.0001 = ~11 mètres, 0.0002 = ~22 mètres, etc.
+  const double orbitRadius = 0.0002; // Environ 20-25 mètres
+
+  // Convertir le bearing en radians pour les calculs trigonométriques
   final bearingRad = bearing * (math.pi / 180);
-  
-  // Calculer la nouvelle position
-  const double earthRadius = 6371000; // Rayon de la Terre en mètres
-  final double lat1 = currentPosition.latitude * (math.pi / 180);
-  final double lng1 = currentPosition.longitude * (math.pi / 180);
-  
-  final double lat2 = math.asin(
-    math.sin(lat1) * math.cos(distanceAhead / earthRadius) +
-    math.cos(lat1) * math.sin(distanceAhead / earthRadius) * math.cos(bearingRad)
+
+  // Calculer la nouvelle position (décalage en latitude et longitude)
+  final double deltaLat = orbitRadius * math.cos(bearingRad);
+  final double deltaLng = orbitRadius * math.sin(bearingRad);
+
+  return LatLng(
+    centerPosition.latitude + deltaLat,
+    centerPosition.longitude + deltaLng,
   );
-  
-  final double lng2 = lng1 + math.atan2(
-    math.sin(bearingRad) * math.sin(distanceAhead / earthRadius) * math.cos(lat1),
-    math.cos(distanceAhead / earthRadius) - math.sin(lat1) * math.sin(lat2)
-  );
-  
-  return LatLng(lat2 * (180 / math.pi), lng2 * (180 / math.pi));
 }
 
-double _calculateNavigationBearing(LatLng currentPosition) {
-  if (_selectedShop == null || _polylinePoints.isEmpty) return 0;
-  
-  // Trouver l'index du point le plus proche sur l'itinéraire
+List<Marker> _buildNavigationMarkers() {
+  if (_currentPosition == null || !_isNavigating || _orbitController == null) return [];
+
+  final currentLatLng = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+
+  // Calculer le bearing pour la direction de navigation
+  double? navigationBearing = _calculateNavigationBearing(currentLatLng);
+  if (navigationBearing == null) return [];
+
+  // Créer la liste des marqueurs
+  List<Marker> markers = [];
+
+  // 1. Marqueur central de position (point bleu avec effet de pulsation)
+  markers.add(
+    Marker(
+      point: currentLatLng,
+      width: 60, // Augmenté pour laisser de l'espace à l'orbite
+      height: 60,
+      child: AnimatedBuilder(
+        animation: _orbitController!,
+        builder: (context, child) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // Effet de pulsation (cercle extérieur)
+              Container(
+                width: 48 + (6 * math.sin(_orbitController!.value * 2 * math.pi)),
+                height: 48 + (6 * math.sin(_orbitController!.value * 2 * math.pi)),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color.fromARGB(255, 99, 165, 241).withOpacity(0.2),
+                ),
+              ),
+              
+              // Cercle de base
+              // Container(
+              //   width: 48,
+              //   height: 48,
+              //   decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     color: const Color.fromARGB(255, 99, 165, 241).withOpacity(0.2),
+              //   ),
+              // ),
+              
+              // Point central de position
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color.fromARGB(255, 35, 143, 252),
+                  // border: Border.all(
+                  //   color: Colors.white,
+                  //   width: 3,
+                  // ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 35, 143, 252),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // FLÈCHE FIXE pointant vers la destination
+              Transform.translate(
+                offset: Offset(
+                  // Position fixe de la flèche (25 pixels vers le haut par rapport au centre)
+                  25 * math.cos(navigationBearing * math.pi / 180 - math.pi / 2), // -π/2 pour pointer vers le haut par défaut
+                  25 * math.sin(navigationBearing * math.pi / 180 - math.pi / 2),
+                ),
+                child: Transform.rotate(
+                  angle: navigationBearing * (math.pi / 180), // Orienter la flèche vers la destination
+                  child: Container(
+                    decoration: BoxDecoration(
+                      // Ombre subtile pour la visibilité
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.navigation,
+                      color:const Color.fromARGB(255, 35, 143, 252),
+                      size: 30,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    ),
+  );
+
+  return markers;
+}
+
+double? _calculateNavigationBearing(LatLng currentPosition) {
+  if (_selectedShop == null || _polylinePoints.isEmpty) return null;
+
+  // Trouver le point le plus proche sur l'itinéraire
   int nearestIndex = _findNearestPointIndex(currentPosition);
   
-  // Prendre les prochains points pour calculer la direction
+  // Déterminer le point cible pour la direction
   LatLng targetPoint;
   
-  if (nearestIndex < _polylinePoints.length - 5) {
-    // Prendre un point un peu plus loin pour une direction plus stable
-    targetPoint = _polylinePoints[nearestIndex + 3];
-  } else if (nearestIndex < _polylinePoints.length - 1) {
+  // Prendre un point plus loin sur l'itinéraire pour une meilleure direction
+  if (nearestIndex + 5 < _polylinePoints.length) {
+    targetPoint = _polylinePoints[nearestIndex + 5]; // 5 points plus loin
+  } else if (nearestIndex + 2 < _polylinePoints.length) {
+    targetPoint = _polylinePoints[nearestIndex + 2];
+  } else if (nearestIndex + 1 < _polylinePoints.length) {
     targetPoint = _polylinePoints[nearestIndex + 1];
   } else {
-    // Si on est près de la fin, pointer vers la destination finale
+    // Pointer vers la destination finale
     targetPoint = LatLng(_selectedShop!.latitude, _selectedShop!.longitude);
   }
-  
+
   return Geolocator.bearingBetween(
     currentPosition.latitude,
     currentPosition.longitude,
@@ -1303,65 +1465,8 @@ double _calculateNavigationBearing(LatLng currentPosition) {
 }
 
 
-Widget _buildNavigationArrowWidget(double bearing) {
-  return TweenAnimationBuilder<double>(
-    duration: const Duration(milliseconds: 1000),
-    tween: Tween<double>(begin: 0.9, end: 1.1),
-    builder: (context, scale, child) {
-      return Transform.scale(
-        scale: scale,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-               AppColors.primary,
-                AppColors.secondary,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.5),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Colors.white.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(-2, -2),
-              ),
-            ],
-            border: Border.all(
-              color: Colors.white,
-              width: 3,
-            ),
-          ),
-          child: Center(
-            child: Transform.rotate(
-              angle: (bearing * math.pi) / 180,
-              child: Icon(
-                Icons.navigation,
-                color: Colors.white,
-                size: 24,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.5),
-                    offset: const Offset(1, 1),
-                    blurRadius: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
+
+
 Widget _buildConnectivityCheckWidget(BuildContext context) {
   final L10n = AppLocalizations.of(context);
   return Center(

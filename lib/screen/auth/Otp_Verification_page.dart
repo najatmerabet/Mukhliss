@@ -215,7 +215,7 @@ Future<void> _verifyOtp() async {
       if (widget.type == OtpVerificationType.passwordReset) {
         await ref.read(authProvider).sendPasswordResetOtp(widget.email);
       } else {
-        await ref.read(authProvider).sendSignupOtp(widget.email);
+        await ref.read(authProvider).sendSignupOtpWithRetry(widget.email);
       }
 
       if (mounted) {

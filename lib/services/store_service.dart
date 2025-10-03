@@ -1,23 +1,16 @@
-import 'dart:convert';
 
 import 'package:mukhliss/models/store.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StoreService {
   final SupabaseClient _client = Supabase.instance.client;
-  static const String _bucketName = 'store-logo'; // Nom exact du bucket
+  static const String _bucketName = 'store-logo/logos'; // Nom exact du bucket
 
 Future<List<Store>> getStoresWithLogos() async {
   try {
     final response = await _client
         .from('magasins')
         .select('*');
-
-    // Vérification que la réponse est une liste
-    if (response == null || response is! List) {
-      print('Réponse invalide ou vide de Supabase');
-      return [];
-    }
 
     return response.map<Store>((item) {
       try {

@@ -37,7 +37,7 @@ class _ProfileState extends ConsumerState<Profile> {
       }
 
       final userType = await authService.getUserType();
-      final tableName = userType == 'client' ? 'clients' : 'magasins';
+      final tableName = userType == 'clients' ? 'clients' : 'magasins';
 
       final response = await authService.client
           .from(tableName)
@@ -73,7 +73,7 @@ class _ProfileState extends ConsumerState<Profile> {
 
   @override
   Widget build(BuildContext context) {
-    final isClient = _userData?['user_type'] == 'client';
+    final isClient = _userData?['user_type'] == 'clients';
     
     return Scaffold(
       appBar: AppBar(

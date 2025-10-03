@@ -8,7 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
-
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
@@ -116,29 +116,56 @@ class LocationScreenState extends ConsumerState<LocationScreen>
     _initializeApp();
   }
 
+  // Future<void> _initializeApp() async {
+  //   try {
+  //     // Check connectivity first
+  //     await _checkConnectivity();
+
+  //     // If we have connection, get location
+  //     if (_hasConnection && mounted && !_disposed) {
+  //       // Small delay to ensure everything is initialized
+  //       await Future.delayed(const Duration(milliseconds: 500));
+
+  //       if (mounted && !_disposed) {
+  //         controller.getCurrentLocation();
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print('[DEBUG] Initialization error: $e');
+  //     if (mounted && !_disposed) {
+  //       _safeSetState(() {
+  //         _isCheckingConnectivity = false;
+  //       });
+  //     }
+  //   }
+  // }
+
   Future<void> _initializeApp() async {
-    try {
-      // Check connectivity first
-      await _checkConnectivity();
+  try {
+    debugPrint('🚀 Initialisation de l\'app...');
+    
+    // Vérifier la connexion sans bloquer le chargement initial
+    _checkConnectivity().then((_) {
+      debugPrint('✅ Vérification connexion terminée: $_hasConnection');
+    });
 
-      // If we have connection, get location
-      if (_hasConnection && mounted && !_disposed) {
-        // Small delay to ensure everything is initialized
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        if (mounted && !_disposed) {
-          controller.getCurrentLocation();
-        }
-      }
-    } catch (e) {
-      print('[DEBUG] Initialization error: $e');
+    // Charger la position IMMÉDIATEMENT (en parallèle)
+    if (mounted && !_disposed) {
+      await Future.delayed(const Duration(milliseconds: 100));
       if (mounted && !_disposed) {
-        _safeSetState(() {
-          _isCheckingConnectivity = false;
-        });
+        controller.getCurrentLocation();
       }
     }
+  } catch (e) {
+    debugPrint('❌ Erreur initialisation: $e');
+    if (mounted && !_disposed) {
+      _safeSetState(() {
+        _isCheckingConnectivity = false;
+      });
+    }
   }
+}
+
 
   Future<void> _checkConnectivity() async {
     if (!mounted || _disposed) return;
@@ -167,7 +194,7 @@ class LocationScreenState extends ConsumerState<LocationScreen>
     if (!mounted || _disposed) return;
 
     try {
-      final connectivityResult = await Connectivity().checkConnectivity();
+      final connectivityResult = await InternetConnection().hasInternetAccess;
       print('[DEBUG] Connectivity (attempt $retryCount): $connectivityResult');
 
       if (connectivityResult == ConnectivityResult.none &&
@@ -196,18 +223,24 @@ class LocationScreenState extends ConsumerState<LocationScreen>
     }
   }
 
-  Future<bool> _checkRealInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup(
-        'example.com',
-      ).timeout(const Duration(seconds: 5));
-      print('[DEBUG] Internet lookup result: $result');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e) {
-      debugPrint('Real internet check failed: $e');
-      return false;
-    }
+Future<bool> _checkRealInternetConnection() async {
+  try {
+    // Test multiple servers
+    final futures = [
+      InternetAddress.lookup('google.com'),
+      InternetAddress.lookup('cloudflare.com'),
+      InternetAddress.lookup('example.com'),
+    ];
+    
+    final results = await Future.wait(futures)
+        .timeout(const Duration(seconds: 10));
+    
+    return results.any((result) => result.isNotEmpty && result[0].rawAddress.isNotEmpty);
+  } catch (e) {
+    debugPrint('Real internet check failed: $e');
+    return false;
   }
+}
 
   // Dans votre LocationScreenState
 void _refreshStoresOnConnectionRestored() {
@@ -680,6 +713,7 @@ void _updateConnectionStatus(ConnectivityResult result) {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final storesAsync = ref.watch(storesListProvider);
@@ -764,47 +798,47 @@ void _updateConnectionStatus(ConnectivityResult result) {
                     ],
                   ),
                 // Shop markers
-                MarkerLayer(
-                  markers: [
-                    ...storesAsync.maybeWhen(
-                      data: (stores) {
-                        List<Store> filteredStores = stores;
-                        if (_selectedCategory != null) {
-                          filteredStores =
-                              stores
-                                  .where(
-                                    (store) =>
-                                        store.Categorieid ==
-                                        _selectedCategory!.id,
-                                  )
-                                  .toList();
-                        }
-                        return filteredStores.map((store) {
-                          return Marker(
-                            point: LatLng(
-                              store.latitude.toDouble(),
-                              store.longitude.toDouble(),
-                            ),
-                            width: 40,
-                            height: 40,
-                            child: GestureDetector(
-                              onTap:
-                                  () => _navigateToStoreAndShowDetails(store),
-                              child: CategoryMarkers.getPinWidget(
-                                CategoryHelpers.getCategoryName(
-                                  ref,
-                                  store.Categorieid,
-                                ),
-                                size: 40,
-                              ),
-                            ),
-                          );
-                        }).toList();
-                      },
-                      orElse: () => [],
-                    ),
-                  ],
-                ),
+                // MarkerLayer(
+                //   markers: [
+                //     ...storesAsync.maybeWhen(
+                //       data: (stores) {
+                //         List<Store> filteredStores = stores;
+                //         if (_selectedCategory != null) {
+                //           filteredStores =
+                //               stores
+                //                   .where(
+                //                     (store) =>
+                //                         store.Categorieid ==
+                //                         _selectedCategory!.id,
+                //                   )
+                //                   .toList();
+                //         }
+                //         return filteredStores.map((store) {
+                //           return Marker(
+                //             point: LatLng(
+                //               store.latitude.toDouble(),
+                //               store.longitude.toDouble(),
+                //             ),
+                //             width: 40,
+                //             height: 40,
+                //             child: GestureDetector(
+                //               onTap:
+                //                   () => _navigateToStoreAndShowDetails(store),
+                //               child: CategoryMarkers.getPinWidget(
+                //                 CategoryHelpers.getCategoryName(
+                //                   ref,
+                //                   store.Categorieid,
+                //                 ),
+                //                 size: 40,
+                //               ),
+                //             ),
+                //           );
+                //         }).toList();
+                //       },
+                //       orElse: () => [],
+                //     ),
+                //   ],
+                // ),
                 // Current position marker
                 if (_currentPosition != null)
                   MarkerLayer(
@@ -897,9 +931,10 @@ void _updateConnectionStatus(ConnectivityResult result) {
                       ),
                     ),
                   ),
-                  MarkerLayer(
-  markers: _buildStoreMarkers(storesAsync),
-),
+if (storesAsync.hasValue || storesAsync.isLoading)
+  MarkerLayer(
+    markers: _buildStoreMarkers(storesAsync),
+  ),
                 // MarkerLayer(
                 //   markers: storesAsync.maybeWhen(
                 //     data: (stores) {
@@ -1200,29 +1235,56 @@ void _updateConnectionStatus(ConnectivityResult result) {
     );
   }
 
-  List<Marker> _buildStoreMarkers(AsyncValue<List<Store>> storesAsync) {
+ List<Marker> _buildStoreMarkers(AsyncValue<List<Store>> storesAsync) {
+  debugPrint('🎯 === DÉBUT _buildStoreMarkers ===');
+  debugPrint('   État: ${storesAsync.isLoading ? "LOADING" : storesAsync.hasError ? "ERROR" : storesAsync.hasValue ? "HAS_VALUE" : "UNKNOWN"}');
+  
   return storesAsync.when(
     data: (stores) {
+      debugPrint('   📊 Données reçues: ${stores.length} magasins');
+      
       if (stores.isEmpty) {
-        debugPrint('Aucun magasin trouvé');
+        debugPrint('   ⚠️ Liste vide - AUCUN MARQUEUR');
         return [];
       }
-      
+
+      // Afficher quelques exemples
+      for (var i = 0; i < (stores.length > 3 ? 3 : stores.length); i++) {
+        final s = stores[i];
+        debugPrint('   Store $i: ${s.nom_enseigne} - Lat:${s.latitude} Lng:${s.longitude} Cat:${s.Categorieid}');
+      }
+
       List<Store> filteredStores = stores;
+      
       if (_selectedCategory != null) {
         filteredStores = stores.where((store) => 
           store.Categorieid == _selectedCategory!.id
         ).toList();
-        debugPrint('${filteredStores.length} magasins filtrés pour la catégorie ${_selectedCategory!.id}');
+        debugPrint('   🔍 Filtre catégorie ${_selectedCategory!.id}: ${filteredStores.length} résultats');
+      } else {
+        debugPrint('   ℹ️ Pas de filtre catégorie - Affichage de TOUS les magasins');
       }
       
-      return filteredStores.map((store) {
+      if (filteredStores.isEmpty) {
+        debugPrint('   ⚠️ Aucun magasin après filtrage');
+        return [];
+      }
+
+      final markers = filteredStores.map((store) {
+        debugPrint('   🎯 Création marqueur pour: ${store.nom_enseigne}');
+        
         return Marker(
-          point: LatLng(store.latitude.toDouble(), store.longitude.toDouble()),
+          point: LatLng(
+            store.latitude.toDouble(), 
+            store.longitude.toDouble()
+          ),
           width: 40,
           height: 40,
           child: GestureDetector(
-            onTap: () => _navigateToStoreAndShowDetails(store),
+            onTap: () {
+              debugPrint('   👆 Tap sur: ${store.nom_enseigne}');
+              _navigateToStoreAndShowDetails(store);
+            },
             child: CategoryMarkers.getPinWidget(
               CategoryHelpers.getCategoryName(ref, store.Categorieid),
               size: 40,
@@ -1230,32 +1292,150 @@ void _updateConnectionStatus(ConnectivityResult result) {
           ),
         );
       }).toList();
+
+      debugPrint('   ✅ ${markers.length} MARQUEURS CRÉÉS');
+      debugPrint('🎯 === FIN _buildStoreMarkers ===\n');
+      
+      return markers;
     },
+    
     loading: () {
-      debugPrint('Chargement des magasins en cours...');
+      debugPrint('   ⏳ CHARGEMENT en cours...');
       return [];
     },
+    
     error: (error, stack) {
-      debugPrint('❌ Erreur chargement magasins: $error');
+      debugPrint('   ❌ ERREUR: $error');
+      debugPrint('   Stack: $stack');
       
-      // Optionnel: Afficher un message d'erreur seulement si on a une connexion
-      if (_hasConnection) {
+      // Détection spécifique du type d'erreur
+      final isTimeout = error is TimeoutException || 
+                       error.toString().contains('Timeout') ||
+                       error.toString().contains('TimeoutException') ||
+                       error.toString().contains('timed out');
+      
+      final isNetworkError = error.toString().contains('SocketException') ||
+                            error.toString().contains('Connection') ||
+                            error.toString().contains('network');
+      
+      debugPrint('   🔍 Type erreur: ${isTimeout ? "TIMEOUT" : isNetworkError ? "NETWORK" : "OTHER"}');
+      
+      // Gestion spécifique du timeout
+      if (isTimeout && _hasConnection && mounted && !_disposed) {
+        debugPrint('   🔄 Timeout détecté - Planification retry automatique...');
+        
+        // Retry automatique après 3 secondes
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted && !_disposed && _hasConnection) {
+            debugPrint('   🔄 Exécution retry automatique...');
+            ref.invalidate(storesListProvider);
+          }
+        });
+        
+        // Notification utilisateur
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_disposed) {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Erreur chargement magasins: $error'),
+                content: Row(
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Connexion lente... Nouvelle tentative en cours',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.orange.shade700,
+                duration: const Duration(seconds: 4),
+                behavior: SnackBarBehavior.floating,
+                action: SnackBarAction(
+                  label: 'Réessayer maintenant',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    debugPrint('   👆 Retry manuel demandé');
+                    ref.invalidate(storesListProvider);
+                  },
+                ),
+              ),
+            );
+          }
+        });
+      } 
+      // Gestion erreur réseau
+      else if (isNetworkError && _hasConnection && mounted && !_disposed) {
+        debugPrint('   📡 Erreur réseau détectée');
+        
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Problème de connexion réseau',
+                  style: TextStyle(fontSize: 14),
+                ),
+                backgroundColor: Colors.red.shade700,
                 duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+                action: SnackBarAction(
+                  label: 'Réessayer',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    ref.invalidate(storesListProvider);
+                  },
+                ),
               ),
             );
           }
         });
       }
+      // Autres erreurs
+      else if (_hasConnection && mounted && !_disposed) {
+        debugPrint('   ⚠️ Erreur générique');
+        
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final errorMsg = error.toString().length > 60 
+                ? '${error.toString().substring(0, 60)}...' 
+                : error.toString();
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Erreur: $errorMsg',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                backgroundColor: Colors.red.shade700,
+                duration: const Duration(seconds: 4),
+                behavior: SnackBarBehavior.floating,
+                action: SnackBarAction(
+                  label: 'Réessayer',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    ref.invalidate(storesListProvider);
+                  },
+                ),
+              ),
+            );
+          }
+        });
+      }
+      
+      debugPrint('🎯 === FIN _buildStoreMarkers (ERROR) ===\n');
       return [];
     },
   );
 }
-
   int _findNearestPointIndex(LatLng point) {
     double minDistance = double.infinity;
     int nearestIndex = 0;

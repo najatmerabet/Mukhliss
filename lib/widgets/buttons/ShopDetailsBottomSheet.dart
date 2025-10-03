@@ -725,380 +725,294 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
   }
 
   // 🎫 DESIGN 1: Style Ticket/Coupon
-  Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
-    final l10n = AppLocalizations.of(context);
-    final isRTL = Directionality.of(context) == TextDirection.rtl;
+Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
+  // Couleurs de gradient basées sur l'index pour varier les cartes
+  final List<List<Color>> gradients = [
+    [Color(0xFF6B46C1), Color(0xFF9333EA)], // Purple
+    [Color(0xFF0EA5E9), Color(0xFF2563EB)], // Blue
+    [Color(0xFFEC4899), Color(0xFFF43F5E)], // Pink
+    [Color(0xFF10B981), Color(0xFF059669)], // Green
+    [Color(0xFFF59E0B), Color(0xFFEF4444)], // Orange-Red
+  ];
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      height: 240,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: isRTL ? Alignment.topRight : Alignment.topLeft,
-          end: isRTL ? Alignment.topLeft : Alignment.topRight,
-          colors: AppColors.lightGradient,
-          stops: [0.0, 1.0],
+  final gradientIndex = index % gradients.length;
+  final cardGradient = gradients[gradientIndex];
+
+  return Container(
+    width: 340,
+    margin: const EdgeInsets.only(right: 16),
+    child: Opacity(
+      opacity: offer.is_active ? 1.0 : 0.5,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF121212), Color(0xFF121212)],
+          ),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: (offer.is_active ? cardGradient[0] : Colors.grey)
+          //         .withOpacity(0.3),
+          //     blurRadius: 12,
+          //     offset: const Offset(0, 6),
+          //   ),
+          // ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.lightGradient[0].withOpacity(0.3),
-            blurRadius: 25,
-            spreadRadius: 0,
-            offset: Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            spreadRadius: 0,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Arrière-plan décoratif - positionnement RTL-aware
-            Positioned(
-              right: isRTL ? null : -30,
-              left: isRTL ? -30 : null,
-              top: -30,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              right: isRTL ? null : 20,
-              left: isRTL ? 20 : null,
-              bottom: -20,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
-                ),
-              ),
-            ),
-
-            // Effet de lueur - positionnement RTL-aware
-            Positioned(
-              right: isRTL ? null : 0,
-              left: isRTL ? 0 : null,
-              top: 0,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.amber.withOpacity(0.2),
-                      Colors.transparent,
-                    ],
-                    stops: [0.0, 1.0],
-                  ),
-                ),
-              ),
-            ),
-
-            // Icône étoile - positionnement RTL-aware
-            Positioned(
-              right: isRTL ? null : 16,
-              left: isRTL ? 16 : null,
-              top: 16,
-              child: Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  Icons.star_rounded,
-                  size: 22,
-                  color: AppColors.amber,
-                ),
-              ),
-            ),
-
-            // Contenu principal
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section en-tête avec badges - direction RTL-aware
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    textDirection:
-                        isRTL ? TextDirection.rtl : TextDirection.ltr,
-                    children: [
-                      // Badge d'état
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          textDirection:
-                              isRTL ? TextDirection.rtl : TextDirection.ltr,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color:
-                                    offer.is_active
-                                        ? AppColors.success
-                                        : AppColors.warning,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              offer.is_active
-                                  ? l10n?.exclusifs ?? 'EXCLUSIF'
-                                  : l10n?.limite ?? 'LIMITÉ',
-                              style: TextStyle(
-                                color: AppColors.darkSurface,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Indicateur de popularité
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.amber.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          textDirection:
-                              isRTL ? TextDirection.rtl : TextDirection.ltr,
-                          children: [
-                            Icon(
-                              Icons.local_fire_department,
-                              color: AppColors.amber,
-                              size: 14,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'HOT',
-                              style: TextStyle(
-                                color: AppColors.amber,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // Titre principal - alignement RTL-aware
-                  Text(
-                    offer.name,
-                    style: TextStyle(
-                      color: AppColors.darkSurface,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                  ),
-
-                  SizedBox(height: 8),
-
-                  // Description - alignement RTL-aware (CORRIGÉ)
-                  Expanded(
-                    child: Text(
-                      offer.description ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.darkSurface,
-                        fontSize: 14,
-                        height: 1.3,
-                      ),
-                      textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                    ),
-                  ),
-
-                  SizedBox(height: 12),
-
-                  // Section points compacte - CORRIGÉ
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: offer.is_active
+                ? () {
+                    // Navigation vers les détails du cadeau
+                    print('Cadeau ${offer.name} cliqué');
+                  }
+                : null,
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+          
+                Positioned(
+                  left: -50,
+                  bottom: -50,
+                  child: Container(
+                    width: 180,
+                    height: 180,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                        width: 1,
-                      ),
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      textDirection:
-                          isRTL ? TextDirection.rtl : TextDirection.ltr,
-                      children: [
-                        // Points section compacte
-                        Row(
-                          textDirection:
-                              isRTL ? TextDirection.rtl : TextDirection.ltr,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Icône étoile compacte
-                            Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.amber,
-                                    AppColors.amber.withOpacity(0.8),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.star_rounded,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-
-                            SizedBox(width: 8),
-
-                            // Informations des points compactes
-                            Column(
-                              crossAxisAlignment:
-                                  isRTL
-                                      ? CrossAxisAlignment.end
-                                      : CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
+                  ),
+                ),
+                
+                // Contenu de la carte
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // En-tête: Logo magasin + Badge statut
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Logo et nom du magasin
+                          Expanded(
+                            child: Row(
                               children: [
-                                Text(
-                                  l10n?.pointsrequis ?? 'POINTS REQUIS',
-                                  style: TextStyle(
-                                    color: AppColors.amber.withOpacity(0.9),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
+                                  child: offer.magasin?.logoUrl != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: Image.network(
+                                            offer.magasin.logoUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Icon(
+                                                Icons.card_giftcard,
+                                                size: 24,
+                                                color: Colors.grey,
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.store,
+                                          size: 24,
+                                          color: Colors.grey,
+                                        ),
                                 ),
-                                SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  textDirection:
-                                      isRTL
-                                          ? TextDirection.rtl
-                                          : TextDirection.ltr,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '${offer.points_required}',
-                                      style: TextStyle(
-                                        color: AppColors.darkSurface,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        height: 1.0,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        offer.name?? 'Magasin',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.5,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                    SizedBox(width: 2),
-                                    Text(
-                                      l10n?.points ?? 'pts',
-                                      style: TextStyle(
-                                        color: AppColors.darkSurface,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                      Text(
+                                         offer.description ?? 'Description non disponible',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontSize: 11,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-
-                        // Bouton d'action
-                        InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            // Votre logique ici
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              l10n?.benificier ?? 'À bénéficier',
-                              style: TextStyle(
-                                color: AppColors.secondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          // Badge de statut
+                          if (!offer.is_active)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Épuisé',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                    
+                     
+
+                      // Pied de carte: Points + Date
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          // Points requis
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'POINTS REQUIS',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.stars_rounded,
+                                    color: Colors.amber,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${offer.points_required ?? 0}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          
+                          // Date de création
+                          if (offer.created_at != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'AJOUTÉ LE',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Text(
+                                  offer.created_at.toString(),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                             
+                                
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
+
+
+Widget _buildStatusBadge(bool isActive, bool isDarkMode) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: isActive 
+          ? (isDarkMode ? Colors.green[800]! : Colors.green[100]!)
+          : (isDarkMode ? Colors.red[800]! : Colors.red[100]!),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: isActive 
+                ? (isDarkMode ? Colors.green[300]! : Colors.green)
+                : (isDarkMode ? Colors.red[300]! : Colors.red),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          isActive ? 'Actif' : 'Inactif',
+          style: TextStyle(
+            color: isActive 
+                ? (isDarkMode ? Colors.green[300]! : Colors.green[800]!)
+                : (isDarkMode ? Colors.red[300]! : Colors.red[800]!),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}
   double _calculateDistance(Position? currentPosition, Store? shop) {
     if (currentPosition == null) return 0;
 

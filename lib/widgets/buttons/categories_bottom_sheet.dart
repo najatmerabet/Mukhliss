@@ -75,27 +75,30 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
     _scrollController.dispose();
     super.dispose();
   }
-    void _loadMoreStores() {
-    if (_scrollController.position.pixels == 
-        _scrollController.position.maxScrollExtent && 
-        !_isLoadingMore) {
-      setState(() {
-        _isLoadingMore = true;
-        _visibleStoresCount += _storesPerPage;
-        _isLoadingMore = false;
-      });
+void _loadMoreStores() {
+    final storesNotifier = ref.read(storesListProvider.notifier);
+    
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent - 100 && // 100px avant la fin
+        !storesNotifier.isLoadingMore && 
+        storesNotifier.hasMore) {
+      
+      storesNotifier.loadMoreStores();
     }
   }
  Widget _buildLoadingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Center(
-        child: _isLoadingMore 
-            ? const CircularProgressIndicator()
-            : const SizedBox.shrink(),
-      ),
-    );
+    final storesNotifier = ref.read(storesListProvider.notifier);
+    
+    return storesNotifier.isLoadingMore
+        ? Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        : SizedBox.shrink();
   }
+
   @override
   Widget build(BuildContext context){
      final l10n = AppLocalizations.of(context);
@@ -312,24 +315,24 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
                       );
                       return distanceA.compareTo(distanceB);
                     });
-                    
+                     final storesNotifier = ref.read(storesListProvider.notifier);
                     return SliverList(
                     delegate: SliverChildBuilderDelegate(
                    (context, index) {
 
                     print('Building item $index / $_visibleStoresCount');
                     // Si on atteint la fin de la liste visible +1 pour l'indicateur
-                   if (index == _visibleStoresCount) {
+                   if (index == filteredStores.length) {
                      // Afficher l'indicateur de chargement si plus d'éléments
-                              return _visibleStoresCount < filteredStores.length
-                                  ? _buildLoadingIndicator()
-                                  : const SizedBox.shrink();
+                            return storesNotifier.hasMore 
+                        ? _buildLoadingIndicator()
+                        : SizedBox.shrink();
                   }
 
       // Si index dépasse le nombre d'éléments
-      if (index >= filteredStores.length || index >= _visibleStoresCount) {
-        return const SizedBox.shrink();
-      }
+       if (index >= filteredStores.length) {
+                    return SizedBox.shrink();
+                  }
 
       final store = filteredStores[index];
       final distance =widget. currentPosition != null
@@ -343,9 +346,7 @@ class _CategoriesBottomSheetState extends ConsumerState<CategoriesBottomSheet>
 
       return _buildStoreItem(context:context ,store: store,distance:  distance, isDarkMode: isDarkMode ,currentPosition: widget.currentPosition,onStoreSelected: widget.onStoreSelected);
        },
-      childCount: filteredStores.length > _visibleStoresCount 
-                              ? _visibleStoresCount + 1 
-                              : filteredStores.length, // +1 pour l'indicateur
+      childCount: filteredStores.length + (storesNotifier.hasMore ? 1 : 0), // +1 pour l'indicateur
          ),
          );
                   },

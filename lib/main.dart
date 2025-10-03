@@ -142,6 +142,9 @@ void main() async {
       authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
       ),
+      realtimeClientOptions: RealtimeClientOptions(
+        timeout:  Duration(seconds: 30),
+      )
     );
 
     runApp(ProviderScope(child: AuthWrapper()));

@@ -1,83 +1,154 @@
-import 'dart:convert';
-
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StoreService {
   final SupabaseClient _client = Supabase.instance.client;
-  static const String _bucketName = 'store-logo/logos'; // Nom exact du bucket
+  static const String _bucketName = 'store-logo/logos';
 
-Future<List<Store>> getStoresWithLogos() async {
-  try {
-    final response = await _client
-        .from('magasins')
-        .select('*');
+  // Méthode avec pagination AMÉLIORÉE
+  Future<List<Store>> getStoresWithLogos({
+    int limit = 20, // ✅ Augmenté de 5 à 20
+    int offset = 0,
+  }) async {
+    try {
+      debugPrint('🔄 Chargement magasins (limit: $limit, offset: $offset)...');
+      
+      final response = await _client
+          .from('magasins')
+          .select('*')
+          .range(offset, offset + limit - 1)
+          .order('created_at', ascending: false)
+          .timeout(
+            const Duration(seconds: 45), // ✅ Augmenté de 15 à 45 secondes
+            onTimeout: () {
+              debugPrint('⚠️ Timeout dépassé pour batch $offset-${offset + limit}');
+              throw TimeoutException('Timeout après 45 secondes');
+            },
+          );
 
-    // Vérification que la réponse est une liste
-    if (response == null || response is! List) {
-      print('Réponse invalide ou vide de Supabase');
-      return [];
+      debugPrint('📦 Batch reçu: ${response?.length ?? 0} items');
+
+      if (response == null || response is! List) {
+        debugPrint('❌ Réponse invalide');
+        return [];
+      }
+
+      if (response.isEmpty) {
+        debugPrint('⚠️ Aucun magasin dans ce batch');
+        return [];
+      }
+
+      final stores = response.map<Store>((item) {
+        try {
+          final json = item as Map<String, dynamic>;
+          
+          // Traitement du logo OPTIMISÉ
+          final String? rawLogoUrl = json['logoUrl']?.toString();
+          String? publicUrl;
+          
+          if (rawLogoUrl != null && rawLogoUrl.isNotEmpty) {
+            try {
+              // Ne pas générer l'URL publique si déjà une URL complète
+              if (rawLogoUrl.startsWith('http')) {
+                publicUrl = rawLogoUrl;
+              } else {
+                final fileName = rawLogoUrl.split('/').last;
+                publicUrl = _client.storage.from(_bucketName).getPublicUrl(fileName);
+              }
+            } catch (e) {
+              debugPrint('⚠️ Erreur génération URL pour $rawLogoUrl: $e');
+              publicUrl = rawLogoUrl;
+            }
+          }
+
+          final store = Store.fromJson({
+            ...json,
+            'logoUrl': publicUrl ?? json['logoUrl'],
+          });
+
+          return store;
+        } catch (e) {
+          debugPrint('❌ Erreur parsing magasin: $e');
+          rethrow;
+        }
+      }).toList();
+
+      debugPrint('✅ ${stores.length} magasins chargés (batch $offset)');
+      return stores;
+      
+    } on TimeoutException catch (e) {
+      debugPrint('❌ TIMEOUT batch $offset: $e');
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint('❌ ERREUR batch $offset: $e');
+      debugPrint('Stack: $stackTrace');
+      rethrow;
     }
+  }
 
-    return response.map<Store>((item) {
-      try {
-        // Conversion sécurisée en Map
-        final json = (item as Map<String, dynamic>?) ?? {};
+  // Méthode pour charger TOUS les magasins avec retry
+  Future<List<Store>> getAllStoresWithPagination({
+    int batchSize = 20, // ✅ Augmenté
+    int maxRetries = 3, // ✅ Ajout de retry
+  }) async {
+    List<Store> allStores = [];
+    int offset = 0;
+    bool hasMore = true;
 
-        // Extraction et traitement du logo (peut être null)
-        final String? rawLogoUrl = json['logoUrl']?.toString();
-        String? publicUrl;
+    try {
+      while (hasMore) {
+        debugPrint('📥 Chargement batch $offset...');
         
-        if (rawLogoUrl != null && rawLogoUrl.isNotEmpty) {
+        int retries = 0;
+        bool success = false;
+        List<Store>? batch;
+
+        // ✅ Retry logic pour chaque batch
+        while (retries < maxRetries && !success) {
           try {
-            final fileName = rawLogoUrl.split('/').last;
-            publicUrl = _client.storage.from(_bucketName).getPublicUrl(fileName);
-          } catch (e) {
-            print('Erreur de génération URL pour $rawLogoUrl: $e');
-            publicUrl = rawLogoUrl; // On conserve l'original si échec
+            batch = await getStoresWithLogos(
+              limit: batchSize,
+              offset: offset,
+            );
+            success = true;
+          } on TimeoutException catch (e) {
+            retries++;
+            debugPrint('⚠️ Retry $retries/$maxRetries pour batch $offset');
+            
+            if (retries >= maxRetries) {
+              debugPrint('❌ Abandon après $maxRetries tentatives');
+              throw Exception('Timeout persistant après $maxRetries essais');
+            }
+            
+            // Attendre avant de réessayer (backoff exponentiel)
+            await Future.delayed(Duration(seconds: retries * 2));
           }
         }
 
-        // Création du magasin avec ou sans logo
-        return Store.fromJson({
-          ...json,
-          'logoUrl': publicUrl ?? json['logoUrl'], // Garde l'original si publicUrl est null
-        });
-      } catch (e, stackTrace) {
-        print('Erreur traitement magasin: $e');
-        print('Stack trace: $stackTrace');
-        
-        // Retourne un magasin minimal avec les données disponibles
-        return Store(
-          id: (item as Map<String, dynamic>?)?['id'] ?? '',
-          nom_enseigne: (item as Map<String, dynamic>?)?['nom_enseigne'] ?? '',
-          siret: (item as Map<String, dynamic>?)?['siret'] ?? '',
-          adresse: (item as Map<String, dynamic>?)?['adresse'] ?? '',
-          ville: (item as Map<String, dynamic>?)?['ville'] ?? '',
-          code_postal: (item as Map<String, dynamic>?)?['code_postal'] ?? '',
-          telephone: (item as Map<String, dynamic>?)?['telephone'] ?? '',
-          description: (item as Map<String, dynamic>?)?['description'] ?? '',
-          geom: (item as Map<String, dynamic>?)?['geom'] ?? {},
-          Categorieid: (item as Map<String, dynamic>?)?['Categorieid'] ?? 0,
-          logoUrl: (item as Map<String, dynamic>?)?['logoUrl'] ?? '', // Utilise l'URL publique ou null
-        );
+        if (batch == null || batch.isEmpty) {
+          hasMore = false;
+          debugPrint('✅ Tous les magasins chargés: ${allStores.length} total');
+        } else {
+          allStores.addAll(batch);
+          offset += batchSize;
+          
+          // Pause entre les requêtes
+          await Future.delayed(const Duration(milliseconds: 300)); // ✅ Augmenté
+        }
       }
-    }).toList();
-  } catch (e, stackTrace) {
-    print('Erreur récupération magasins: $e');
-    print('Stack trace: $stackTrace');
-    return [];
+
+      return allStores;
+    } catch (e) {
+      debugPrint('❌ Erreur chargement total: $e');
+      // Retourner ce qui a été chargé jusqu'ici
+      return allStores;
+    }
   }
-}
 
-
- String getStoreLogoUrl(String filePath) {
-    // Prendre seulement le nom du fichier si une URL complète est fournie
+  String getStoreLogoUrl(String filePath) {
     final fileName = filePath.split('/').last;
-    return _client.storage
-      .from(_bucketName)
-      .getPublicUrl(fileName);
+    return _client.storage.from(_bucketName).getPublicUrl(fileName);
   }
 }
-
-/* Removed problematic extension on JsonCodec that caused [] to return void */

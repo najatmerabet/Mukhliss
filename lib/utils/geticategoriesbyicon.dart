@@ -78,7 +78,7 @@ class CategoryMarkers {
     for (final key in _pinIcons.keys) {
       if (lowerName.contains(key)) return _pinIcons[key]!;
     }
-    return Icons.place;
+    return Icons.category_rounded;
   }
 
   static Color getPinColor(String categoryName) {

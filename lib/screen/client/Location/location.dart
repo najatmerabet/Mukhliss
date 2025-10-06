@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:mukhliss/models/store.dart';
+import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location_controller.dart';
@@ -356,9 +357,33 @@ class LocationScreenState extends ConsumerState<LocationScreen>
       ),
     );
   }
-
+void refreshShopRewards(Store? shop) {
+  final shopId = shop?.id;
+  if (shopId != null && shopId.isNotEmpty) {
+    ref.invalidate(rewardsByMagasinProvider(shopId));
+    
+    // Appeler le callback parent si fourni
+    
+    
+    print("🔄 Rewards rafraîchis pour le magasin: $shopId");
+    
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text( 'Données actualisées'),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
   void _handleStoreSelection(Store? store, Categories? category) {
     if (store == null || _disposed) return;
+    
+    if (store.id != _selectedShop?.id) {
+      refreshShopRewards(store);
+    print('🔄 Rafraîchissement des rewards pour le magasin: ${store.id}');
+  }
 
     _safeSetState(() {
       _selectedShop = store;
@@ -716,6 +741,8 @@ class LocationScreenState extends ConsumerState<LocationScreen>
       Navigator.pop(context);
       await Future.delayed(const Duration(milliseconds: 200));
     }
+
+    refreshShopRewards(store);
     // 2. Mettre à jour l'état avant toute animation
     if (!mounted) return;
     setState(() {
@@ -1123,6 +1150,11 @@ class LocationScreenState extends ConsumerState<LocationScreen>
                   closeCategoriesSheet: () {
                     _updateBottomSheetState(BottomSheetState.none);
                   },
+                   onRefresh: () {
+          // Cette fonction sera appelée quand le bottom sheet rafraîchit
+          print("Parent: Les rewards ont été rafraîchis!");
+          // Vous pouvez ajouter d'autres logiques ici si besoin
+        },
                 ),
               ),
             ),

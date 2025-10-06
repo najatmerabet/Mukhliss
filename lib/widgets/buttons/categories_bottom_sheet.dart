@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/models/categories.dart';
-import 'package:mukhliss/models/offers.dart';
+
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/providers/categories_provider.dart';

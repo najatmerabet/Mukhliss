@@ -935,7 +935,8 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                                   const SizedBox(height: 3),
 
                                   Text(
-                                    offer.description ?? '',
+                                    offer.description ??
+                                        '',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.95),
                                       fontSize: 10,

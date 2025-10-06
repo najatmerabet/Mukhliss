@@ -667,15 +667,7 @@ void refreshShopRewards(Store? shop) {
       _bottomSheetState = BottomSheetState.none;
     });
     print("============> Refreshing data");
-    // Show feedback to user
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n?.active ?? 'Données actualisées'),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    
   }
 
   void _showArrivalNotification() {

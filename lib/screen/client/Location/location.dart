@@ -667,8 +667,6 @@ void refreshShopRewards(Store? shop) {
       _bottomSheetState = BottomSheetState.none;
     });
     print("============> Refreshing data");
-    
-    
   }
 
   void _showArrivalNotification() {

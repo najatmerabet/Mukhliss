@@ -112,7 +112,6 @@ void refreshShopRewards() {
     widget.onRefresh?.call();
     
     print("🔄 Rewards rafraîchis pour le magasin: $shopId");
-    
    
   }
 }

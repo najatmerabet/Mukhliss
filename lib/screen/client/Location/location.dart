@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:mukhliss/models/store.dart';
+import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location_controller.dart';
@@ -141,31 +142,30 @@ class LocationScreenState extends ConsumerState<LocationScreen>
   // }
 
   Future<void> _initializeApp() async {
-  try {
-    debugPrint('🚀 Initialisation de l\'app...');
-    
-    // Vérifier la connexion sans bloquer le chargement initial
-    _checkConnectivity().then((_) {
-      debugPrint('✅ Vérification connexion terminée: $_hasConnection');
-    });
+    try {
+      debugPrint('🚀 Initialisation de l\'app...');
 
-    // Charger la position IMMÉDIATEMENT (en parallèle)
-    if (mounted && !_disposed) {
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Vérifier la connexion sans bloquer le chargement initial
+      _checkConnectivity().then((_) {
+        debugPrint('✅ Vérification connexion terminée: $_hasConnection');
+      });
+
+      // Charger la position IMMÉDIATEMENT (en parallèle)
       if (mounted && !_disposed) {
-        controller.getCurrentLocation();
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted && !_disposed) {
+          controller.getCurrentLocation();
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Erreur initialisation: $e');
+      if (mounted && !_disposed) {
+        _safeSetState(() {
+          _isCheckingConnectivity = false;
+        });
       }
     }
-  } catch (e) {
-    debugPrint('❌ Erreur initialisation: $e');
-    if (mounted && !_disposed) {
-      _safeSetState(() {
-        _isCheckingConnectivity = false;
-      });
-    }
   }
-}
-
 
   Future<void> _checkConnectivity() async {
     if (!mounted || _disposed) return;
@@ -209,6 +209,12 @@ class LocationScreenState extends ConsumerState<LocationScreen>
         _safeSetState(() {
           _hasConnection =
               connectivityResult != ConnectivityResult.none && reallyConnected;
+          if (_hasConnection) {
+            print('[DEBUG] Internet connection verified.');
+            refreshData(); // Refresh
+          } else {
+            print('[DEBUG] No internet connection.');
+          }
           _isCheckingConnectivity = false;
         });
       }
@@ -223,59 +229,62 @@ class LocationScreenState extends ConsumerState<LocationScreen>
     }
   }
 
-Future<bool> _checkRealInternetConnection() async {
-  try {
-    // Test multiple servers
-    final futures = [
-      InternetAddress.lookup('google.com'),
-      InternetAddress.lookup('cloudflare.com'),
-      InternetAddress.lookup('example.com'),
-    ];
-    
-    final results = await Future.wait(futures)
-        .timeout(const Duration(seconds: 10));
-    
-    return results.any((result) => result.isNotEmpty && result[0].rawAddress.isNotEmpty);
-  } catch (e) {
-    debugPrint('Real internet check failed: $e');
-    return false;
-  }
-}
+  Future<bool> _checkRealInternetConnection() async {
+    try {
+      // Test multiple servers
+      final futures = [
+        InternetAddress.lookup('google.com'),
+        InternetAddress.lookup('cloudflare.com'),
+        InternetAddress.lookup('example.com'),
+      ];
 
-  // Dans votre LocationScreenState
-void _refreshStoresOnConnectionRestored() {
-  if (_hasConnection) {
-    debugPrint('🔄 Connexion restaurée - Rechargement des magasins');
-    // Invalider le provider pour forcer le rechargement
-    ref.invalidate(storesListProvider);
-    
-    // Optionnel: recharger aussi les catégories
-    ref.invalidate(categoriesListProvider);
-  }
-}
+      final results = await Future.wait(
+        futures,
+      ).timeout(const Duration(seconds: 10));
 
-// Modifiez votre méthode _updateConnectionStatus
-void _updateConnectionStatus(ConnectivityResult result) {
-  if (!mounted || _disposed) return;
-  
-  final newStatus = result != ConnectivityResult.none;
-  final wasDisconnected = !_hasConnection && newStatus;
-  
-  _safeSetState(() {
-    _hasConnection = newStatus;
-  });
-
-  // Rafraîchir les données si la connexion revient
-  if (wasDisconnected) {
-    debugPrint('📡 Connexion restaurée - Rafraîchissement des données');
-    _refreshStoresOnConnectionRestored();
-    
-    // Recharger aussi la position si nécessaire
-    if (_currentPosition == null) {
-      controller.getCurrentLocation();
+      return results.any(
+        (result) => result.isNotEmpty && result[0].rawAddress.isNotEmpty,
+      );
+    } catch (e) {
+      debugPrint('Real internet check failed: $e');
+      return false;
     }
   }
-}
+
+  // Dans votre LocationScreenState
+  void _refreshStoresOnConnectionRestored() {
+    if (_hasConnection) {
+      debugPrint('🔄 Connexion restaurée - Rechargement des magasins');
+      // Invalider le provider pour forcer le rechargement
+      ref.invalidate(storesListProvider);
+
+      // Optionnel: recharger aussi les catégories
+      ref.invalidate(categoriesListProvider);
+    }
+  }
+
+  // Modifiez votre méthode _updateConnectionStatus
+  void _updateConnectionStatus(ConnectivityResult result) {
+    if (!mounted || _disposed) return;
+
+    final newStatus = result != ConnectivityResult.none;
+    final wasDisconnected = !_hasConnection && newStatus;
+
+    _safeSetState(() {
+      _hasConnection = newStatus;
+    });
+
+    // Rafraîchir les données si la connexion revient
+    if (wasDisconnected) {
+      debugPrint('📡 Connexion restaurée - Rafraîchissement des données');
+      _refreshStoresOnConnectionRestored();
+
+      // Recharger aussi la position si nécessaire
+      if (_currentPosition == null) {
+        controller.getCurrentLocation();
+      }
+    }
+  }
 
   Widget _buildNoConnectionWidget(
     BuildContext context,
@@ -317,11 +326,7 @@ void _updateConnectionStatus(ConnectivityResult result) {
               // Texte principal
               Text(
                 l10n?.somethingwrong ?? "Something went wrong",
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
 
@@ -352,9 +357,33 @@ void _updateConnectionStatus(ConnectivityResult result) {
       ),
     );
   }
-
+void refreshShopRewards(Store? shop) {
+  final shopId = shop?.id;
+  if (shopId != null && shopId.isNotEmpty) {
+    ref.invalidate(rewardsByMagasinProvider(shopId));
+    
+    // Appeler le callback parent si fourni
+    
+    
+    print("🔄 Rewards rafraîchis pour le magasin: $shopId");
+    
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text( 'Données actualisées'),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
   void _handleStoreSelection(Store? store, Categories? category) {
     if (store == null || _disposed) return;
+    
+    if (store.id != _selectedShop?.id) {
+      refreshShopRewards(store);
+    print('🔄 Rafraîchissement des rewards pour le magasin: ${store.id}');
+  }
 
     _safeSetState(() {
       _selectedShop = store;
@@ -622,6 +651,33 @@ void _updateConnectionStatus(ConnectivityResult result) {
     }
   }
 
+  void refreshData() {
+    if (_disposed) return;
+
+    // Refresh both providers
+    ref.refresh(categoriesListProvider);
+    ref.refresh(storesListProvider);
+
+    // Reset relevant state
+    _safeSetState(() {
+      _storesLoaded = false;
+      _categoriesBottomSheetShown = false;
+      _selectedCategory = null;
+      _selectedShop = null;
+      _bottomSheetState = BottomSheetState.none;
+    });
+    print("============> Refreshing data");
+    // Show feedback to user
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n?.active ?? 'Données actualisées'),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _showArrivalNotification() {
     if (!mounted) return;
 
@@ -685,6 +741,8 @@ void _updateConnectionStatus(ConnectivityResult result) {
       Navigator.pop(context);
       await Future.delayed(const Duration(milliseconds: 200));
     }
+
+    refreshShopRewards(store);
     // 2. Mettre à jour l'état avant toute animation
     if (!mounted) return;
     setState(() {
@@ -713,7 +771,6 @@ void _updateConnectionStatus(ConnectivityResult result) {
       _lastPosition = null;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -932,10 +989,8 @@ void _updateConnectionStatus(ConnectivityResult result) {
                       ),
                     ),
                   ),
-if (storesAsync.hasValue || storesAsync.isLoading)
-  MarkerLayer(
-    markers: _buildStoreMarkers(storesAsync),
-  ),
+                if (storesAsync.hasValue || storesAsync.isLoading)
+                  MarkerLayer(markers: _buildStoreMarkers(storesAsync)),
                 // MarkerLayer(
                 //   markers: storesAsync.maybeWhen(
                 //     data: (stores) {
@@ -1095,6 +1150,11 @@ if (storesAsync.hasValue || storesAsync.isLoading)
                   closeCategoriesSheet: () {
                     _updateBottomSheetState(BottomSheetState.none);
                   },
+                   onRefresh: () {
+          // Cette fonction sera appelée quand le bottom sheet rafraîchit
+          print("Parent: Les rewards ont été rafraîchis!");
+          // Vous pouvez ajouter d'autres logiques ici si besoin
+        },
                 ),
               ),
             ),
@@ -1236,207 +1296,237 @@ if (storesAsync.hasValue || storesAsync.isLoading)
     );
   }
 
- List<Marker> _buildStoreMarkers(AsyncValue<List<Store>> storesAsync) {
-  debugPrint('🎯 === DÉBUT _buildStoreMarkers ===');
-  debugPrint('   État: ${storesAsync.isLoading ? "LOADING" : storesAsync.hasError ? "ERROR" : storesAsync.hasValue ? "HAS_VALUE" : "UNKNOWN"}');
-  
-  return storesAsync.when(
-    data: (stores) {
-      debugPrint('   📊 Données reçues: ${stores.length} magasins');
-      
-      if (stores.isEmpty) {
-        debugPrint('   ⚠️ Liste vide - AUCUN MARQUEUR');
+  List<Marker> _buildStoreMarkers(AsyncValue<List<Store>> storesAsync) {
+    debugPrint('🎯 === DÉBUT _buildStoreMarkers ===');
+    debugPrint(
+      '   État: ${storesAsync.isLoading
+          ? "LOADING"
+          : storesAsync.hasError
+          ? "ERROR"
+          : storesAsync.hasValue
+          ? "HAS_VALUE"
+          : "UNKNOWN"}',
+    );
+
+    return storesAsync.when(
+      data: (stores) {
+        debugPrint('   📊 Données reçues: ${stores.length} magasins');
+
+        if (stores.isEmpty) {
+          debugPrint('   ⚠️ Liste vide - AUCUN MARQUEUR');
+          return [];
+        }
+
+        // Afficher quelques exemples
+        for (var i = 0; i < (stores.length > 3 ? 3 : stores.length); i++) {
+          final s = stores[i];
+          debugPrint(
+            '   Store $i: ${s.nom_enseigne} - Lat:${s.latitude} Lng:${s.longitude} Cat:${s.Categorieid}',
+          );
+        }
+
+        List<Store> filteredStores = stores;
+
+        if (_selectedCategory != null) {
+          filteredStores =
+              stores
+                  .where((store) => store.Categorieid == _selectedCategory!.id)
+                  .toList();
+          debugPrint(
+            '   🔍 Filtre catégorie ${_selectedCategory!.id}: ${filteredStores.length} résultats',
+          );
+        } else {
+          debugPrint(
+            '   ℹ️ Pas de filtre catégorie - Affichage de TOUS les magasins',
+          );
+        }
+
+        if (filteredStores.isEmpty) {
+          debugPrint('   ⚠️ Aucun magasin après filtrage');
+          return [];
+        }
+
+        final markers =
+            filteredStores.map((store) {
+              debugPrint('   🎯 Création marqueur pour: ${store.nom_enseigne}');
+
+              return Marker(
+                point: LatLng(
+                  store.latitude.toDouble(),
+                  store.longitude.toDouble(),
+                ),
+                width: 40,
+                height: 40,
+                child: GestureDetector(
+                  onTap: () {
+                    debugPrint('   👆 Tap sur: ${store.nom_enseigne}');
+                    _navigateToStoreAndShowDetails(store);
+                  },
+                  child: CategoryMarkers.getPinWidget(
+                    CategoryHelpers.getCategoryName(ref, store.Categorieid),
+                    size: 40,
+                  ),
+                ),
+              );
+            }).toList();
+
+        debugPrint('   ✅ ${markers.length} MARQUEURS CRÉÉS');
+        debugPrint('🎯 === FIN _buildStoreMarkers ===\n');
+
+        return markers;
+      },
+
+      loading: () {
+        debugPrint('   ⏳ CHARGEMENT en cours...');
         return [];
-      }
+      },
 
-      // Afficher quelques exemples
-      for (var i = 0; i < (stores.length > 3 ? 3 : stores.length); i++) {
-        final s = stores[i];
-        debugPrint('   Store $i: ${s.nom_enseigne} - Lat:${s.latitude} Lng:${s.longitude} Cat:${s.Categorieid}');
-      }
+      error: (error, stack) {
+        debugPrint('   ❌ ERREUR: $error');
+        debugPrint('   Stack: $stack');
 
-      List<Store> filteredStores = stores;
-      
-      if (_selectedCategory != null) {
-        filteredStores = stores.where((store) => 
-          store.Categorieid == _selectedCategory!.id
-        ).toList();
-        debugPrint('   🔍 Filtre catégorie ${_selectedCategory!.id}: ${filteredStores.length} résultats');
-      } else {
-        debugPrint('   ℹ️ Pas de filtre catégorie - Affichage de TOUS les magasins');
-      }
-      
-      if (filteredStores.isEmpty) {
-        debugPrint('   ⚠️ Aucun magasin après filtrage');
-        return [];
-      }
+        // Détection spécifique du type d'erreur
+        final isTimeout =
+            error is TimeoutException ||
+            error.toString().contains('Timeout') ||
+            error.toString().contains('TimeoutException') ||
+            error.toString().contains('timed out');
 
-      final markers = filteredStores.map((store) {
-        debugPrint('   🎯 Création marqueur pour: ${store.nom_enseigne}');
-        
-        return Marker(
-          point: LatLng(
-            store.latitude.toDouble(), 
-            store.longitude.toDouble()
-          ),
-          width: 40,
-          height: 40,
-          child: GestureDetector(
-            onTap: () {
-              debugPrint('   👆 Tap sur: ${store.nom_enseigne}');
-              _navigateToStoreAndShowDetails(store);
-            },
-            child: CategoryMarkers.getPinWidget(
-              CategoryHelpers.getCategoryName(ref, store.Categorieid),
-              size: 40,
-            ),
-          ),
+        final isNetworkError =
+            error.toString().contains('SocketException') ||
+            error.toString().contains('Connection') ||
+            error.toString().contains('network');
+
+        debugPrint(
+          '   🔍 Type erreur: ${isTimeout
+              ? "TIMEOUT"
+              : isNetworkError
+              ? "NETWORK"
+              : "OTHER"}',
         );
-      }).toList();
 
-      debugPrint('   ✅ ${markers.length} MARQUEURS CRÉÉS');
-      debugPrint('🎯 === FIN _buildStoreMarkers ===\n');
-      
-      return markers;
-    },
-    
-    loading: () {
-      debugPrint('   ⏳ CHARGEMENT en cours...');
-      return [];
-    },
-    
-    error: (error, stack) {
-      debugPrint('   ❌ ERREUR: $error');
-      debugPrint('   Stack: $stack');
-      
-      // Détection spécifique du type d'erreur
-      final isTimeout = error is TimeoutException || 
-                       error.toString().contains('Timeout') ||
-                       error.toString().contains('TimeoutException') ||
-                       error.toString().contains('timed out');
-      
-      final isNetworkError = error.toString().contains('SocketException') ||
-                            error.toString().contains('Connection') ||
-                            error.toString().contains('network');
-      
-      debugPrint('   🔍 Type erreur: ${isTimeout ? "TIMEOUT" : isNetworkError ? "NETWORK" : "OTHER"}');
-      
-      // Gestion spécifique du timeout
-      if (isTimeout && _hasConnection && mounted && !_disposed) {
-        debugPrint('   🔄 Timeout détecté - Planification retry automatique...');
-        
-        // Retry automatique après 3 secondes
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted && !_disposed && _hasConnection) {
-            debugPrint('   🔄 Exécution retry automatique...');
-            ref.invalidate(storesListProvider);
-          }
-        });
-        
-        // Notification utilisateur
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        // Gestion spécifique du timeout
+        if (isTimeout && _hasConnection && mounted && !_disposed) {
+          debugPrint(
+            '   🔄 Timeout détecté - Planification retry automatique...',
+          );
+
+          // Retry automatique après 3 secondes
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted && !_disposed && _hasConnection) {
+              debugPrint('   🔄 Exécution retry automatique...');
+              ref.invalidate(storesListProvider);
+            }
+          });
+
+          // Notification utilisateur
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Connexion lente... Nouvelle tentative en cours',
-                        style: TextStyle(fontSize: 14),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Connexion lente... Nouvelle tentative en cours',
+                          style: TextStyle(fontSize: 14),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  backgroundColor: Colors.orange.shade700,
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                  action: SnackBarAction(
+                    label: 'Réessayer maintenant',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      debugPrint('   👆 Retry manuel demandé');
+                      ref.invalidate(storesListProvider);
+                    },
+                  ),
                 ),
-                backgroundColor: Colors.orange.shade700,
-                duration: const Duration(seconds: 4),
-                behavior: SnackBarBehavior.floating,
-                action: SnackBarAction(
-                  label: 'Réessayer maintenant',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    debugPrint('   👆 Retry manuel demandé');
-                    ref.invalidate(storesListProvider);
-                  },
+              );
+            }
+          });
+        }
+        // Gestion erreur réseau
+        else if (isNetworkError && _hasConnection && mounted && !_disposed) {
+          debugPrint('   📡 Erreur réseau détectée');
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    'Problème de connexion réseau',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  backgroundColor: Colors.red.shade700,
+                  duration: const Duration(seconds: 3),
+                  behavior: SnackBarBehavior.floating,
+                  action: SnackBarAction(
+                    label: 'Réessayer',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      ref.invalidate(storesListProvider);
+                    },
+                  ),
                 ),
-              ),
-            );
-          }
-        });
-      } 
-      // Gestion erreur réseau
-      else if (isNetworkError && _hasConnection && mounted && !_disposed) {
-        debugPrint('   📡 Erreur réseau détectée');
-        
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text(
-                  'Problème de connexion réseau',
-                  style: TextStyle(fontSize: 14),
+              );
+            }
+          });
+        }
+        // Autres erreurs
+        else if (_hasConnection && mounted && !_disposed) {
+          debugPrint('   ⚠️ Erreur générique');
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              final errorMsg =
+                  error.toString().length > 60
+                      ? '${error.toString().substring(0, 60)}...'
+                      : error.toString();
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Erreur: $errorMsg',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  backgroundColor: Colors.red.shade700,
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                  action: SnackBarAction(
+                    label: 'Réessayer',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      ref.invalidate(storesListProvider);
+                    },
+                  ),
                 ),
-                backgroundColor: Colors.red.shade700,
-                duration: const Duration(seconds: 3),
-                behavior: SnackBarBehavior.floating,
-                action: SnackBarAction(
-                  label: 'Réessayer',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ref.invalidate(storesListProvider);
-                  },
-                ),
-              ),
-            );
-          }
-        });
-      }
-      // Autres erreurs
-      else if (_hasConnection && mounted && !_disposed) {
-        debugPrint('   ⚠️ Erreur générique');
-        
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            final errorMsg = error.toString().length > 60 
-                ? '${error.toString().substring(0, 60)}...' 
-                : error.toString();
-            
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Erreur: $errorMsg',
-                  style: const TextStyle(fontSize: 14),
-                ),
-                backgroundColor: Colors.red.shade700,
-                duration: const Duration(seconds: 4),
-                behavior: SnackBarBehavior.floating,
-                action: SnackBarAction(
-                  label: 'Réessayer',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ref.invalidate(storesListProvider);
-                  },
-                ),
-              ),
-            );
-          }
-        });
-      }
-      
-      debugPrint('🎯 === FIN _buildStoreMarkers (ERROR) ===\n');
-      return [];
-    },
-  );
-}
+              );
+            }
+          });
+        }
+
+        debugPrint('🎯 === FIN _buildStoreMarkers (ERROR) ===\n');
+        return [];
+      },
+    );
+  }
+
   int _findNearestPointIndex(LatLng point) {
     double minDistance = double.infinity;
     int nearestIndex = 0;

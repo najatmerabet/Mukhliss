@@ -121,7 +121,7 @@ class QrcodeService {
 
     } on SocketException catch (e) {
       return _handleFallbackToCache(prefs, 'Network error: ${e.message}');
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       return _handleFallbackToCache(prefs, 'Request timeout');
     } on PostgrestException catch (e) {
       return _handleFallbackToCache(prefs, 'Database error: ${e.message}');

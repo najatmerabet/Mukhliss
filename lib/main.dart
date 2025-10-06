@@ -460,14 +460,4 @@ void _handleAuthChange(AuthState data) async {
     );
   }
 
-  ThemeMode _convertToFlutterThemeMode(AppThemeMode appThemeMode) {
-    switch (appThemeMode) {
-      case AppThemeMode.light:
-        return ThemeMode.light;
-      case AppThemeMode.dark:
-        return ThemeMode.dark;
-      case AppThemeMode.system:
-        return ThemeMode.system;
-    }
-  }
 }

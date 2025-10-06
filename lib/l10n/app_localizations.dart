@@ -1419,6 +1419,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New code sent'**
   String get nouveaucodeenvoye;
+
+  /// No description provided for @ilYa.
+  ///
+  /// In en, this message translates to:
+  /// **'ago'**
+  String get ilYa;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get days;
 }
 
 class _AppLocalizationsDelegate

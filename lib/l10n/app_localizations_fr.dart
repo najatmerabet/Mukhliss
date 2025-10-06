@@ -647,7 +647,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pour accéder à la gestion des appareils, vous devez être connecté à Internet.';
 
   @override
-  String get verifier => 'VÉRIFIER';
+  String get verifier => 'Veuillez vérifier :';
 
   @override
   String get wifi =>
@@ -695,4 +695,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nouveaucodeenvoye => 'Nouveau code envoyé';
+
+  @override
+  String get ilYa => 'Il y a';
+
+  @override
+  String get days => 'jours';
 }

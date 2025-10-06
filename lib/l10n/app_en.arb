@@ -227,12 +227,16 @@
 "codeexpire":"Expired code",
 "codeexpiredans":"Code expires in",
 "entrercode":"Enter the code",
-"nouveaucodeenvoye":"New code sent"
+"nouveaucodeenvoye":"New code sent",
 
 
 
 
 
+
+
+  "ilYa": "ago",
+  "days": "days"
 
 
 

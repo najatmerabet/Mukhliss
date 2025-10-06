@@ -108,7 +108,6 @@
    "pointsagagner":"نقاط للفوز",
   "nooffre":"لا توجد عروض متاحة",
   "arrivee":"لقد وصلت الى",
-   "points":"نقاط",
   "disponible":"متاح",
  "limite":"محدود",
   "nouvelleoffre":"عروض جديدة",
@@ -165,7 +164,6 @@
  "sauvgarder":"حفظ التغييرات ",
  "application":"التطبيقات",
 "theme":"الوضع الليلي",
-  "active":"مفعل",
   "netoyercacha":"مسح ذاكرة التخزين المؤقت",
    "desactive": "معطل",
   "securite":"الأمان والخصوصية",
@@ -175,7 +173,6 @@
     "apparielsconnecte":"الأجهزة المتصلة",
   "statistiques":"الإحصائيات",
  "inactifs":"غير فعال",
-"active":"فعال",
  "total":"الإجمالي",
 "mesappariels":"أجهزتي",
   "politiqueconfidentialite":" سياسة الخصوصية",
@@ -220,14 +217,17 @@
 "renitialisation":"إعادة تعيين كلمة المرور",
 "codeverifecation":"رمز التحقق",
 "envoyerunode":"لقد أرسلنا رمزًا إلى",
-"verifier":"تحقق",
 "renvoyercode":"إعادة إرسال الرمز",
 "codeexpire":"انتهت صلاحية الرمز",
 "codeexpiredans":"ينتهي الرمز خلال",
 "entrercode":"أدخل الرمز",
-"nouveaucodeenvoye":"تم إرسال رمز جديد"
+"nouveaucodeenvoye":"تم إرسال رمز جديد",
 
 
+
+
+  "ilYa": "منذ",
+  "days": "أيام"
 
 
 

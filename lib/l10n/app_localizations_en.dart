@@ -688,4 +688,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nouveaucodeenvoye => 'New code sent';
+
+  @override
+  String get ilYa => 'ago';
+
+  @override
+  String get days => 'days';
 }

@@ -374,7 +374,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get description => 'لا تفوّت هذا العرض الحصري المتاح الآن';
 
   @override
-  String get active => 'فعال';
+  String get active => 'مفعّل';
 
   @override
   String get aujour => 'اليوم';
@@ -637,7 +637,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'للوصول إلى إدارة الأجهزة، يجب أن تكون متصلاً بالإنترنت.';
 
   @override
-  String get verifier => 'تحقق';
+  String get verifier => 'يرجى التحقق:';
 
   @override
   String get wifi =>
@@ -684,4 +684,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nouveaucodeenvoye => 'تم إرسال رمز جديد';
+
+  @override
+  String get ilYa => 'منذ';
+
+  @override
+  String get days => 'أيام';
 }

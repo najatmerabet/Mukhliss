@@ -113,14 +113,7 @@ void refreshShopRewards() {
     
     print("🔄 Rewards rafraîchis pour le magasin: $shopId");
     
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n?.active ?? 'Données actualisées'),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+   
   }
 }
 

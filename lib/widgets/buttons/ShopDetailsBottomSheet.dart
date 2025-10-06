@@ -1,25 +1,25 @@
-import 'dart:async';
+
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
-import 'package:mukhliss/l10n/l10n.dart';
+
 
 import 'package:mukhliss/models/categories.dart';
-import 'package:mukhliss/models/offers.dart';
+
 import 'package:mukhliss/models/rewards.dart';
 import 'package:mukhliss/models/store.dart';
 import 'package:mukhliss/providers/auth_provider.dart';
 import 'package:mukhliss/providers/clientmagazin_provider.dart';
 
 import 'package:mukhliss/providers/langue_provider.dart';
-import 'package:mukhliss/providers/offers_provider.dart';
+
 import 'package:mukhliss/providers/rewards_provider.dart';
 import 'package:mukhliss/providers/store_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
-import 'package:mukhliss/screen/layout/main_navigation_screen.dart';
+
 import 'package:mukhliss/theme/app_theme.dart';
 
 import 'package:mukhliss/utils/category_helpers.dart';
@@ -40,7 +40,7 @@ class ShopDetailsBottomSheet extends ConsumerStatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   // Nouveau paramètre
   final VoidCallback closeCategoriesSheet; // Nouveau paramètre
-
+  final VoidCallback? onRefresh;
   const ShopDetailsBottomSheet({
     super.key,
     required this.shop,
@@ -53,6 +53,7 @@ class ShopDetailsBottomSheet extends ConsumerStatefulWidget {
     required this.initiateRouting,
     required this.navigatorKey,
     required this.closeCategoriesSheet,
+    this.onRefresh,
   });
 
   @override
@@ -101,6 +102,27 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
     _draggableController.dispose();
     super.dispose();
   }
+
+void refreshShopRewards() {
+  final shopId = widget.shop?.id;
+  if (shopId != null && shopId.isNotEmpty) {
+    ref.invalidate(rewardsByMagasinProvider(shopId));
+    
+    // Appeler le callback parent si fourni
+    widget.onRefresh?.call();
+    
+    print("🔄 Rewards rafraîchis pour le magasin: $shopId");
+    
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n?.active ?? 'Données actualisées'),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -726,171 +748,177 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
 
   // 🎫 DESIGN 1: Style Ticket/Coupon
 Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
-  // Couleurs de gradient basées sur l'index pour varier les cartes
-  final List<List<Color>> gradients = [
-    [Color(0xFF6B46C1), Color(0xFF9333EA)], // Purple
-    [Color(0xFF0EA5E9), Color(0xFF2563EB)], // Blue
-    [Color(0xFFEC4899), Color(0xFFF43F5E)], // Pink
-    [Color(0xFF10B981), Color(0xFF059669)], // Green
-    [Color(0xFFF59E0B), Color(0xFFEF4444)], // Orange-Red
-  ];
-
-  final gradientIndex = index % gradients.length;
-  final cardGradient = gradients[gradientIndex];
-
+ 
   return Container(
-    width: 340,
+    width: 300,
     margin: const EdgeInsets.only(right: 16),
     child: Opacity(
-      opacity: offer.is_active ? 1.0 : 0.5,
+      opacity: 1.0 ,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF121212), Color(0xFF121212)],
+            colors:   [const Color.fromARGB(255, 20, 20, 20), const Color.fromARGB(255, 15, 15, 15)],
           ),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: (offer.is_active ? cardGradient[0] : Colors.grey)
-          //         .withOpacity(0.3),
-          //     blurRadius: 12,
-          //     offset: const Offset(0, 6),
-          //   ),
-          // ],
+          boxShadow: [
+           
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
           child: InkWell(
             onTap: offer.is_active
                 ? () {
                     // Navigation vers les détails du cadeau
                     print('Cadeau ${offer.name} cliqué');
+                    _showRewardDetails(offer);
                   }
                 : null,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             child: Stack(
               children: [
-          
                 Positioned(
-                  left: -50,
-                  bottom: -50,
+                  bottom: -30,
+                  left: -30,
                   child: Container(
-                    width: 180,
-                    height: 180,
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.05),
                     ),
                   ),
                 ),
-                
-                // Contenu de la carte
+
+                // Badge "Épuisé" en overlay
+                if (!offer.is_active)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'ÉPUISÉ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Contenu principal
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // En-tête: Logo magasin + Badge statut
+                      // En-tête avec logo et informations
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Logo et nom du magasin
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: offer.magasin?.logoUrl != null
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(10),
-                                          child: Image.network(
-                                            offer.magasin.logoUrl!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return const Icon(
-                                                Icons.card_giftcard,
-                                                size: 24,
-                                                color: Colors.grey,
-                                              );
-                                            },
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.store,
-                                          size: 24,
-                                          color: Colors.grey,
-                                        ),
+                          // Logo du magasin
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        offer.name?? 'Magasin',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                         offer.description ?? 'Description non disponible',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.8),
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child:  Icon(
+                                      Icons.celebration_rounded,
+                                      size: 24,
+                                      color: Colors.yellow[800],
+                                    ),
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 12),
+                          
+                          // Informations du reward
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  offer.name ,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
                                   ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                
+                                const SizedBox(height: 4),
+                                
+                                Text(
+                                  offer.description ?? 'Description non disponible',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 12,
+                                    height: 1.3,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
                           ),
-                          // Badge de statut
-                          if (!offer.is_active)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                'Épuisé',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                         ],
                       ),
 
-                    
-                     
+                      const SizedBox(height: 20),
 
-                      // Pied de carte: Points + Date
+                      // Barre de séparation décorative
+                      Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.3),
+                              Colors.white.withOpacity(0.1),
+                              Colors.white.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Section points et statut
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -898,31 +926,37 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
                           // Points requis
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 'POINTS REQUIS',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.7),
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: 1.2,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Row(
                                 children: [
-                                  const Icon(
-                                    Icons.stars_rounded,
-                                    color: Colors.amber,
-                                    size: 24,
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                    child: const Icon(
+                                      Icons.stars_rounded,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   Text(
                                     '${offer.points_required ?? 0}',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 28,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                       height: 1,
                                     ),
@@ -931,37 +965,87 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
                               ),
                             ],
                           ),
-                          
-                          // Date de création
-                          if (offer.created_at != null)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'AJOUTÉ LE',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 1,
+
+                          // Informations supplémentaires
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (offer.created_at != null)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'AJOUTÉ LE',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _formatDate(offer.created_at!),
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              
+                              const SizedBox(height: 8),
+                              
+                              // Badge de disponibilité
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: offer.is_active 
+                                      ? Colors.green.withOpacity(0.2)
+                                      : Colors.red.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: offer.is_active 
+                                        ? Colors.green
+                                        : Colors.red,
+                                    width: 1,
                                   ),
                                 ),
-                                Text(
-                                  offer.created_at.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 1,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: offer.is_active 
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      offer.is_active ? 'Disponible' : 'Indisponible',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                             
-                                
-                              ],
-                            ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
+
+                    
                     ],
                   ),
                 ),
@@ -974,45 +1058,17 @@ Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
   );
 }
 
-
-
-Widget _buildStatusBadge(bool isActive, bool isDarkMode) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: isActive 
-          ? (isDarkMode ? Colors.green[800]! : Colors.green[100]!)
-          : (isDarkMode ? Colors.red[800]! : Colors.red[100]!),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            color: isActive 
-                ? (isDarkMode ? Colors.green[300]! : Colors.green)
-                : (isDarkMode ? Colors.red[300]! : Colors.red),
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          isActive ? 'Actif' : 'Inactif',
-          style: TextStyle(
-            color: isActive 
-                ? (isDarkMode ? Colors.green[300]! : Colors.green[800]!)
-                : (isDarkMode ? Colors.red[300]! : Colors.red[800]!),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
+// Fonction helper pour formater la date
+String _formatDate(DateTime date) {
+  return '${date.day}/${date.month}/${date.year}';
 }
+
+// Fonction pour afficher les détails du reward (à implémenter)
+void _showRewardDetails(Rewards offer) {
+  // Implémentez la navigation vers les détails du reward
+  print('Détails du reward: ${offer.name}');
+}
+
   double _calculateDistance(Position? currentPosition, Store? shop) {
     if (currentPosition == null) return 0;
 

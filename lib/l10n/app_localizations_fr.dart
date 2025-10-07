@@ -722,4 +722,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get utiliseLe => 'Utilisé le';
+
+  @override
+  String get votrecartefidelite => 'Votre carte de fidélité intelligente';
+
+  @override
+  String get chargement => 'Chargement...';
 }

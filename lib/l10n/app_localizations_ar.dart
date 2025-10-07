@@ -711,4 +711,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get utiliseLe => 'اِسْتَخْدَمَ';
+
+  @override
+  String get votrecartefidelite => 'بطاقة الولاء الذكية الخاصة بكم';
+
+  @override
+  String get chargement => 'جاري التحميل...';
 }

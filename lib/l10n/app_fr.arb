@@ -225,5 +225,12 @@
 "entrercode":"Entrez le code",
 "nouveaucodeenvoye":"Nouveau code envoyé",
 "ilYa": "Il y a",
-  "days": "jours"
+  "days": "jours",
+  "nouveau":"NOUVEAU",
+  "pts":"pts",
+  "publier":"Publié",
+  "ancien":"Ancienneté",
+ "le":"le",
+ "dejautilise":"DÉJÀ UTILISÉ",
+ "utiliseLe":"Utilisé le"
 }

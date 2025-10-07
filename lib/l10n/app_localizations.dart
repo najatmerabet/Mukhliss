@@ -1431,6 +1431,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'days'**
   String get days;
+
+  /// No description provided for @nouveau.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get nouveau;
+
+  /// No description provided for @pts.
+  ///
+  /// In en, this message translates to:
+  /// **'pts'**
+  String get pts;
+
+  /// No description provided for @publier.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get publier;
+
+  /// No description provided for @ancien.
+  ///
+  /// In en, this message translates to:
+  /// **'Seniority'**
+  String get ancien;
+
+  /// No description provided for @le.
+  ///
+  /// In en, this message translates to:
+  /// **'THE'**
+  String get le;
+
+  /// No description provided for @dejautilise.
+  ///
+  /// In en, this message translates to:
+  /// **'ALREADY USED'**
+  String get dejautilise;
+
+  /// No description provided for @utiliseLe.
+  ///
+  /// In en, this message translates to:
+  /// **'Used on'**
+  String get utiliseLe;
 }
 
 class _AppLocalizationsDelegate

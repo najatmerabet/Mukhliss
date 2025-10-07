@@ -690,4 +690,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get days => 'أيام';
+
+  @override
+  String get nouveau => 'جديد';
+
+  @override
+  String get pts => 'نقاط';
+
+  @override
+  String get publier => 'تم نشره';
+
+  @override
+  String get ancien => 'الأقدمية';
+
+  @override
+  String get le => 'الـ';
+
+  @override
+  String get dejautilise => 'مستخدم بالفعل';
+
+  @override
+  String get utiliseLe => 'اِسْتَخْدَمَ';
 }

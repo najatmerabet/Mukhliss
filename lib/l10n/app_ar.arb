@@ -222,14 +222,15 @@
 "codeexpiredans":"ينتهي الرمز خلال",
 "entrercode":"أدخل الرمز",
 "nouveaucodeenvoye":"تم إرسال رمز جديد",
-
-
-
-
   "ilYa": "منذ",
-  "days": "أيام"
-
-
+  "days": "أيام",
+ "nouveau":"جديد",
+ "pts":"نقاط",
+  "publier":"تم نشره",
+   "ancien":"الأقدمية",
+   "le":"الـ",
+    "dejautilise":"مستخدم بالفعل",
+ "utiliseLe":"اِسْتَخْدَمَ"
 
 
 

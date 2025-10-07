@@ -168,7 +168,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     
                     // Sous-titre
                     Text(
-                      'Votre carte de fidélité intelligente',
+                    l10n?.votrecartefidelite ??  'Votre carte de fidélité intelligente',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -198,7 +198,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     
                     // Texte de chargement
                     Text(
-                      'Chargement...',
+                 l10n?.chargement ?? 'Chargement...',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

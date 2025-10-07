@@ -715,4 +715,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get utiliseLe => 'Used on';
+
+  @override
+  String get votrecartefidelite => 'Your smart loyalty card';
+
+  @override
+  String get chargement => 'Loading...';
 }

@@ -1473,6 +1473,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Used on'**
   String get utiliseLe;
+
+  /// No description provided for @votrecartefidelite.
+  ///
+  /// In en, this message translates to:
+  /// **'Your smart loyalty card'**
+  String get votrecartefidelite;
+
+  /// No description provided for @chargement.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get chargement;
 }
 
 class _AppLocalizationsDelegate

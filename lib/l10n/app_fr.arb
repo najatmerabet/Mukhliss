@@ -219,10 +219,18 @@
 "renitialisation":"Réinitialisation",
 "codeverifecation":"Code de vérification",
 "envoyerunode":"Nous avons envoyé un code à",
-"verifier":"VÉRIFIER",
 "renvoyercode":"Renvoyer le code",
 "codeexpire":"Code expiré",
 "codeexpiredans":"Code expire dans",
 "entrercode":"Entrez le code",
-"nouveaucodeenvoye":"Nouveau code envoyé"
+"nouveaucodeenvoye":"Nouveau code envoyé",
+"ilYa": "Il y a",
+  "days": "jours",
+  "nouveau":"NOUVEAU",
+  "pts":"pts",
+  "publier":"Publié",
+  "ancien":"Ancienneté",
+ "le":"le",
+ "dejautilise":"DÉJÀ UTILISÉ",
+ "utiliseLe":"Utilisé le"
 }

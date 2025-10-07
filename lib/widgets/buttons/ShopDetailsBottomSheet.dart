@@ -1,11 +1,8 @@
-
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
-
 
 import 'package:mukhliss/models/categories.dart';
 
@@ -103,18 +100,26 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
     super.dispose();
   }
 
-void refreshShopRewards() {
-  final shopId = widget.shop?.id;
-  if (shopId != null && shopId.isNotEmpty) {
-    ref.invalidate(rewardsByMagasinProvider(shopId));
-    
-    // Appeler le callback parent si fourni
-    widget.onRefresh?.call();
-    
-    print("🔄 Rewards rafraîchis pour le magasin: $shopId");
-   
+  void refreshShopRewards() {
+    final shopId = widget.shop?.id;
+    if (shopId != null && shopId.isNotEmpty) {
+      ref.invalidate(rewardsByMagasinProvider(shopId));
+
+      // Appeler le callback parent si fourni
+      widget.onRefresh?.call();
+
+      print("🔄 Rewards rafraîchis pour le magasin: $shopId");
+
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n?.active ?? 'Données actualisées'),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -739,327 +744,433 @@ void refreshShopRewards() {
   }
 
   // 🎫 DESIGN 1: Style Ticket/Coupon
-Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
- 
-  return Container(
-    width: 300,
-    margin: const EdgeInsets.only(right: 16),
-    child: Opacity(
-      opacity: 1.0 ,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors:   [const Color.fromARGB(255, 20, 20, 20), const Color.fromARGB(255, 15, 15, 15)],
-          ),
-          boxShadow: [
-           
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+  Widget _buildCreditCardStyle(Rewards offer, bool isDarkMode, int index) {
+    // Palette de dégradés colorés variés
+    final List<List<Color>> gradients = [
+      [const Color(0xFF667eea), const Color(0xFF764ba2)], // Violet-Purple
+      [const Color(0xFFf093fb), const Color(0xFFF5576c)], // Rose-Rouge
+      [const Color(0xFF4facfe), const Color(0xFF00f2fe)], // Bleu clair
+      [const Color(0xFF43e97b), const Color(0xFF38f9d7)], // Vert-Cyan
+      [const Color(0xFFfa709a), const Color(0xFFfee140)], // Rose-Jaune
+      [const Color(0xFFff9a56), const Color(0xFFff6a88)], // Orange-Coral
+      [const Color(0xFF30cfd0), const Color(0xFF330867)], // Cyan-Violet foncé
+      [const Color(0xFFa8edea), const Color(0xFFfed6e3)], // Pastel multicolore
+    ];
+
+    final selectedGradient = gradients[index % gradients.length];
+
+    return Container(
+      width: 200,
+
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.only(bottom: 60),
+      child: Opacity(
+        opacity: 1.0,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: selectedGradient,
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          child: InkWell(
-            onTap: offer.is_active
-                ? () {
-                    // Navigation vers les détails du cadeau
-                    print('Cadeau ${offer.name} cliqué');
-                    _showRewardDetails(offer);
-                  }
-                : null,
-            borderRadius: BorderRadius.circular(24),
-            child: Stack(
-              children: [
-                Positioned(
-                  bottom: -30,
-                  left: -30,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.05),
-                    ),
-                  ),
-                ),
-
-                // Badge "Épuisé" en overlay
-                if (!offer.is_active)
+            boxShadow: [
+              BoxShadow(
+                color: selectedGradient[0].withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: -5,
+              ),
+              BoxShadow(
+                color: selectedGradient[1].withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap:
+                  offer.is_active
+                      ? () {
+                        print('Cadeau ${offer.name} cliqué');
+                        _showRewardDetails(offer);
+                      }
+                      : null,
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                children: [
+                  // Cercles décoratifs multiples
                   Positioned(
-                    top: 16,
-                    right: 16,
+                    bottom: -20,
+                    left: -20,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.15),
                       ),
-                      child: Text(
-                        'ÉPUISÉ',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -15,
+                    right: -15,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 40,
+                    right: 15,
+                    child: Container(
+                      width: 25,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.2),
                       ),
                     ),
                   ),
 
-                // Contenu principal
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // En-tête avec logo et informations
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Logo du magasin
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child:  Icon(
-                                      Icons.celebration_rounded,
-                                      size: 24,
-                                      color: Colors.yellow[800],
-                                    ),
-                            ),
-                          ),
-                          
-                          const SizedBox(width: 12),
-                          
-                          // Informations du reward
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  offer.name ,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.2,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                
-                                const SizedBox(height: 4),
-                                
-                                Text(
-                                  offer.description ?? 'Description non disponible',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Barre de séparation décorative
-                      Container(
-                        height: 1,
+                  // Badge "Épuisé" en overlay
+                  if (!offer.is_active)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.3),
-                              Colors.white.withOpacity(0.1),
-                              Colors.white.withOpacity(0.3),
-                            ],
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.8),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Text(
+                          'ÉPUISÉ',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 16),
-
-                      // Section points et statut
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          // Points requis
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'POINTS REQUIS',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.2),
-                                    ),
-                                    child: const Icon(
-                                      Icons.stars_rounded,
-                                      color: Colors.amber,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${offer.points_required ?? 0}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1,
-                                    ),
+                  // Contenu principal
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // En-tête avec logo et informations
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Logo du magasin avec effet glassmorphism
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white.withOpacity(0.9),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.5),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 3),
+                                    spreadRadius: 1,
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Icon(
+                                  Icons.celebration_rounded,
+                                  size: 22,
+                                  color: selectedGradient[0],
+                                ),
+                              ),
+                            ),
 
-                          // Informations supplémentaires
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              if (offer.created_at != null)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'AJOUTÉ LE',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 1,
-                                      ),
+                            const SizedBox(width: 10),
+
+                            // Informations du reward
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    offer.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.2,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black26,
+                                          blurRadius: 6,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _formatDate(offer.created_at!),
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              
-                              const SizedBox(height: 8),
-                              
-                              // Badge de disponibilité
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: offer.is_active 
-                                      ? Colors.green.withOpacity(0.2)
-                                      : Colors.red.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: offer.is_active 
-                                        ? Colors.green
-                                        : Colors.red,
-                                    width: 1,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: offer.is_active 
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
+
+                                  const SizedBox(height: 3),
+
+                                  Text(
+                                    offer.description ??
+                                        '',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontSize: 10,
+                                      height: 1.3,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black26,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      offer.is_active ? 'Disponible' : 'Indisponible',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Barre de séparation décorative lumineuse
+                        Container(
+                          height: 1.5,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(1),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.1),
+                                Colors.white.withOpacity(0.6),
+                                Colors.white.withOpacity(0.1),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.3),
+                                blurRadius: 8,
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
 
-                    
-                    ],
+                        const SizedBox(height: 10),
+
+                        // Section points et statut
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            // Points requis
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'POINTS REQUIS',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.amber.shade300,
+                                            Colors.orange.shade400,
+                                          ],
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.amber.withOpacity(
+                                              0.6,
+                                            ),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.stars_rounded,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${offer.points_required ?? 0}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black26,
+                                            blurRadius: 6,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+
+                            // Informations supplémentaires
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (offer.created_at != null)
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'AJOUTÉ LE',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.85),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatDate(offer.created_at!),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                const SizedBox(height: 8),
+
+                                // Badge de disponibilité coloré
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors:
+                                          offer.is_active
+                                              ? [
+                                                const Color(0xFF11998e),
+                                                const Color(0xFF38ef7d),
+                                              ]
+                                              : [
+                                                const Color(0xFFeb3349),
+                                                const Color(0xFFf45c43),
+                                              ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            offer.is_active
+                                                ? Colors.green.withOpacity(0.4)
+                                                : Colors.red.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.white54,
+                                              blurRadius: 4,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        offer.is_active
+                                            ? 'Disponible'
+                                            : 'Indisponible',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// Fonction helper pour formater la date
-String _formatDate(DateTime date) {
-  return '${date.day}/${date.month}/${date.year}';
-}
+  // Fonction helper pour formater la date
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
 
-// Fonction pour afficher les détails du reward (à implémenter)
-void _showRewardDetails(Rewards offer) {
-  // Implémentez la navigation vers les détails du reward
-  print('Détails du reward: ${offer.name}');
-}
+  // Fonction pour afficher les détails du reward (à implémenter)
+  void _showRewardDetails(Rewards offer) {
+    // Implémentez la navigation vers les détails du reward
+    print('Détails du reward: ${offer.name}');
+  }
 
   double _calculateDistance(Position? currentPosition, Store? shop) {
     if (currentPosition == null) return 0;
@@ -1175,3 +1286,4 @@ void _showRewardDetails(Rewards offer) {
     );
   }
 }
+

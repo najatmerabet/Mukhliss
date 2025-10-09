@@ -29,7 +29,7 @@ class GlobalErrorHandler {
     FlutterError.onError = (FlutterErrorDetails details) {
       debugPrint('Flutter Error: ${details.exception}');
       debugPrint('Stack trace: ${details.stack}');
-
+      
       _handleSupabaseAuthError(details.exception);
     };
 
@@ -37,7 +37,7 @@ class GlobalErrorHandler {
     PlatformDispatcher.instance.onError = (error, stack) {
       debugPrint('Platform Error: $error');
       debugPrint('Stack trace: $stack');
-
+      
       _handleSupabaseAuthError(error);
       return true;
     };
@@ -52,19 +52,19 @@ class GlobalErrorHandler {
 
     try {
       final supabase = Supabase.instance.client;
-
+      
       // Écouter les changements d'état d'authentification
       supabase.auth.onAuthStateChange.listen(
         (data) {
           final event = data.event;
           final session = data.session;
-
+          
           debugPrint('🔐 Auth state changed: $event');
-
+          
           if (event == AuthChangeEvent.signedOut && session == null) {
             debugPrint('🚪 User signed out - possibly due to auth error');
           }
-
+          
           if (event == AuthChangeEvent.tokenRefreshed) {
             debugPrint('🔄 Token refreshed successfully');
           }
@@ -84,26 +84,25 @@ class GlobalErrorHandler {
 
   static void _handleSupabaseAuthError(dynamic error) {
     if (error == null) return;
-
+    
     final errorString = error.toString();
-
+    
     // Vérifier si c'est une erreur d'authentification Supabase
     if (errorString.contains('AuthRetryableFetchException') ||
         errorString.contains('Failed host lookup') ||
         errorString.contains('supabase.co') ||
         errorString.contains('refresh_token') ||
         errorString.contains('No address associated with hostname')) {
+      
       debugPrint('🔧 Supabase auth error detected and handled: $errorString');
-
+      
       _notifyAuthError(errorString);
     }
   }
 
   static void _notifyAuthError(String error) {
-    debugPrint(
-      '📡 Auth error notification: Network connectivity issues detected',
-    );
-
+    debugPrint('📡 Auth error notification: Network connectivity issues detected');
+    
     if (scaffoldMessengerKey?.currentState != null) {
       try {
         scaffoldMessengerKey!.currentState!.showSnackBar(
@@ -257,9 +256,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
   void _setupRealtimeCallbacks() {
     _deviceService.onForceLogout = () {
-      debugPrint(
-        '🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate',
-      );
+      debugPrint('🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate');
 
       _showForceLogoutNotification();
       Supabase.instance.client.auth.signOut();
@@ -376,16 +373,12 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
     // ✅ Vérifier d'abord si la langue a été sélectionnée
     final hasSelectedLanguage = await OnboardingService.hasSelectedLanguage();
-
+    
     if (!hasSelectedLanguage) {
-      debugPrint(
-        '🎯 [Main] Langue non sélectionnée - Redirection vers language selection',
-      );
+      debugPrint('🎯 [Main] Langue non sélectionnée - Redirection vers language selection');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && navigatorKey.currentState != null) {
-          navigatorKey.currentState!.pushReplacementNamed(
-            AppRouter.languageSelection,
-          );
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.languageSelection);
         }
       });
       return;
@@ -393,7 +386,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
     // ✅ Vérifier ensuite l'onboarding
     final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
-
+    
     if (!hasSeenOnboarding) {
       debugPrint('🎯 [Main] Onboarding non vu - Redirection vers onboarding');
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -408,7 +401,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     if (data.event == AuthChangeEvent.signedIn) {
       debugPrint('✅ [Main] Utilisateur connecté - Initialisation monitoring');
       await _initializeDeviceMonitoring();
-
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && navigatorKey.currentState != null) {
           navigatorKey.currentState!.pushReplacementNamed(AppRouter.clientHome);
@@ -417,7 +410,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     } else if (data.event == AuthChangeEvent.signedOut) {
       debugPrint('🚪 [Main] Utilisateur déconnecté - Nettoyage');
       _cleanupOnSignOut();
-
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && navigatorKey.currentState != null) {
           navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
@@ -425,7 +418,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       });
     }
   }
-
+  
   void _cleanupOnSignOut() {
     _monitoringInitialized = false;
     _activityTimer?.cancel();

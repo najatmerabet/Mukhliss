@@ -484,7 +484,7 @@ void _showPrivacyPolicy(BuildContext context) {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l10n?.datemiseajour ?? 'Dernière mise à jour: 15/06/2023',
+                        l10n?.datemiseajour ?? 'Dernière mise à jour:',
                         style: TextStyle(
                           fontSize: 14,
                           color:isDarkMode ?AppColors.surface : AppColors.darkGrey50,

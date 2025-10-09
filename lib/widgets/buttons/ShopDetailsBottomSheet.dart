@@ -1286,3 +1286,4 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
     );
   }
 }
+

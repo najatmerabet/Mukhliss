@@ -367,14 +367,7 @@ void refreshShopRewards(Store? shop) {
     
     print("🔄 Rewards rafraîchis pour le magasin: $shopId");
     
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text( 'Données actualisées'),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    
   }
 }
   void _handleStoreSelection(Store? store, Categories? category) {
@@ -667,7 +660,7 @@ void refreshShopRewards(Store? shop) {
       _bottomSheetState = BottomSheetState.none;
     });
     print("============> Refreshing data");
-    
+
   }
 
   void _showArrivalNotification() {

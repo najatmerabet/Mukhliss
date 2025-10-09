@@ -1431,6 +1431,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'days'**
   String get days;
+
+  /// No description provided for @nouveau.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get nouveau;
+
+  /// No description provided for @pts.
+  ///
+  /// In en, this message translates to:
+  /// **'pts'**
+  String get pts;
+
+  /// No description provided for @publier.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get publier;
+
+  /// No description provided for @ancien.
+  ///
+  /// In en, this message translates to:
+  /// **'Seniority'**
+  String get ancien;
+
+  /// No description provided for @le.
+  ///
+  /// In en, this message translates to:
+  /// **'THE'**
+  String get le;
+
+  /// No description provided for @dejautilise.
+  ///
+  /// In en, this message translates to:
+  /// **'ALREADY USED'**
+  String get dejautilise;
+
+  /// No description provided for @utiliseLe.
+  ///
+  /// In en, this message translates to:
+  /// **'Used on'**
+  String get utiliseLe;
+
+  /// No description provided for @votrecartefidelite.
+  ///
+  /// In en, this message translates to:
+  /// **'Your smart loyalty card'**
+  String get votrecartefidelite;
+
+  /// No description provided for @chargement.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get chargement;
+
+  /// No description provided for @min.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get min;
+
+  /// No description provided for @h.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get h;
+
+  /// No description provided for @day.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get day;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks'**
+  String get week;
+
+  /// No description provided for @mois.
+  ///
+  /// In en, this message translates to:
+  /// **'mois'**
+  String get mois;
 }
 
 class _AppLocalizationsDelegate

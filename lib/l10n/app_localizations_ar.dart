@@ -690,4 +690,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get days => 'أيام';
+
+  @override
+  String get nouveau => 'جديد';
+
+  @override
+  String get pts => 'نقاط';
+
+  @override
+  String get publier => 'تم نشره';
+
+  @override
+  String get ancien => 'الأقدمية';
+
+  @override
+  String get le => 'الـ';
+
+  @override
+  String get dejautilise => 'مستخدم بالفعل';
+
+  @override
+  String get utiliseLe => 'اِسْتَخْدَمَ';
+
+  @override
+  String get votrecartefidelite => 'بطاقة الولاء الذكية الخاصة بكم';
+
+  @override
+  String get chargement => 'جاري التحميل...';
+
+  @override
+  String get min => 'دقيقة';
+
+  @override
+  String get h => 'ساعة';
+
+  @override
+  String get day => 'يوم';
+
+  @override
+  String get week => 'أسابيع';
+
+  @override
+  String get mois => 'mois';
 }

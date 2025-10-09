@@ -225,5 +225,20 @@
 "entrercode":"Entrez le code",
 "nouveaucodeenvoye":"Nouveau code envoyé",
 "ilYa": "Il y a",
-  "days": "jours"
+  "days": "jours",
+  "nouveau":"NOUVEAU",
+  "pts":"pts",
+  "publier":"Publié",
+  "ancien":"Ancienneté",
+ "le":"le",
+ "dejautilise":"DÉJÀ UTILISÉ",
+ "utiliseLe":"Utilisé le",
+ "votrecartefidelite":"Votre carte de fidélité intelligente",
+ "chargement":"Chargement...",
+ "min":"min",
+ "h":"h",
+ "day":"jour",
+ "week":"semaines",
+ "mois":"mois"
+
 }

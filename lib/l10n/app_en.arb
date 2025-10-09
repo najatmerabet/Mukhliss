@@ -228,20 +228,22 @@
 "codeexpiredans":"Code expires in",
 "entrercode":"Enter the code",
 "nouveaucodeenvoye":"New code sent",
-
-
-
-
-
-
-
   "ilYa": "ago",
-  "days": "days"
-
-
-
-
-
+  "days": "days",
+ "nouveau":"NEW",
+ "pts":"pts",
+  "publier":"Published",
+   "ancien":"Seniority",
+ "le":"THE",
+  "dejautilise":"ALREADY USED",
+ "utiliseLe":"Used on",
+ "votrecartefidelite":"Your smart loyalty card",
+  "chargement":"Loading...",
+ "min":"min",
+"h":"h",
+"day":"day",
+ "week":"weeks",
+"mois":"mois"
 
 }
 

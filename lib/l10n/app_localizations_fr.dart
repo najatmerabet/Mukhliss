@@ -701,4 +701,46 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get days => 'jours';
+
+  @override
+  String get nouveau => 'NOUVEAU';
+
+  @override
+  String get pts => 'pts';
+
+  @override
+  String get publier => 'Publié';
+
+  @override
+  String get ancien => 'Ancienneté';
+
+  @override
+  String get le => 'le';
+
+  @override
+  String get dejautilise => 'DÉJÀ UTILISÉ';
+
+  @override
+  String get utiliseLe => 'Utilisé le';
+
+  @override
+  String get votrecartefidelite => 'Votre carte de fidélité intelligente';
+
+  @override
+  String get chargement => 'Chargement...';
+
+  @override
+  String get min => 'min';
+
+  @override
+  String get h => 'h';
+
+  @override
+  String get day => 'jour';
+
+  @override
+  String get week => 'semaines';
+
+  @override
+  String get mois => 'mois';
 }

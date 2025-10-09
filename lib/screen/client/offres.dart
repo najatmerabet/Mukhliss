@@ -969,7 +969,7 @@ Widget _buildRewardCardClaimed(ClientOffre reward) {
               Icon(Icons.check_circle, size: 16, color: Colors.white),
               SizedBox(width: 6),
               Text(
-                'DÉJÀ UTILISÉ',
+              L10n?.dejautilise ??  'DÉJÀ UTILISÉ',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -1017,7 +1017,7 @@ Widget _buildRewardCardClaimed(ClientOffre reward) {
               ),
               SizedBox(width: 2),
               Text(
-                'pts',
+               L10n?.pts ?? 'pts',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 10,
@@ -1283,7 +1283,7 @@ Widget _buildRewardCardClaimed(ClientOffre reward) {
                 
                         SizedBox(height: 2),
                         Text(
-                          '${reward.reward.points_required} pts',
+                          '${reward.reward.points_required} ${L10n?.pts ?? 'pts'}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.orange,
@@ -1313,20 +1313,20 @@ String _formatClaimedDate(DateTime date) {
 String _formatTimeAgo(DateTime date) {
   final now = DateTime.now();
   final difference = now.difference(date);
-  
+  final l10n = AppLocalizations.of(context);
   if (difference.inDays == 0) {
     if (difference.inHours == 0) {
-      return '${difference.inMinutes} min';
+      return '${difference.inMinutes} ${l10n?.min} min';
     }
-    return '${difference.inHours} h';
+    return '${difference.inHours} ${l10n?.h ?? 'h'}';
   } else if (difference.inDays == 1) {
-    return '1 jour';
+    return '1 ${l10n?.day ?? 'jour'}';
   } else if (difference.inDays < 7) {
-    return '${difference.inDays} jours';
+    return '${difference.inDays} ${l10n?.days ?? 'jours'}';
   } else if (difference.inDays < 30) {
-    return '${(difference.inDays / 7).floor()} sem';
+    return '${(difference.inDays / 7).floor()} ${l10n?.week ?? 'semaines'}';
   } else {
-    return '${(difference.inDays / 30).floor()} mois';
+    return '${(difference.inDays / 30).floor()} ${l10n?.mois ?? 'mois'}';
   }
 }
 

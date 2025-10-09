@@ -728,4 +728,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chargement => 'Chargement...';
+
+  @override
+  String get min => 'min';
+
+  @override
+  String get h => 'h';
+
+  @override
+  String get day => 'jour';
+
+  @override
+  String get week => 'semaines';
+
+  @override
+  String get mois => 'mois';
 }

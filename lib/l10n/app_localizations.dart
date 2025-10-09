@@ -1159,7 +1159,7 @@ abstract class AppLocalizations {
   /// No description provided for @datemiseajour.
   ///
   /// In en, this message translates to:
-  /// **'Last updated: 08/07/2025'**
+  /// **'Last updated:'**
   String get datemiseajour;
 
   /// No description provided for @premierstep.

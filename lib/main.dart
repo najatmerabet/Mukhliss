@@ -1,4 +1,4 @@
-// main.dart - Version avec GlobalErrorHandler
+// main.dart - Version corrigée (Fixed Supabase initialization order)
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -21,15 +21,15 @@ typedef flutter_ThemeMode = flutter_material.ThemeMode;
 // ✅ Gestionnaire d'erreurs global
 class GlobalErrorHandler {
   static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
+  static bool _supabaseListenerSetup = false;
 
+  // ✅ Initialisation de base (sans Supabase)
   static void initialize() {
     // Capturer les erreurs Flutter non gérées
     FlutterError.onError = (FlutterErrorDetails details) {
-      // Log l'erreur
       debugPrint('Flutter Error: ${details.exception}');
       debugPrint('Stack trace: ${details.stack}');
       
-      // Gérer les erreurs Supabase spécifiques
       _handleSupabaseAuthError(details.exception);
     };
 
@@ -39,14 +39,17 @@ class GlobalErrorHandler {
       debugPrint('Stack trace: $stack');
       
       _handleSupabaseAuthError(error);
-      return true; // Indique que l'erreur a été gérée
+      return true;
     };
-
-    // Écouter spécifiquement les erreurs d'authentification Supabase
-    _setupSupabaseAuthErrorListener();
   }
 
-  static void _setupSupabaseAuthErrorListener() {
+  // ✅ Configuration Supabase (à appeler APRÈS Supabase.initialize())
+  static void setupSupabaseAuthListener() {
+    if (_supabaseListenerSetup) {
+      debugPrint('⚠️ Supabase auth listener already setup');
+      return;
+    }
+
     try {
       final supabase = Supabase.instance.client;
       
@@ -71,6 +74,9 @@ class GlobalErrorHandler {
           _handleSupabaseAuthError(error);
         },
       );
+
+      _supabaseListenerSetup = true;
+      debugPrint('✅ Supabase auth listener setup successfully');
     } catch (e) {
       debugPrint('❌ Failed to setup Supabase auth error listener: $e');
     }
@@ -97,7 +103,6 @@ class GlobalErrorHandler {
   static void _notifyAuthError(String error) {
     debugPrint('📡 Auth error notification: Network connectivity issues detected');
     
-    // Afficher une notification discrète à l'utilisateur
     if (scaffoldMessengerKey?.currentState != null) {
       try {
         scaffoldMessengerKey!.currentState!.showSnackBar(
@@ -130,24 +135,28 @@ class GlobalErrorHandler {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Initialiser le gestionnaire d'erreurs global AVANT tout le reste
+  // ✅ ÉTAPE 1: Initialiser le gestionnaire d'erreurs (sans Supabase)
   GlobalErrorHandler.initialize();
 
   try {
     await dotenv.load(fileName: '.env');
 
+    // ✅ ÉTAPE 2: Initialiser Supabase
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
       anonKey: dotenv.env['SUPABASE_KEY']!,
       authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
       ),
-      realtimeClientOptions: RealtimeClientOptions(
-        timeout:  Duration(seconds: 30),
-      )
+      realtimeClientOptions: const RealtimeClientOptions(
+        timeout: Duration(seconds: 30),
+      ),
     );
 
-    runApp(ProviderScope(child: AuthWrapper()));
+    // ✅ ÉTAPE 3: Configurer l'écouteur Supabase APRÈS l'initialisation
+    GlobalErrorHandler.setupSupabaseAuthListener();
+
+    runApp(const ProviderScope(child: AuthWrapper()));
   } catch (e) {
     print('Erreur d\'initialisation: $e');
     runApp(const ErrorApp());
@@ -186,7 +195,6 @@ class AuthWrapper extends ConsumerWidget {
     final currentLocale = ref.watch(languageProvider);
     final currentThemeMode = ref.watch(themeProvider);
 
-    // ✅ Créer la clé globale pour ScaffoldMessenger
     final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
     GlobalErrorHandler.scaffoldMessengerKey = scaffoldMessengerKey;
 
@@ -199,7 +207,7 @@ class AuthWrapper extends ConsumerWidget {
       supportedLocales: L10n.all,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       locale: currentLocale,
-      scaffoldMessengerKey: scaffoldMessengerKey, // ✅ Ajouter la clé
+      scaffoldMessengerKey: scaffoldMessengerKey,
       home: const AuthStateHandler(),
       onGenerateRoute: AppRouter.generateRoute,
     );
@@ -238,18 +246,15 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
 
     _setupRealtimeCallbacks();
 
-    // ✅ Écoute des changements d'authentification avec gestion d'erreur améliorée
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
       _handleAuthChange,
       onError: (error) {
         debugPrint('❌ Auth subscription error: $error');
-        // L'erreur sera gérée par GlobalErrorHandler
       },
     );
   }
 
   void _setupRealtimeCallbacks() {
-    // Callback pour déconnexion forcée
     _deviceService.onForceLogout = () {
       debugPrint('🚨 [Main] Déconnexion forcée détectée - déconnexion immédiate');
 
@@ -264,7 +269,6 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       }
     };
 
-    // Callback pour notification de déconnexion d'un autre appareil
     _deviceService.onRemoteDisconnect = (deviceId, deviceName) {
       debugPrint('🔔 [Main] Appareil déconnecté à distance: $deviceName');
       _showRemoteDisconnectNotification(deviceName);
@@ -296,7 +300,6 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     } catch (e) {
       debugPrint('❌ [Main] Erreur initialisation monitoring: $e');
       _monitoringInitialized = false;
-      // L'erreur sera gérée par GlobalErrorHandler si c'est une erreur réseau
     }
   }
 
@@ -309,7 +312,6 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
           await _deviceService.updateDeviceActivity();
         } catch (e) {
           debugPrint('❌ [Main] Erreur mise à jour activité: $e');
-          // L'erreur sera gérée par GlobalErrorHandler
         }
       } else {
         timer.cancel();
@@ -363,43 +365,59 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     }
   }
 
-  // Remplacez la méthode _handleAuthChange dans _AuthStateHandlerState
+  void _handleAuthChange(AuthState data) async {
+    if (!mounted) return;
 
-// Dans main.dart - Modifier _handleAuthChange
-void _handleAuthChange(AuthState data) async {
-  if (!mounted) return;
+    debugPrint('🔹 [Main] Auth event: ${data.event}');
+    debugPrint('🔹 [Main] Session: ${data.session?.user.email ?? 'null'}');
 
-  debugPrint('🔹 [Main] Auth event: ${data.event}');
-  debugPrint('🔹 [Main] Session: ${data.session?.user.email ?? 'null'}');
+    // ✅ Vérifier d'abord si la langue a été sélectionnée
+    final hasSelectedLanguage = await OnboardingService.hasSelectedLanguage();
+    
+    if (!hasSelectedLanguage) {
+      debugPrint('🎯 [Main] Langue non sélectionnée - Redirection vers language selection');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.languageSelection);
+        }
+      });
+      return;
+    }
 
-  // ✅ Vérifier d'abord si la langue a été sélectionnée
-  final hasSelectedLanguage = await OnboardingService.hasSelectedLanguage();
-  
-  if (!hasSelectedLanguage) {
-    debugPrint('🎯 [Main] Langue non sélectionnée - Redirection vers language selection');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && navigatorKey.currentState != null) {
-        navigatorKey.currentState!.pushReplacementNamed(AppRouter.languageSelection);
-      }
-    });
-    return;
+    // ✅ Vérifier ensuite l'onboarding
+    final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
+    
+    if (!hasSeenOnboarding) {
+      debugPrint('🎯 [Main] Onboarding non vu - Redirection vers onboarding');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.onboarding);
+        }
+      });
+      return;
+    }
+
+    // ✅ Gérer les événements d'authentification
+    if (data.event == AuthChangeEvent.signedIn) {
+      debugPrint('✅ [Main] Utilisateur connecté - Initialisation monitoring');
+      await _initializeDeviceMonitoring();
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.clientHome);
+        }
+      });
+    } else if (data.event == AuthChangeEvent.signedOut) {
+      debugPrint('🚪 [Main] Utilisateur déconnecté - Nettoyage');
+      _cleanupOnSignOut();
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
+        }
+      });
+    }
   }
-
-  // ✅ Vérifier ensuite l'onboarding
-  final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
-  
-  if (!hasSeenOnboarding) {
-    debugPrint('🎯 [Main] Onboarding non vu - Redirection vers onboarding');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && navigatorKey.currentState != null) {
-        navigatorKey.currentState!.pushReplacementNamed(AppRouter.onboarding);
-      }
-    });
-    return;
-  }
-
-  // ... reste du code existant pour la gestion d'authentification
-}
   
   void _cleanupOnSignOut() {
     _monitoringInitialized = false;
@@ -459,5 +477,4 @@ void _handleAuthChange(AuthState data) async {
       home: const SplashScreen(),
     );
   }
-
 }

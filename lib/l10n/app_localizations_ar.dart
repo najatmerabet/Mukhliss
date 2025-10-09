@@ -546,7 +546,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get politiqueconfidentialite => ' سياسة الخصوصية';
 
   @override
-  String get datemiseajour => 'آخر تحديث: 08/07/2025';
+  String get datemiseajour => 'آخر تحديث: ';
 
   @override
   String get premierstep => '1. جمع البيانات';

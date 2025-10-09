@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 
 import 'package:mukhliss/models/categories.dart';
 
@@ -756,6 +757,7 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
       [const Color(0xFF30cfd0), const Color(0xFF330867)], // Cyan-Violet foncé
       [const Color(0xFFa8edea), const Color(0xFFfed6e3)], // Pastel multicolore
     ];
+    final l10n = AppLocalizations.of(context);
 
     final selectedGradient = gradients[index % gradients.length];
 
@@ -935,8 +937,7 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                                   const SizedBox(height: 3),
 
                                   Text(
-                                    offer.description ??
-                                        '',
+                                    offer.description ?? '',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.95),
                                       fontSize: 10,
@@ -992,7 +993,7 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'POINTS REQUIS',
+                                  l10n?.pointsrequis ?? 'POINTS REQUIS',
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.9),
                                     fontSize: 8,
@@ -1055,30 +1056,29 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                if (offer.created_at != null)
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        'AJOUTÉ LE',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 1,
-                                        ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      l10n?.datemiseajour ?? 'Date de création',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.85),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 1,
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _formatDate(offer.created_at!),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _formatDate(offer.created_at),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
+                                ),
 
                                 const SizedBox(height: 8),
 
@@ -1134,8 +1134,8 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                                       const SizedBox(width: 4),
                                       Text(
                                         offer.is_active
-                                            ? 'Disponible'
-                                            : 'Indisponible',
+                                            ? (l10n?.disponible ?? 'Disponible')
+                                            : (l10n?.inactifs ?? 'Épuisé'),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,

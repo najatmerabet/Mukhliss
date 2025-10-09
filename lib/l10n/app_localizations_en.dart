@@ -549,7 +549,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get politiqueconfidentialite => 'Privacy Policy';
 
   @override
-  String get datemiseajour => 'Last updated: 08/07/2025';
+  String get datemiseajour => 'Last updated:';
 
   @override
   String get premierstep => '1. Data collection';

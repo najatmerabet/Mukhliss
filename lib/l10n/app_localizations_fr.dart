@@ -555,7 +555,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get politiqueconfidentialite => 'Politique de confidentialité';
 
   @override
-  String get datemiseajour => 'Dernière mise à jour: 08/07/2025';
+  String get datemiseajour => 'Dernière mise à jour: ';
 
   @override
   String get premierstep => '1. Collecte des données';

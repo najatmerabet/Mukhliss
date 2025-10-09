@@ -1485,6 +1485,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get chargement;
+
+  /// No description provided for @min.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get min;
+
+  /// No description provided for @h.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get h;
+
+  /// No description provided for @day.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get day;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks'**
+  String get week;
+
+  /// No description provided for @mois.
+  ///
+  /// In en, this message translates to:
+  /// **'mois'**
+  String get mois;
 }
 
 class _AppLocalizationsDelegate

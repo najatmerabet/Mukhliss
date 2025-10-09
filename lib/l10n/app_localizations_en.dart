@@ -721,4 +721,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chargement => 'Loading...';
+
+  @override
+  String get min => 'min';
+
+  @override
+  String get h => 'h';
+
+  @override
+  String get day => 'day';
+
+  @override
+  String get week => 'weeks';
+
+  @override
+  String get mois => 'mois';
 }

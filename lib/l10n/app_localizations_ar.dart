@@ -717,4 +717,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chargement => 'جاري التحميل...';
+
+  @override
+  String get min => 'دقيقة';
+
+  @override
+  String get h => 'ساعة';
+
+  @override
+  String get day => 'يوم';
+
+  @override
+  String get week => 'أسابيع';
+
+  @override
+  String get mois => 'mois';
 }

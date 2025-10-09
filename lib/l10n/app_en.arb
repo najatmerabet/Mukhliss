@@ -238,9 +238,12 @@
   "dejautilise":"ALREADY USED",
  "utiliseLe":"Used on",
  "votrecartefidelite":"Your smart loyalty card",
-  "chargement":"Loading..."
-
-
+  "chargement":"Loading...",
+ "min":"min",
+"h":"h",
+"day":"day",
+ "week":"weeks",
+"mois":"mois"
 
 }
 

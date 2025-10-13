@@ -422,9 +422,19 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                                             ),
                                         loading:
                                             () => _buildLoadingRow(isDarkMode),
-                                        error:
-                                            (_, __) =>
-                                                _buildErrorRow(isDarkMode),
+                                        error: (e, __) {
+                                          print('Erreur points: $e');
+
+                                          // Gestion spécifique selon le type d'erreur
+                                          if (e.toString().contains(
+                                            'no_internet_connection',
+                                          )) {
+                                            return _buildNoInternetRow(
+                                              isDarkMode,
+                                            );
+                                          }
+                                          return _buildErrorRow(isDarkMode);
+                                        },
                                       ),
                                     ),
                                   ],
@@ -697,6 +707,74 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
       ),
     );
   }
+Widget _buildNoInternetRow(bool isDarkMode) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: Colors.orange.withOpacity(0.3),
+        width: 1,
+      ),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          Icons.wifi_off_rounded,
+          color: Colors.orange.shade400,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Points',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Hors ligne',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange.shade400,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Bouton de rafraîchissement optionnel
+        InkWell(
+          onTap: () {
+            // Réessayer de charger les points
+            final clientAsync = ref.read(authProvider).currentUser;
+            ref.invalidate(
+              clientMagazinPointsProvider(
+                Tuple2(clientAsync?.id, widget.shop?.id),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              Icons.refresh_rounded,
+              size: 18,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildFirstLoadState(bool isDarkMode) {
     return SliverToBoxAdapter(
@@ -1286,4 +1364,3 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
     );
   }
 }
-

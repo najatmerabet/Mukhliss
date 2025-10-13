@@ -1,4 +1,4 @@
-// main.dart - Version corrigée
+// main.dart - Version corrigée (Fixed Supabase initialization order)
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -19,12 +19,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // ✅ Gestionnaire d'erreurs global REVISÉ
 class GlobalErrorHandler {
   static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
-  static bool _supabaseInitialized = false;
+  static bool _supabaseListenerSetup = false;
 
-  static void setSupabaseInitialized(bool initialized) {
-    _supabaseInitialized = initialized;
-  }
-
+  // ✅ Initialisation de base (sans Supabase)
   static void initialize() {
     // Capturer les erreurs Flutter non gérées
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -44,9 +41,10 @@ class GlobalErrorHandler {
     };
   }
 
-  static Future<void> _setupSupabaseAuthErrorListener() async {
-    if (!_supabaseInitialized) {
-      debugPrint('⏳ Supabase not initialized yet, delaying auth listener setup');
+  // ✅ Configuration Supabase (à appeler APRÈS Supabase.initialize())
+  static void setupSupabaseAuthListener() {
+    if (_supabaseListenerSetup) {
+      debugPrint('⚠️ Supabase auth listener already setup');
       return;
     }
 
@@ -74,8 +72,9 @@ class GlobalErrorHandler {
           _handleSupabaseAuthError(error);
         },
       );
-      
-      debugPrint('✅ Supabase auth error listener setup completed');
+
+      _supabaseListenerSetup = true;
+      debugPrint('✅ Supabase auth listener setup successfully');
     } catch (e) {
       debugPrint('❌ Failed to setup Supabase auth error listener: $e');
       // Réessayer après un délai
@@ -138,13 +137,13 @@ class GlobalErrorHandler {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Initialiser le gestionnaire d'erreurs global SANS Supabase
+  // ✅ ÉTAPE 1: Initialiser le gestionnaire d'erreurs (sans Supabase)
   GlobalErrorHandler.initialize();
 
   try {
     await dotenv.load(fileName: '.env');
 
-    // ✅ Initialiser Supabase d'abord
+    // ✅ ÉTAPE 2: Initialiser Supabase
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
       anonKey: dotenv.env['SUPABASE_KEY']!,
@@ -153,16 +152,13 @@ void main() async {
       ),
       realtimeClientOptions: const RealtimeClientOptions(
         timeout: Duration(seconds: 30),
-      )
+      ),
     );
 
-    // ✅ Maintenant marquer Supabase comme initialisé
-    GlobalErrorHandler.setSupabaseInitialized(true);
-    
-    // ✅ Configurer l'écouteur d'erreurs d'authentification
-    await GlobalErrorHandler._setupSupabaseAuthErrorListener();
+    // ✅ ÉTAPE 3: Configurer l'écouteur Supabase APRÈS l'initialisation
+    GlobalErrorHandler.setupSupabaseAuthListener();
 
-    runApp(ProviderScope(child: AuthWrapper()));
+    runApp(const ProviderScope(child: AuthWrapper()));
   } catch (e) {
     print('Erreur d\'initialisation: $e');
     runApp(const ErrorApp());
@@ -214,7 +210,6 @@ class AuthWrapper extends ConsumerWidget {
     final currentLocale = ref.watch(languageProvider);
     final currentThemeMode = ref.watch(themeProvider);
 
-    // ✅ Créer la clé globale pour ScaffoldMessenger
     final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
     GlobalErrorHandler.scaffoldMessengerKey = scaffoldMessengerKey;
 
@@ -270,25 +265,12 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     try {
       _setupRealtimeCallbacks();
 
-      // ✅ Maintenant Supabase est initialisé, on peut écouter les changements d'auth
-      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
-        _handleAuthChange,
-        onError: (error) {
-          debugPrint('❌ Auth subscription error: $error');
-        },
-      );
-
-      setState(() {
-        _initialized = true;
-      });
-
-      debugPrint('✅ App initialization completed');
-    } catch (e) {
-      debugPrint('❌ App initialization error: $e');
-      setState(() {
-        _initialized = true; // Même en cas d'erreur, on marque comme initialisé
-      });
-    }
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      _handleAuthChange,
+      onError: (error) {
+        debugPrint('❌ Auth subscription error: $error');
+      },
+    );
   }
 
   void _setupRealtimeCallbacks() {
@@ -434,58 +416,25 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
       return;
     }
 
-    // Gestion normale de l'authentification
-    switch (data.event) {
-      case AuthChangeEvent.initialSession:
-      case AuthChangeEvent.signedIn:
-        if (data.session != null) {
-          debugPrint('✅ [Main] Utilisateur connecté - Initialisation monitoring');
-          await _initializeDeviceMonitoring();
-          
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && navigatorKey.currentState != null) {
-              navigatorKey.currentState!.pushNamedAndRemoveUntil(
-                AppRouter.clientHome,
-                (route) => false,
-              );
-            }
-          });
+    // ✅ Gérer les événements d'authentification
+    if (data.event == AuthChangeEvent.signedIn) {
+      debugPrint('✅ [Main] Utilisateur connecté - Initialisation monitoring');
+      await _initializeDeviceMonitoring();
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.clientHome);
         }
-        break;
-
-      case AuthChangeEvent.signedOut:
-        debugPrint('🚪 [Main] Utilisateur déconnecté');
-        _cleanupOnSignOut();
-        
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && navigatorKey.currentState != null) {
-            navigatorKey.currentState!.pushNamedAndRemoveUntil(
-              AppRouter.login,
-              (route) => false,
-            );
-          }
-        });
-        break;
-
-      case AuthChangeEvent.tokenRefreshed:
-        debugPrint('🔄 [Main] Token rafraîchi');
-        break;
-
-      case AuthChangeEvent.userUpdated:
-        debugPrint('👤 [Main] Utilisateur mis à jour');
-        break;
-
-      case AuthChangeEvent.userDeleted:
-        debugPrint('🗑️ [Main] Utilisateur supprimé');
-        _cleanupOnSignOut();
-        break;
-
-      case AuthChangeEvent.mfaChallengeVerified:
-        debugPrint('🔐 [Main] MFA vérifié');
-        break;
-      case AuthChangeEvent.passwordRecovery:
-        // TODO: Handle this case.
-        throw UnimplementedError();
+      });
+    } else if (data.event == AuthChangeEvent.signedOut) {
+      debugPrint('🚪 [Main] Utilisateur déconnecté - Nettoyage');
+      _cleanupOnSignOut();
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushReplacementNamed(AppRouter.login);
+        }
+      });
     }
   }
   

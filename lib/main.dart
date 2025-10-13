@@ -1,6 +1,5 @@
 // main.dart - Version corrigée (Fixed Supabase initialization order)
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,8 +14,11 @@ import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/services/onboarding_service.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart' as flutter_material show ThemeMode;
 
-// ✅ Gestionnaire d'erreurs global REVISÉ
+typedef flutter_ThemeMode = flutter_material.ThemeMode;
+
+// ✅ Gestionnaire d'erreurs global
 class GlobalErrorHandler {
   static GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
   static bool _supabaseListenerSetup = false;
@@ -77,10 +79,6 @@ class GlobalErrorHandler {
       debugPrint('✅ Supabase auth listener setup successfully');
     } catch (e) {
       debugPrint('❌ Failed to setup Supabase auth error listener: $e');
-      // Réessayer après un délai
-      Future.delayed(const Duration(seconds: 2), () {
-        _setupSupabaseAuthErrorListener();
-      });
     }
   }
 
@@ -94,10 +92,10 @@ class GlobalErrorHandler {
         errorString.contains('Failed host lookup') ||
         errorString.contains('supabase.co') ||
         errorString.contains('refresh_token') ||
-        errorString.contains('No address associated with hostname') ||
-        errorString.contains('SocketException')) {
+        errorString.contains('No address associated with hostname')) {
       
       debugPrint('🔧 Supabase auth error detected and handled: $errorString');
+      
       _notifyAuthError(errorString);
     }
   }
@@ -173,23 +171,10 @@ class ErrorApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 64),
-              const SizedBox(height: 16),
-              Text(
-                'Erreur d\'initialisation',
-                style: TextStyle(fontSize: 24, color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Veuillez redémarrer l\'application',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
+          child: Text(
+            'Erreur d\'initialisation',
+            style: TextStyle(fontSize: 24, color: Colors.red),
+            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -250,7 +235,7 @@ class AuthStateHandler extends ConsumerStatefulWidget {
 class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<AuthState>? _authSubscription;
-  bool _initialized = false; // ✅ Corrigé: maintenant une variable d'instance
+  final bool _initialized = false;
   bool _monitoringInitialized = false;
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;
@@ -258,12 +243,8 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   @override
   void initState() {
     super.initState();
-    _initializeApp();
-  }
 
-  Future<void> _initializeApp() async {
-    try {
-      _setupRealtimeCallbacks();
+    _setupRealtimeCallbacks();
 
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
       _handleAuthChange,
@@ -457,7 +438,7 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
   Widget build(BuildContext context) {
     final currentLocale = ref.watch(languageProvider);
 
-    if (!_initialized) {
+    if (_initialized) {
       return MaterialApp(
         locale: currentLocale,
         supportedLocales: L10n.all,

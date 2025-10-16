@@ -25,12 +25,19 @@ class MyOffersScreen extends ConsumerStatefulWidget {
 }
 
 class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   bool _hasConnection = true;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   bool _isCheckingConnectivity = true;
   late AnimationController _shimmerController;
   late AnimationController _fadeController;
+
+  // Nouveaux états pour les onglets
+  late TabController _tabController;
+  int _currentTabIndex = 0;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -44,6 +51,18 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
       vsync: this,
       duration: Duration(milliseconds: 600),
     )..forward();
+
+    // Initialiser le contrôleur d'onglets
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabSelection);
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
+    }
   }
 
   @override
@@ -51,6 +70,7 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
     _connectivitySubscription?.cancel();
     _shimmerController.dispose();
     _fadeController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -91,6 +111,7 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context);
     final themeMode = ref.watch(themeProvider);
     final isDarkMode = themeMode == AppThemeMode.light;
@@ -98,25 +119,109 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
 
     return Scaffold(
       backgroundColor: isDarkMode ? Color(0xFF0A0E27) : Color(0xFFF8F9FE),
-      body: CustomScrollView(
+      body: NestedScrollView(
         physics: BouncingScrollPhysics(),
-        slivers: [
-          AppBarTypes.offersAppBar(context),
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeController,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: _buildContent(l10n, isDarkMode, clientAsync),
-              ),
-            ),
-          ),
-        ],
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            AppBarTypes.offersAppBar(context),
+            _buildTabBar(l10n, isDarkMode),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildAvailableOffers(l10n, isDarkMode, clientAsync),
+            _buildUsedOffers(l10n, isDarkMode, clientAsync),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildContent(
+  Widget _buildTabBar(AppLocalizations? l10n, bool isDarkMode) {
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      sliver: SliverToBoxAdapter(
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            color: isDarkMode ? Color(0xFF1A1F36) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color:
+                  isDarkMode
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.08),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 16,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Color(0xFF1A1F36) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF6366F1).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor:
+                  isDarkMode ? Colors.white70 : Colors.grey[700],
+              labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              unselectedLabelStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorPadding: EdgeInsets.zero,
+              labelPadding: EdgeInsets.symmetric(horizontal: 16),
+              tabs: [
+                Tab(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text(
+                      l10n?.offredisponible ?? 'Disponibles',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                Tab(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text(
+                      l10n?.offreutilise ?? 'Utilisées',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvailableOffers(
     AppLocalizations? l10n,
     bool isDarkMode,
     User? clientAsync,
@@ -126,9 +231,59 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
     }
 
     if (!_hasConnection) {
-      return Column(
-        children: [_buildNoConnectionHistoryWidget(l10n, isDarkMode)],
-      );
+      return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
+    }
+
+    final rewardsAsync = ref.watch(recentRewardsProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(recentRewardsProvider);
+      },
+      child: rewardsAsync.when(
+        data: (rewards) {
+          if (rewards.isEmpty) {
+            return _buildNoRewardsWidget(l10n, isDarkMode, false);
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(20),
+            physics: BouncingScrollPhysics(),
+            itemCount: rewards.length,
+            itemBuilder: (context, index) {
+              return TweenAnimationBuilder(
+                duration: Duration(milliseconds: 400 + (index * 100)),
+                tween: Tween<double>(begin: 0, end: 1),
+                builder: (context, double value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: _buildRewardCard(rewards[index], isDarkMode),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+        loading: () => _buildLoadingWidget(isDarkMode),
+        error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
+      ),
+    );
+  }
+
+  Widget _buildUsedOffers(
+    AppLocalizations? l10n,
+    bool isDarkMode,
+    User? clientAsync,
+  ) {
+    if (_isCheckingConnectivity) {
+      return _buildConnectivityCheckWidget();
+    }
+
+    if (!_hasConnection) {
+      return _buildNoConnectionHistoryWidget(l10n, isDarkMode);
     }
 
     final clientoffreAsync = ref.watch(
@@ -137,136 +292,52 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
           : FutureProvider((ref) => Future.value([])),
     );
 
-    final rewardsAsync = ref.watch(recentRewardsProvider);
+    return RefreshIndicator(
+      onRefresh: () async {
+        if (clientAsync?.id != null) {
+          ref.invalidate(clientOffresProvider(clientAsync!.id));
+        }
+      },
+      child: clientoffreAsync.when(
+        data: (clientoffre) {
+          if (clientoffre.isEmpty) {
+            return _buildNoRewardsWidget(l10n, isDarkMode, true);
+          }
 
-    return rewardsAsync.when(
-      data:
-          (rewards) => clientoffreAsync.when(
-            data: (clientoffre) {
-              if (rewards.isEmpty && clientoffre.isEmpty) {
-                return Center(
-                  child: _buildNoRewardsWidget(l10n, isDarkMode, false),
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (rewards.isNotEmpty) ...[
-                    _buildSectionHeader(
-                      l10n?.offredisponible ?? 'Offres Disponibles',
-                      Icons.card_giftcard_rounded,
-                      isDarkMode,
-                      Colors.purple,
+          return ListView.builder(
+            padding: EdgeInsets.all(20),
+            physics: BouncingScrollPhysics(),
+            itemCount: clientoffre.length,
+            itemBuilder: (context, index) {
+              return TweenAnimationBuilder(
+                duration: Duration(milliseconds: 400 + (index * 100)),
+                tween: Tween<double>(begin: 0, end: 1),
+                builder: (context, double value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: _buildRewardCardClaimed(
+                        clientoffre[index],
+                        isDarkMode,
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    ...rewards.asMap().entries.map((entry) {
-                      return TweenAnimationBuilder(
-                        duration: Duration(
-                          milliseconds: 400 + (entry.key * 100),
-                        ),
-                        tween: Tween<double>(begin: 0, end: 1),
-                        builder: (context, double value, child) {
-                          return Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: Opacity(
-                              opacity: value,
-                              child: _buildRewardCard(entry.value, isDarkMode),
-                            ),
-                          );
-                        },
-                      );
-                    }),
-                    const SizedBox(height: 32),
-                  ] else
-                    const SizedBox(),
-                  if (clientoffre.isNotEmpty) ...[
-                    _buildSectionHeader(
-                      l10n?.offreutilise ?? 'Offres Utilisées',
-                      Icons.check_circle_rounded,
-                      isDarkMode,
-                      Colors.green,
-                    ),
-                    const SizedBox(height: 20),
-                    ...clientoffre.asMap().entries.map((entry) {
-                      return TweenAnimationBuilder(
-                        duration: Duration(
-                          milliseconds: 400 + (entry.key * 100),
-                        ),
-                        tween: Tween<double>(begin: 0, end: 1),
-                        builder: (context, double value, child) {
-                          return Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: Opacity(
-                              opacity: value,
-                              child: _buildRewardCardClaimed(
-                                entry.value,
-                                isDarkMode,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }),
-                  ] else
-                    const SizedBox(),
-                ],
+                  );
+                },
               );
             },
-            loading: () => _buildLoadingWidget(isDarkMode),
-            error:
-                (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
-          ),
-      loading: () => _buildLoadingWidget(isDarkMode),
-      error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
+          );
+        },
+        loading: () => _buildLoadingWidget(isDarkMode),
+        error: (error, _) => _buildNoConnectionHistoryWidget(l10n, isDarkMode),
+      ),
     );
   }
 
-  Widget _buildSectionHeader(
-    String title,
-    IconData icon,
-    bool isDarkMode,
-    Color color,
-  ) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : Color(0xFF1A1F36),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Les méthodes _buildNoConnectionHistoryWidget, _buildNoRewardsWidget,
+  // _buildLoadingWidget, _buildConnectivityCheckWidget, _buildRewardCard,
+  // _buildRewardCardClaimed, _buildInfoChip, _formatClaimedDate,
+  // _formatTimeAgo, _formatDate, _isNewOffer restent identiques à votre code original
 
   Widget _buildNoConnectionHistoryWidget(
     AppLocalizations? l10n,
@@ -388,72 +459,76 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
     bool isDarkMode,
     bool isUsed,
   ) {
-    return Container(
-      padding: EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors:
-              isDarkMode
-                  ? [Color(0xFF1E2337), Color(0xFF0F1425)]
-                  : [Colors.white, Color(0xFFF8F9FE)],
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors:
+                isDarkMode
+                    ? [Color(0xFF1E2337), Color(0xFF0F1425)]
+                    : [Colors.white, Color(0xFFF8F9FE)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDarkMode ? Colors.white10 : Colors.black12,
+            width: 1,
+          ),
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDarkMode ? Colors.white10 : Colors.black12,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withOpacity(0.2),
-                  AppColors.primary.withOpacity(0.1),
-                ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withOpacity(0.2),
+                    AppColors.primary.withOpacity(0.1),
+                  ],
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: Icon(
+                isUsed ? Icons.history_rounded : Icons.emoji_events_rounded,
+                size: 56,
+                color: AppColors.primary,
+              ),
             ),
-            child: Icon(
-              isUsed ? Icons.history_rounded : Icons.emoji_events_rounded,
-              size: 56,
-              color: AppColors.primary,
+            SizedBox(height: 24),
+            Text(
+              isUsed
+                  ? l10n?.aucunoffre ?? 'Aucune offre utilisée'
+                  : l10n?.aucunoffreutilise ?? 'Aucune récompense disponible',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Color(0xFF1A1F36),
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(height: 24),
-          Text(
-            isUsed
-                ? l10n?.aucunoffre ?? 'Aucune offre utilisée'
-                : l10n?.aucunoffreutilise ?? 'Aucune récompense disponible',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : Color(0xFF1A1F36),
+            SizedBox(height: 8),
+            Text(
+              "Revenez bientôt pour découvrir de nouvelles offres",
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkMode ? Colors.white60 : Colors.black54,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Revenez bientôt pour découvrir de nouvelles offres",
-            style: TextStyle(
-              fontSize: 14,
-              color: isDarkMode ? Colors.white60 : Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLoadingWidget(bool isDarkMode) {
-    return Column(
-      children: List.generate(3, (index) {
+    return ListView.builder(
+      padding: EdgeInsets.all(20),
+      itemCount: 3,
+      itemBuilder: (context, index) {
         return Container(
           margin: EdgeInsets.only(bottom: 16),
           height: 200,
@@ -498,43 +573,49 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
             },
           ),
         );
-      }),
+      },
     );
   }
 
   Widget _buildConnectivityCheckWidget() {
-    return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
+    return Center(
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primary.withOpacity(0.1),
+              AppColors.primary.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+            SizedBox(width: 16),
+            Text(
+              'Vérification de la connexion...',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          ),
-          SizedBox(width: 16),
-          Text(
-            'Vérification de la connexion...',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -733,40 +814,73 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
                               overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: 4),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                            // ✅ AJOUT: Adresse du magasin
+                            if (reward.magasin.adresse != null) ...[
+                              Row(
                                 children: [
                                   Icon(
-                                    Icons.verified,
+                                    Icons.location_on_rounded,
                                     size: 12,
-                                    color: Colors.green,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white54
+                                            : Colors.black45,
                                   ),
                                   SizedBox(width: 4),
-                                  Text(
-                                    'Vérifié',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.w600,
+                                  Expanded(
+                                    child: Text(
+                                      reward.magasin.adresse!.split(',').first,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white54
+                                                : Colors.black45,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
+                            ] else ...[
+                              // Badge "Vérifié" si pas d'adresse
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.verified,
+                                      size: 12,
+                                      color: Colors.green,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Vérifiés',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                     ],
                   ),
+
                   SizedBox(height: 16),
                   Text(
                     reward.name,
@@ -814,18 +928,6 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
                         _buildInfoChip(
                           Icons.calendar_today_rounded,
                           _formatDate(reward.created_at),
-                          isDarkMode,
-                        ),
-                        Container(
-                          width: 1,
-                          height: 30,
-                          color: isDarkMode ? Colors.white10 : Colors.black12,
-                        ),
-                        _buildInfoChip(
-                          Icons.access_time_rounded,
-                          daysAgo == 0
-                              ? L10n?.aujour ?? 'Aujourd\'hui'
-                              : '$daysAgo ${L10n?.days ?? 'j'}',
                           isDarkMode,
                         ),
                       ],
@@ -1039,19 +1141,59 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
                     ),
                     SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        reward.reward.magasin.nom_enseigne ?? 'Magasin',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDarkMode ? Colors.white70 : Colors.black54,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            reward.reward.magasin.nom_enseigne ?? 'Magasin',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isDarkMode ? Colors.white70 : Colors.black54,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // ✅ AJOUT: Adresse du magasin
+                          if (reward.reward.magasin.adresse != null) ...[
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_rounded,
+                                  size: 12,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white54
+                                          : Colors.black45,
+                                ),
+                                SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    reward.reward.magasin.adresse!
+                                        .split(',')
+                                        .first,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color:
+                                          isDarkMode
+                                              ? Colors.white54
+                                              : Colors.black45,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
+
                 SizedBox(height: 16),
                 Text(
                   reward.reward.name,

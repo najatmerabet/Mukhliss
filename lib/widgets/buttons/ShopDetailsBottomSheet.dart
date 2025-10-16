@@ -391,53 +391,60 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
 
                                 const SizedBox(height: 12),
 
-                                // Deuxième ligne - Distance et Points
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildInfoRow(
-                                        icon: Icons.near_me_rounded,
-                                        iconColor: Colors.green,
-                                        title: l10n?.distance ?? 'Distance',
-                                        value:
-                                            distance < 1000
-                                                ? '${distance.toStringAsFixed(0)} m'
-                                                : '${(distance / 1000).toStringAsFixed(1)} km',
-                                        isDarkMode: isDarkMode,
+                                // Deuxième ligne - Distance et Points (CORRIGÉ)
+                                IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      // Distance
+                                      Flexible(
+                                        flex: 1,
+                                        child: _buildInfoRow(
+                                          icon: Icons.near_me_rounded,
+                                          iconColor: Colors.green,
+                                          title: l10n?.distance ?? 'Distance',
+                                          value:
+                                              distance < 1000
+                                                  ? '${distance.toStringAsFixed(0)} m'
+                                                  : '${(distance / 1000).toStringAsFixed(1)} km',
+                                          isDarkMode: isDarkMode,
+                                        ),
                                       ),
-                                    ),
 
-                                    const SizedBox(width: 16),
+                                      const SizedBox(width: 12),
 
-                                    Expanded(
-                                      child: pointsAsync.when(
-                                        data:
-                                            (clientMagazin) => _buildInfoRow(
-                                              icon: Icons.loyalty_rounded,
-                                              iconColor: Colors.amber,
-                                              title: 'Points',
-                                              value:
-                                                  '${clientMagazin?.cumulpoint ?? 0}',
-                                              isDarkMode: isDarkMode,
-                                            ),
-                                        loading:
-                                            () => _buildLoadingRow(isDarkMode),
-                                        error: (e, __) {
-                                          print('Erreur points: $e');
-
-                                          // Gestion spécifique selon le type d'erreur
-                                          if (e.toString().contains(
-                                            'no_internet_connection',
-                                          )) {
-                                            return _buildNoInternetRow(
-                                              isDarkMode,
-                                            );
-                                          }
-                                          return _buildErrorRow(isDarkMode);
-                                        },
+                                      // Points
+                                      Flexible(
+                                        flex: 1,
+                                        child: pointsAsync.when(
+                                          data:
+                                              (clientMagazin) => _buildInfoRow(
+                                                icon: Icons.loyalty_rounded,
+                                                iconColor: Colors.amber,
+                                                title: 'Points',
+                                                value:
+                                                    '${clientMagazin?.cumulpoint ?? 0}',
+                                                isDarkMode: isDarkMode,
+                                              ),
+                                          loading:
+                                              () =>
+                                                  _buildLoadingRow(isDarkMode),
+                                          error: (e, __) {
+                                            print('Erreur points: $e');
+                                            if (e.toString().contains(
+                                              'no_internet_connection',
+                                            )) {
+                                              return _buildNoInternetRow(
+                                                isDarkMode,
+                                              );
+                                            }
+                                            return _buildErrorRow(isDarkMode);
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -640,6 +647,8 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
                     fontSize: 12,
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -675,10 +684,14 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 12),
-          Text(
-            'Chargement...',
-            style: TextStyle(
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          Expanded(
+            child: Text(
+              'Chargement...',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -707,74 +720,68 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
       ),
     );
   }
-Widget _buildNoInternetRow(bool isDarkMode) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: Colors.orange.withOpacity(0.3),
-        width: 1,
+
+  Widget _buildNoInternetRow(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
       ),
-    ),
-    child: Row(
-      children: [
-        Icon(
-          Icons.wifi_off_rounded,
-          color: Colors.orange.shade400,
-          size: 20,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Points',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off_rounded, color: Colors.orange.shade400, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Points',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Hors ligne',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.orange.shade400,
+                const SizedBox(height: 4),
+                Text(
+                  'Hors ligne',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade400,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        // Bouton de rafraîchissement optionnel
-        InkWell(
-          onTap: () {
-            // Réessayer de charger les points
-            final clientAsync = ref.read(authProvider).currentUser;
-            ref.invalidate(
-              clientMagazinPointsProvider(
-                Tuple2(clientAsync?.id, widget.shop?.id),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Icon(
-              Icons.refresh_rounded,
-              size: 18,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ],
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+          // Bouton de rafraîchissement optionnel
+          InkWell(
+            onTap: () {
+              // Réessayer de charger les points
+              final clientAsync = ref.read(authProvider).currentUser;
+              ref.invalidate(
+                clientMagazinPointsProvider(
+                  Tuple2(clientAsync?.id, widget.shop?.id),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                Icons.refresh_rounded,
+                size: 18,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildFirstLoadState(bool isDarkMode) {
     return SliverToBoxAdapter(
@@ -1063,167 +1070,195 @@ Widget _buildNoInternetRow(bool isDarkMode) {
 
                         // Section points et statut
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             // Points requis
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n?.pointsrequis ?? 'POINTS REQUIS',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1,
+                            Flexible(
+                              flex: 1,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    l10n?.pointsrequis ?? 'POINTS REQUIS',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.amber.shade300,
-                                            Colors.orange.shade400,
-                                          ],
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.amber.withOpacity(
-                                              0.6,
-                                            ),
-                                            blurRadius: 8,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.stars_rounded,
-                                        color: Colors.white,
-                                        size: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${offer.points_required ?? 0}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black26,
-                                            blurRadius: 6,
-                                            offset: Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            // Informations supplémentaires
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      l10n?.datemiseajour ?? 'Date de création',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.85),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _formatDate(offer.created_at),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                // Badge de disponibilité coloré
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors:
-                                          offer.is_active
-                                              ? [
-                                                const Color(0xFF11998e),
-                                                const Color(0xFF38ef7d),
-                                              ]
-                                              : [
-                                                const Color(0xFFeb3349),
-                                                const Color(0xFFf45c43),
-                                              ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            offer.is_active
-                                                ? Colors.green.withOpacity(0.4)
-                                                : Colors.red.withOpacity(0.4),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
+                                  const SizedBox(height: 4),
+                                  Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: const BoxDecoration(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.white,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.amber.shade300,
+                                              Colors.orange.shade400,
+                                            ],
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.white54,
-                                              blurRadius: 4,
+                                              color: Colors.amber.withOpacity(
+                                                0.6,
+                                              ),
+                                              blurRadius: 8,
                                               spreadRadius: 1,
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        offer.is_active
-                                            ? (l10n?.disponible ?? 'Disponible')
-                                            : (l10n?.inactifs ?? 'Épuisé'),
-                                        style: const TextStyle(
+                                        child: const Icon(
+                                          Icons.stars_rounded,
                                           color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                                          size: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          '${offer.points_required ?? 0}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black26,
+                                                blurRadius: 6,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // Informations supplémentaires
+                            Flexible(
+                              flex: 1,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n?.datemiseajour ??
+                                            'Date de création',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.85),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 1,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.right,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatDate(offer.created_at),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // Badge de disponibilité coloré
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors:
+                                            offer.is_active
+                                                ? [
+                                                  const Color(0xFF11998e),
+                                                  const Color(0xFF38ef7d),
+                                                ]
+                                                : [
+                                                  const Color(0xFFeb3349),
+                                                  const Color(0xFFf45c43),
+                                                ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color:
+                                              offer.is_active
+                                                  ? Colors.green.withOpacity(
+                                                    0.4,
+                                                  )
+                                                  : Colors.red.withOpacity(0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.white54,
+                                                blurRadius: 4,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            offer.is_active
+                                                ? (l10n?.disponible ??
+                                                    'Disponible')
+                                                : (l10n?.inactifs ?? 'Épuisé'),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -1316,15 +1351,21 @@ Widget _buildNoInternetRow(bool isDarkMode) {
                 size: 28,
               ),
               const SizedBox(width: 12),
-              Text(
-                l10n?.offredisponible ?? 'Offres disponibles',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: isDarkMode ? Colors.white : Colors.black87,
+              // ✅ FIX: Wrappez le texte dans Expanded pour éviter l'overflow
+              Expanded(
+                child: Text(
+                  l10n?.offredisponible ?? 'Offres disponibles',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
+              // Badge du nombre d'offres
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

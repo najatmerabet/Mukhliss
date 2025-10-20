@@ -670,7 +670,7 @@ void refreshShopRewards(Store? shop) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n?.arrivee ?? 'Vous êtes arrivé à ${_selectedShop?.nom_enseigne}',
+          l10n!.arrivee + ' ${_selectedShop?.nom_enseigne}' ,
         ),
         backgroundColor: AppColors.success,
         duration: const Duration(seconds: 5),

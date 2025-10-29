@@ -40,6 +40,7 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isImageLoaded = false;
 
   @override
   void initState() {
@@ -61,6 +62,23 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
     );
 
     _animationController.forward();
+  }
+
+   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Précacher l'image dès que le widget est initialisé
+    _precacheImage();
+  }
+
+  Future<void> _precacheImage() async {
+    await precacheImage(
+      const AssetImage('images/mukhlislogo1.png'),
+      context,
+    );
+    if (mounted) {
+      setState(() => _isImageLoaded = true);
+    }
   }
 
   @override
@@ -173,19 +191,16 @@ class _SignUpClientState extends ConsumerState<ClientSignup>
                           Center(
                             child: Column(
                               children: [
-                                Container(
-                                  child:
-                                  // Fully circular for logo
-                                  Image.asset(
-                                    'images/withoutbg.png', // Path to your logo asset
-                                    width:
-                                        250, // Same size as the previous icon
-                                    height: 250,
-                                    fit:
-                                        BoxFit.contain, // Preserve aspect ratio
-                                  ),
+                                AnimatedOpacity(
+            opacity: _isImageLoaded ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: Image.asset(
+              'images/mukhlislogo1.png',
+              width: 250,
+              height: 250,
+              fit: BoxFit.contain,
+            ),
                                 ),
-
                                 Text(
                                   l10n?.creecompte ??
                                   'Créer un compte',

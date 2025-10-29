@@ -1,4 +1,4 @@
-// splash_screen.dart - Version corrigée
+// splash_screen.dart - L'écran ne s'affiche QUE quand l'image est chargée
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
@@ -17,20 +17,49 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _isReady = false; // ✅ L'écran est prêt à s'afficher
+
   @override
   void initState() {
     super.initState();
-    _navigateToNextScreen();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // ✅ 1. D'abord charger l'image
+      await precacheImage(
+        const AssetImage('images/mukhlislogo1.png'),
+        context,
+      );
+
+      // ✅ 2. Maintenant on peut afficher l'écran
+      if (mounted) {
+        setState(() => _isReady = true);
+      }
+
+      // ✅ 3. Attendre 2 secondes APRÈS l'affichage
+      await Future.delayed(const Duration(seconds: 5));
+
+      // ✅ 4. Naviguer vers l'écran suivant
+      if (mounted) {
+        await _navigateToNextScreen();
+      }
+    } catch (e) {
+      debugPrint('❌ Erreur initialisation: $e');
+      // En cas d'erreur, afficher quand même l'écran
+      if (mounted) {
+        setState(() => _isReady = true);
+        await Future.delayed(const Duration(seconds: 2));
+        await _navigateToNextScreen();
+      }
+    }
   }
 
   Future<void> _navigateToNextScreen() async {
-    // Attendre un peu pour l'animation du splash
-    await Future.delayed(const Duration(seconds: 2));
-    
     if (!mounted) return;
 
     try {
-      // ✅ ÉTAPE 1 : Vérifier d'abord l'onboarding
       final hasSeenOnboarding = await OnboardingService.hasSeenOnboarding();
       
       if (!hasSeenOnboarding) {
@@ -41,7 +70,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      // ✅ ÉTAPE 2 : Si onboarding déjà vu, vérifier l'authentification
       final session = Supabase.instance.client.auth.currentSession;
 
       if (session != null) {
@@ -75,6 +103,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final l10n = AppLocalizations.of(context);
     final isDarkMode = themeMode == AppThemeMode.dark;
     
+    // ✅ SI l'image n'est PAS encore chargée, afficher un écran vide avec la couleur de fond
+    if (!_isReady) {
+      return Scaffold(
+        backgroundColor: isDarkMode 
+            ? AppColors.darkBackground 
+            : AppColors.lightBackground,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode 
+                  ? AppColors.darkGradientscreen 
+                  : AppColors.lightGradient,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // ✅ L'image est chargée, afficher le contenu avec animation
     return Scaffold(
       backgroundColor: isDarkMode 
           ? AppColors.darkBackground 
@@ -108,13 +157,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         return Transform.scale(
                           scale: value,
                           child: Opacity(
-                            opacity: value.clamp(0.0, 1.0),
+                            opacity: value,
                             child: child,
                           ),
                         );
                       },
                       child: Image.asset(
-                        'images/withoutbg.png',
+                        'images/mukhlislogo.png',
                         width: 200,
                         height: 200,
                         errorBuilder: (context, error, stackTrace) {
@@ -166,9 +215,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     
                     const SizedBox(height: 8),
                     
-                    // Sous-titre
                     Text(
-                    l10n?.votrecartefidelite ??  'Votre carte de fidélité intelligente',
+                      l10n?.votrecartefidelite ?? 'Votre carte de fidélité intelligente',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -180,25 +228,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     
                     const SizedBox(height: 48),
                     
-                    // Loading indicator
                     SizedBox(
                       width: 40,
                       height: 40,
                       child: CircularProgressIndicator(
                         strokeWidth: 3,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isDarkMode
-                              ? Colors.grey[400]!
-                              : Colors.white,
+                          isDarkMode ? Colors.grey[400]! : Colors.white,
                         ),
                       ),
                     ),
                     
                     const SizedBox(height: 16),
                     
-                    // Texte de chargement
                     Text(
-                 l10n?.chargement ?? 'Chargement...',
+                      l10n?.chargement ?? 'Chargement...',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

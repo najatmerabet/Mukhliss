@@ -7,7 +7,7 @@ final clientMagazinServiceProvider = Provider<ClientMagazinService>((ref) {
   return ClientMagazinService();
 });
 
-final clientMagazinPointsProvider = FutureProvider.family<ClientMagazin?, Tuple2<String?, String?>>((ref, ids) {
+final clientMagazinPointsProvider = FutureProvider.autoDispose.family<ClientMagazin?, Tuple2<String?, String?>>((ref, ids) {
   final service = ref.read(clientMagazinServiceProvider);
   if (ids.item1 == null || ids.item2 == null) {
     return Future.value(null);

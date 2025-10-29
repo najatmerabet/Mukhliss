@@ -9,8 +9,6 @@ import 'package:mukhliss/utils/error_handler.dart';
 import 'package:mukhliss/utils/form_field_helpers.dart';
 import 'package:mukhliss/utils/snackbar_helper.dart';
 import 'package:mukhliss/utils/validators.dart';
-
-import 'package:mukhliss/providers/langue_provider.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -26,6 +24,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _isImageLoaded = false; // ✅ Contrôle l'affichage de l'image
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ Charger l'image dès l'initialisation
+    _loadImage();
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      await precacheImage(
+        const AssetImage('images/mukhlislogo1.png'),
+        context,
+      );
+      if (mounted) {
+        setState(() => _isImageLoaded = true);
+      }
+    } catch (e) {
+      debugPrint('⚠️ Erreur chargement image: $e');
+      // En cas d'erreur, afficher quand même
+      if (mounted) {
+        setState(() => _isImageLoaded = true);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -47,8 +71,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Navigator.pushReplacementNamed(context, AppRouter.main);
       }
     } catch (e) {
-      // Delegate *all* errors (AuthException, PostgrestException,
-      // SocketException, TimeoutException, anything else) to your handler:
       // ignore: use_build_context_synchronously
       final errorMessage = AuthErrorHandler(context).handle(e);
       if (mounted) {
@@ -66,120 +88,114 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final isDarkMode = themeMode == AppThemeMode.light;
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor:
-                isDarkMode ? AppColors.darkPrimary : AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Réinitialisation par email',
-              style: TextStyle(
-                color: AppColors.purpleDark,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: l10n?.email ?? 'Email',
-                    hintText: 'votre@email.com',
-                    prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.purpleDark),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: AppColors.purpleDark,
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    Validators.validateEmaillogin(value, context);
-                    return null;
-                  },
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? AppColors.darkPrimary : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Réinitialisation par email',
+          style: TextStyle(
+            color: AppColors.purpleDark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: emailController,
+              decoration: InputDecoration(
+                labelText: l10n?.email ?? 'Email',
+                hintText: 'votre@email.com',
+                prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.purpleDark),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.purpleDark.withOpacity(0.7),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppColors.purpleDark,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                Validators.validateEmaillogin(value, context);
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.purpleDark.withOpacity(0.7),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Un code OTP vous sera envoyé par email',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkMode
+                          ? AppColors.surface
+                          : Colors.grey.shade700,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Un code OTP vous sera envoyé par email',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color:
-                              isDarkMode
-                                  ? AppColors.surface
-                                  : Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  l10n?.cancel ?? 'Annuler',
-                  style: TextStyle(
-                    color:
-                        isDarkMode ? AppColors.surface : Colors.grey.shade700,
-                  ),
-                ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n?.cancel ?? 'Annuler',
+              style: TextStyle(
+                color: isDarkMode ? AppColors.surface : Colors.grey.shade700,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (emailController.text.trim().isEmpty ||
-                      !emailController.text.contains('@')) {
-                    Navigator.pop(context);
-                    showErrorSnackbar(
-                      context: context,
-                      message:
-                          l10n?.emailinvalide ??
-                          'Veuillez entrer un email valide',
-                    );
-                    return;
-                  }
-
-                  Navigator.pop(context);
-                  await _sendResetOtpEmail(emailController.text.trim());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purpleDark,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  l10n?.envoiencours ?? 'Envoyer le code',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ],
+            ),
           ),
+          ElevatedButton(
+            onPressed: () async {
+              if (emailController.text.trim().isEmpty ||
+                  !emailController.text.contains('@')) {
+                Navigator.pop(context);
+                showErrorSnackbar(
+                  context: context,
+                  message: l10n?.emailinvalide ?? 'Veuillez entrer un email valide',
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+              await _sendResetOtpEmail(emailController.text.trim());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.purpleDark,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              l10n?.envoiencours ?? 'Envoyer le code',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -192,11 +208,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => OtpVerificationPage(
-                  email: email,
-                  type: OtpVerificationType.passwordReset, // Add this parameter
-                ),
+            builder: (context) => OtpVerificationPage(
+              email: email,
+              type: OtpVerificationType.passwordReset,
+            ),
           ),
         );
       }
@@ -216,6 +231,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final l10n = AppLocalizations.of(context);
     final themeMode = ref.watch(themeProvider);
     final isDarkMode = themeMode == AppThemeMode.light;
+
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -223,18 +239,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [
-                      AppColors.darkWhite,
-                      AppColors.darkGrey50,
-                      AppColors.darkPurpleDark,
-                    ]
-                    : [
-                      AppColors.lightWhite,
-                      AppColors.lightGrey50,
-                      AppColors.lightPurpleDark,
-                    ],
+            colors: isDarkMode
+                ? [
+                    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
+                  ]
+                : [
+                    AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -254,31 +269,62 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          child:
-                          // Fully circular for logo
-                          Image.asset(
-                            'images/withoutbg.png', // Path to your logo asset
-                            width: 250, // Same size as the previous icon
-                            height: 250,
-                            fit: BoxFit.contain, // Preserve aspect ratio
-                          ),
+                        // ✅ Logo qui apparaît avec animation seulement quand il est chargé
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 500),
+                          child: _isImageLoaded
+                              ? TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  duration: const Duration(milliseconds: 800),
+                                  curve: Curves.easeOut,
+                                  builder: (context, value, child) {
+                                    return Transform.scale(
+                                      scale: 0.8 + (0.2 * value),
+                                      child: Opacity(
+                                        opacity: value,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: Image.asset(
+                                    'images/mukhlislogo1.png',
+                                    width: 250,
+                                    height: 250,
+                                    fit: BoxFit.contain,
+                                    key: const ValueKey('logo'),
+                                  ),
+                                )
+                              : SizedBox(
+                                  width: 250,
+                                  height: 250,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.purpleDark,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  key: const ValueKey('loading'),
+                                ),
                         ),
+
+                        const SizedBox(height: 16),
 
                         Text(
                           l10n?.welcome ?? 'Bienvenue',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.purpleDark,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.purpleDark,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          l10n?.connectezvous ??
-                              'Connectez-vous pour continuer',
-                          style: Theme.of(context).textTheme.bodyLarge
+                          l10n?.connectezvous ?? 'Connectez-vous pour continuer',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
                               ?.copyWith(color: Colors.grey.shade600),
                         ),
                       ],
@@ -290,20 +336,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   // Formulaire de connexion
                   Form(
                     key: _formKey,
-
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Label Email
                         AppFormFields.buildModernTextField(
                           context: context,
                           controller: _emailController,
                           label: l10n?.email ?? 'Email',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          validator:
-                              (value) =>
-                                  Validators.validateEmaillogin(value, context),
+                          validator: (value) =>
+                              Validators.validateEmaillogin(value, context),
                           hintText: 'votre@email.com',
                         ),
                         const SizedBox(height: 24),
@@ -313,21 +356,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           controller: _passwordController,
                           label: l10n?.password ?? 'Mot de passe',
                           isObscure: _obscurePassword,
-                          onToggleVisibility:
-                              () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
-                          validator:
-                              (value) =>
-                                  Validators.validatePassword(value, context),
+                          onToggleVisibility: () =>
+                              setState(() => _obscurePassword = !_obscurePassword),
+                          validator: (value) =>
+                              Validators.validatePassword(value, context),
                           hintText: '••••••••',
                         ),
-                        // Mot de passe oublié
+
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed:
-                                _isLoading ? null : _showEmailResetDialog,
+                            onPressed: _isLoading ? null : _showEmailResetDialog,
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.only(top: 4, bottom: 8),
                               visualDensity: VisualDensity.compact,
@@ -345,7 +384,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                         const SizedBox(height: 32),
 
-                        // Bouton de connexion
                         SizedBox(
                           width: double.infinity,
                           height: 55,
@@ -358,46 +396,39 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              shadowColor: AppColors.purpleDark.withOpacity(
-                                0.4,
-                              ),
+                              shadowColor: AppColors.purpleDark.withOpacity(0.4),
                             ),
-                            child:
-                                _isLoading
-                                    ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                        strokeWidth: 2.5,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
                                       ),
-                                    )
-                                    : Text(
-                                      l10n?.connecter ?? 'Se connecter',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
+                                      strokeWidth: 2.5,
                                     ),
+                                  )
+                                : Text(
+                                    l10n?.connecter ?? 'Se connecter',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
 
                         const SizedBox(height: 24),
 
-                        // Séparateur
                         Row(
                           children: [
                             Expanded(
                               child: Divider(color: Colors.grey.shade300),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 l10n?.ou ?? 'ou',
                                 style: TextStyle(
@@ -414,12 +445,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                         const SizedBox(height: 24),
 
-                        // Boutons de connexion sociale
                         Center(
                           child: _buildSocialButton(
                             imagePath: 'images/google_logo.png',
-                            label:
-                                l10n?.connecteravecgoogle ??
+                            label: l10n?.connecteravecgoogle ??
                                 'Se connecter avec Google',
                             onPressed: () async {
                               setState(() => _isLoading = true);
@@ -427,7 +456,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 await ref.read(authProvider).signInWithGoogle();
                                 if (mounted) {
                                   Navigator.pushReplacementNamed(
-                                    // ignore: use_build_context_synchronously
                                     context,
                                     AppRouter.main,
                                   );
@@ -435,10 +463,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               } catch (e) {
                                 if (mounted) {
                                   showErrorSnackbar(
-                                    // ignore: use_build_context_synchronously
                                     context: context,
-                                    message:
-                                        'Erreur de connexion: ${e.toString()}',
+                                    message: 'Erreur de connexion: ${e.toString()}',
                                   );
                                 }
                               } finally {
@@ -450,24 +476,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        // Inscription
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Expanded(
-                              // Add this
                               child: Text(
                                 l10n?.pasdecompte ?? 'Pas encore de compte ?',
                                 style: TextStyle(
-                                  color:
-                                      isDarkMode
-                                          ? AppColors.lightGrey50
-                                          : AppColors.darkGrey50,
+                                  color: isDarkMode
+                                      ? AppColors.lightGrey50
+                                      : AppColors.darkGrey50,
                                   fontSize: 15,
                                 ),
-                                textAlign:
-                                    TextAlign
-                                        .center, // Add this to center the text
+                                textAlign: TextAlign.center,
                               ),
                             ),
                             TextButton(
@@ -483,10 +505,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               child: Text(
                                 l10n?.creecompte ?? 'Créer un compte',
                                 style: TextStyle(
-                                  color:
-                                      isDarkMode
-                                          ? AppColors.lightPrimary
-                                          : AppColors.darkPrimary,
+                                  color: isDarkMode
+                                      ? AppColors.lightPrimary
+                                      : AppColors.darkPrimary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                 ),
@@ -509,7 +530,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildSocialButton({
     required String imagePath,
     required String label,
-    required Function() onPressed, // Accepts both sync and async functions
+    required Function() onPressed,
     Color? backgroundColor,
   }) {
     return SizedBox(

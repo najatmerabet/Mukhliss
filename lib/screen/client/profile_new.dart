@@ -41,6 +41,10 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+    precacheImage(AssetImage('images/mukhlislogo1.png'), context);
+  });
+
   }
 
   @override
@@ -839,7 +843,7 @@ void _showAbout() {
   final themeMode = ref.watch(themeProvider);
   final l10n = AppLocalizations.of(context);
   final isDarkMode = themeMode == AppThemeMode.light;
-  
+   precacheImage(AssetImage('images/mukhlislogo1.png'), context);
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -886,7 +890,7 @@ void _showAbout() {
                                 height: 220,
                                
                                child: Image.asset(
-  isDarkMode ? 'images/withoutbackgroundwhite.png' : 'images/withoutbg.png',
+  isDarkMode ? 'images/mukhlislogo1.png' : 'images/mukhlislogo1.png',
   width: 240,
   height: 240,
   fit: BoxFit.cover,
@@ -992,6 +996,7 @@ void _showAbout() {
     ),
   );
 }
+
 
 // Fonction helper pour créer les cartes d'information
 Widget _buildInfoCard({

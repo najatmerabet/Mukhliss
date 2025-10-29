@@ -9,7 +9,7 @@ version: 1.0.0+1
 flutter_icons:
   android: true
   ios: true
-  image_path: "images/mukhlislogo.png"
+  image_path: "images/mukhlis1.png"
 
 environment:
   sdk: ^3.7.2
@@ -61,6 +61,11 @@ flutter:
     - images/facbook.jpeg
     - images/offer_pattern.png
     - images/withoutbackgroundwhite.png
+    - images/mukhlis.png
+    - images/mukhlis1.png
+    - images/mukhlislogo.png
+    - images/mukhlislogo1.png
+    - images/placeholder.jpg
 
   # Fonts configuration
   fonts:

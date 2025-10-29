@@ -86,6 +86,16 @@ void _loadMoreStores() {
       storesNotifier.loadMoreStores();
     }
   }
+
+  void _refreshStorePoints(Store store) {
+  final clientAsync = ref.watch(authProvider).currentUser;
+  if (clientAsync?.id != null && store.id != null) {
+    // ✅ Invalider le cache pour forcer le rechargement
+    ref.invalidate(clientMagazinPointsProvider(Tuple2(clientAsync!.id, store.id)));
+    print('🔄 Points rafraîchis pour client:${clientAsync.id}, magasin:${store.id}');
+  }
+}
+
  Widget _buildLoadingIndicator() {
     final storesNotifier = ref.read(storesListProvider.notifier);
     
@@ -474,6 +484,8 @@ Widget _buildStoreItem({ required BuildContext context,
       color: Colors.transparent,
       child: InkWell(
         onTap: ()  {
+          _refreshStorePoints(store); // Rafraîchir les points avant de sélectionner le magasin
+
       if (onStoreSelected != null) {
           onStoreSelected(store, _selectedCategory);
         }

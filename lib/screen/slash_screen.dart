@@ -155,15 +155,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       curve: Curves.easeOutBack,
                       builder: (context, value, child) {
                         return Transform.scale(
-                          scale: value,
+                          scale:  value.clamp(0.0, 1.0),
                           child: Opacity(
-                            opacity: value,
+                            opacity: value.clamp(0.0, 1.0),
                             child: child,
                           ),
                         );
                       },
                       child: Image.asset(
-                        'images/mukhlislogo.png',
+                        'images/mukhlislogo1.png',
                         width: 200,
                         height: 200,
                         errorBuilder: (context, error, stackTrace) {

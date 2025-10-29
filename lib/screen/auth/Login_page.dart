@@ -24,13 +24,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _isImageLoaded = false; // ✅ Contrôle l'affichage de l'image
+  bool _isImageLoaded = false;
+  bool _hasStartedLoading = false; // ✅ Pour éviter les appels multiples
 
   @override
-  void initState() {
-    super.initState();
-    // ✅ Charger l'image dès l'initialisation
-    _loadImage();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ Charger l'image UNE SEULE FOIS quand le context est disponible
+    if (!_hasStartedLoading) {
+      _hasStartedLoading = true;
+      _loadImage();
+    }
   }
 
   Future<void> _loadImage() async {
@@ -44,7 +48,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
     } catch (e) {
       debugPrint('⚠️ Erreur chargement image: $e');
-      // En cas d'erreur, afficher quand même
       if (mounted) {
         setState(() => _isImageLoaded = true);
       }
@@ -269,63 +272,78 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Center(
                     child: Column(
                       children: [
-                        // ✅ Logo qui apparaît avec animation seulement quand il est chargé
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 500),
-                          child: _isImageLoaded
-                              ? TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: 0.0, end: 1.0),
-                                  duration: const Duration(milliseconds: 800),
-                                  curve: Curves.easeOut,
-                                  builder: (context, value, child) {
-                                    return Transform.scale(
-                                      scale: 0.8 + (0.2 * value),
-                                      child: Opacity(
-                                        opacity: value,
-                                        child: child,
+                        // ✅ Logo - N'affiche QUE quand chargé
+                        SizedBox(
+                          width: 250,
+                          height: 250,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            child: _isImageLoaded
+                                ? TweenAnimationBuilder<double>(
+                                    key: const ValueKey('logo-loaded'),
+                                    tween: Tween(begin: 0.0, end: 1.0),
+                                    duration: const Duration(milliseconds: 600),
+                                    curve: Curves.easeOutBack,
+                                    builder: (context, value, child) {
+                                      return Transform.scale(
+                                           scale: 0.7 + (0.3 * value.clamp(0.0, 1.0)),
+                                        child: Opacity(
+                                          opacity: value.clamp(0.0, 1.0),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    child: Image.asset(
+                                      'images/mukhlislogo1.png',
+                                      width: 250,
+                                      height: 250,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                : Center(
+                                    key: const ValueKey('logo-loading'),
+                                    child: SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: CircularProgressIndicator(
+                                        color: AppColors.purpleDark.withOpacity(0.6),
+                                        strokeWidth: 3,
                                       ),
-                                    );
-                                  },
-                                  child: Image.asset(
-                                    'images/mukhlislogo1.png',
-                                    width: 250,
-                                    height: 250,
-                                    fit: BoxFit.contain,
-                                    key: const ValueKey('logo'),
-                                  ),
-                                )
-                              : SizedBox(
-                                  width: 250,
-                                  height: 250,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: AppColors.purpleDark,
-                                      strokeWidth: 2,
                                     ),
                                   ),
-                                  key: const ValueKey('loading'),
-                                ),
+                          ),
                         ),
 
                         const SizedBox(height: 16),
 
-                        Text(
-                          l10n?.welcome ?? 'Bienvenue',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.purpleDark,
+                        // ✅ Texte qui apparaît après l'image
+                        AnimatedOpacity(
+                          opacity: _isImageLoaded ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 400),
+                          child: Column(
+                            children: [
+                              Text(
+                                l10n?.welcome ?? 'Bienvenue',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.purpleDark,
+                                    ),
                               ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n?.connectezvous ?? 'Connectez-vous pour continuer',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(color: Colors.grey.shade600),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n?.connectezvous ?? 'Connectez-vous pour continuer',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

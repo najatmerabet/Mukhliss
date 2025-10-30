@@ -36,6 +36,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   final TextEditingController _addressController = TextEditingController();
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
+  
 
   @override
   void initState() {
@@ -292,6 +293,8 @@ Future<void> _loadUserData() async {
 
   Widget _buildActionButtons() {
     final l10n = AppLocalizations.of(context);
+      final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return Row(
       children: [
         Expanded(
@@ -301,6 +304,7 @@ Future<void> _loadUserData() async {
             subtitle: l10n?.voir ??'Voir et modifier',
             buttonText: l10n?.gerer ?? 'Gérer',
             onPressed: () => _showUserInfo(),
+            isDark: isDarkMode
           ),
         ),
       
@@ -314,11 +318,12 @@ Future<void> _loadUserData() async {
     required String subtitle,
     required String buttonText,
     required VoidCallback onPressed,
+   required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
         boxShadow: [
@@ -362,8 +367,8 @@ Future<void> _loadUserData() async {
               ),
               child: Text(
                 buttonText,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:  TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -377,30 +382,34 @@ Future<void> _loadUserData() async {
 
   Widget _buildMenuItems() {
      final l10n = AppLocalizations.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return Column(
       children: [
     
                _buildMenuItem(
           icon: Icons.person_outline,
-
           title:l10n?.info ?? 'Informations ',
           onTap: () => _showUserInfo(),
+          isDarkMode: isDarkMode,
         ),
         _buildMenuItem(
           icon: Icons.settings_outlined,
-
           title:l10n?.parametre ?? 'Paramètres',
           onTap: () => _showNotificationSettings(),
+          isDarkMode: isDarkMode,
         ),
         _buildMenuItem(
           icon: Icons.help_outline,
           title: l10n?.aide ??'Aide et Support',
           onTap: () => _showSupport(),
+          isDarkMode: isDarkMode,
         ),
         _buildMenuItem(
           icon: Icons.info_outline,
           title:l10n?.apropos ?? 'À propos',
           onTap: () => _showAbout(),
+          isDarkMode: isDarkMode,
         ),
         const SizedBox(height: 10),
         _buildMenuItem(
@@ -408,6 +417,7 @@ Future<void> _loadUserData() async {
           title: l10n?.deconection ?? 'Se Déconnecter',
           isLogout: true,
           onTap: () => _showLogoutDialog(context, ref),
+          isDarkMode: isDarkMode,
         ),
       ],
     );
@@ -418,11 +428,12 @@ Future<void> _loadUserData() async {
     required String title,
     required VoidCallback onTap,
     bool isLogout = false,
+    required bool isDarkMode,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:
@@ -445,7 +456,7 @@ Future<void> _loadUserData() async {
           ),
           child: Icon(
             icon,
-            color: isLogout ? Colors.red : Colors.grey[700],
+            color: isLogout ? Colors.red : (isDarkMode ? Colors.white : Colors.black87),
             size: 20,
           ),
         ),
@@ -454,13 +465,13 @@ Future<void> _loadUserData() async {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: isLogout ? Colors.red : Colors.black87,
+            color: isLogout ? Colors.red : (isDarkMode ? Colors.white : Colors.black87),
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey[400],
+          color: isDarkMode ? Colors.white : Colors.grey[400],
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -560,7 +571,7 @@ Connectivity status:
                       if (!_isEditing)
                         IconButton(
                           icon: Icon(Icons.edit),
-                          color: canEdit ? AppColors.surface : Colors.grey,
+                          color: isDarkMode ? Colors.white: AppColors.darkSurface,
                           onPressed: () async {
                             // Vérification active de la connexion
                           //   final result = await Connectivity().checkConnectivity();
@@ -592,7 +603,7 @@ Connectivity status:
                     child: SingleChildScrollView(
                       child: Column(
                         children: _isEditing 
-                            ? _buildEditableFields(l10n, context)
+                            ? _buildEditableFields(l10n, context,isDarkMode)
                             : _buildReadOnlyFields(l10n),
                       ),
                     ),
@@ -690,7 +701,7 @@ void _showNoConnectionSnackbar() {
   );
 }
 
-List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) {
+List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context, bool isDarkMode) {
   return [
     AppFormFields.buildModernTextField(
       controller: _firstNameController,
@@ -698,6 +709,7 @@ List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) 
       icon: Icons.person_outline,
       validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
       context: context,
+      isDarkMode: isDarkMode,
     ),
     const SizedBox(height: 16),
    AppFormFields.buildModernTextField(
@@ -706,6 +718,7 @@ List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) 
       icon: Icons.person_outline,
       validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
       context: context,
+      isDarkMode: isDarkMode,
     ),
        const SizedBox(height: 16),
     AppFormFields.buildModernTextField(
@@ -714,6 +727,7 @@ List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) 
       icon: Icons.email_outlined,
       validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
       context: context,
+      isDarkMode: isDarkMode,
     ),
            const SizedBox(height: 16),
     AppFormFields.buildModernTextField(
@@ -722,6 +736,7 @@ List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) 
       icon: Icons.location_on_outlined,
       validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
       context: context,
+      isDarkMode: isDarkMode,
     ),
            const SizedBox(height: 16),
     AppFormFields.buildModernTextField(
@@ -730,6 +745,7 @@ List<Widget> _buildEditableFields(AppLocalizations? l10n, BuildContext context) 
       icon: Icons.phone_outlined,
       validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
       context: context,
+      isDarkMode: isDarkMode,
     ),
     
   ];
@@ -746,6 +762,7 @@ List<Widget> _buildReadOnlyFields(AppLocalizations? l10n) {
 }
 
 Widget _buildSaveButton(AppLocalizations? l10n) {
+  final isDarkMode = ref.watch(themeProvider) == AppThemeMode.light;
   return SizedBox(
     width: double.infinity,
     child: ElevatedButton(
@@ -753,20 +770,23 @@ Widget _buildSaveButton(AppLocalizations? l10n) {
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.primary,
       ),
       child: _isLoading
           ? const CircularProgressIndicator()
-          : Text(l10n?.sauvgarder ?? 'Sauvegarder'),
+          : Text(l10n?.sauvgarder ?? 'Sauvegarder', style: TextStyle(color: isDarkMode ? Colors.white : Colors.black)),
     ),
   );
 }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final isDarkMode = ref.watch(themeProvider) == AppThemeMode.light;
+    bool isDark = isDarkMode;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: isDark ? Colors.black : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
@@ -782,7 +802,7 @@ Widget _buildSaveButton(AppLocalizations? l10n) {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: isDarkMode ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -792,7 +812,7 @@ Widget _buildSaveButton(AppLocalizations? l10n) {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: value.isEmpty ? Colors.grey[400] : Colors.black87,
+                    color: isDarkMode ? Colors.white : (value.isEmpty ? Colors.white : Colors.black87),
                   ),
                 ),
               ],
@@ -843,7 +863,7 @@ void _showAbout() {
   final themeMode = ref.watch(themeProvider);
   final l10n = AppLocalizations.of(context);
   final isDarkMode = themeMode == AppThemeMode.light;
-   precacheImage(AssetImage('images/mukhlislogo1.png'), context);
+   precacheImage(AssetImage(isDarkMode ? 'images/whitemukhlislogo.png' : 'images/mukhlislogo1.png'), context);
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -890,7 +910,7 @@ void _showAbout() {
                                 height: 220,
                                
                                child: Image.asset(
-  isDarkMode ? 'images/mukhlislogo1.png' : 'images/mukhlislogo1.png',
+  isDarkMode ? 'images/whitemukhlislogo.png' : 'images/mukhlislogo1.png',
   width: 240,
   height: 240,
   fit: BoxFit.cover,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 
 class AppFormFields {
+  
   static Widget buildModernTextField({
     required BuildContext context,
     required TextEditingController controller,
@@ -14,6 +15,7 @@ class AppFormFields {
     int maxLines = 1,
     bool enabled = true,
     String? hintText,
+    bool isDarkMode=false ,
   }) {
     
     
@@ -25,7 +27,7 @@ class AppFormFields {
           child: Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade700,
+              color: isDarkMode ? Colors.white : Colors.black,
               fontWeight: FontWeight.w500,
               fontSize: 14,
             ),
@@ -40,7 +42,7 @@ class AppFormFields {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: enabled ? Colors.grey.shade900 : Colors.grey.shade600,
+            color:isDarkMode? (enabled ? Colors.white : Colors.grey.shade600) : (enabled ? Colors.black : Colors.grey.shade600),
           ),
           decoration: InputDecoration(
             prefixIcon: Icon(
@@ -49,7 +51,7 @@ class AppFormFields {
             ),
             hintText: hintText,
             filled: true,
-            fillColor: Colors.white.withOpacity(0.7),
+            fillColor: isDarkMode ? const Color.fromARGB(255, 10, 10, 10) : Colors.white.withOpacity(0.7),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

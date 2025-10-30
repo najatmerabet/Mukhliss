@@ -115,7 +115,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header Card
-                        _buildHeaderCard(),
+                        _buildHeaderCard(ref),
                         SizedBox(height: 24),
                         
                         // Priority Selection
@@ -135,7 +135,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
                         SizedBox(height: 30),
                         
                         // Submit Button
-                        _buildSubmitButton(),
+                        _buildSubmitButton(ref),
                       ],
                     ),
                   ),
@@ -152,21 +152,22 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
     );
   }
 
-  Widget _buildHeaderCard() {
+  Widget _buildHeaderCard(WidgetRef ref) {
       final l10n = AppLocalizations.of(context);
+      final isDarkMode = ref.watch(themeProvider) == AppThemeMode.light;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
+          colors: isDarkMode ? [const Color.fromARGB(255, 77, 78, 82), const Color.fromARGB(255, 32, 32, 32)] : [AppColors.secondary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.purpleDark,
+            color: isDarkMode ? AppColors.darkBackground : AppColors.purpleDark,
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -215,7 +216,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color:isDarkMode ? AppColors.surface :AppColors.darkGrey50,
+            color:isDarkMode ? AppColors.surface :AppColors.darkBackground,
           ),
         ),
         SizedBox(height: 12),
@@ -236,10 +237,10 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
                   margin: EdgeInsets.only(right: 8),
                   padding: EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? color :AppColors.surface,
+                    color: isSelected ? color : isDarkMode ? AppColors.darkBackground : AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? color : Colors.grey[300]!,
+                      color: isSelected ? color : isDarkMode ? Colors.grey[700]! : const Color.fromARGB(255, 204, 201, 201),
                       width: 2,
                     ),
                     boxShadow: isSelected ? [
@@ -254,7 +255,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
                     child: Text(
                       priority,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.grey[700],
+                        color: isSelected ? Colors.white : isDarkMode ? Colors.white : Colors.black,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         fontSize: 12,
                       ),
@@ -269,106 +270,148 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
     );
   }
 
-  Widget _buildCategorySelector(WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
-    final isDarkMode = themeMode == AppThemeMode.light;
-    final l10n = AppLocalizations.of(context);
+Widget _buildCategorySelector(WidgetRef ref) {
+  final themeMode = ref.watch(themeProvider);
+  final isDarkMode = themeMode == AppThemeMode.light;
+  final l10n = AppLocalizations.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-        l10n?.categoie ??  "Catégorie",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color:isDarkMode ? AppColors.surface : AppColors.darkGrey50,
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        l10n?.categoie ?? "Catégorie",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: isDarkMode ? AppColors.surface : Colors.black,
+        ),
+      ),
+      SizedBox(height: 12),
+      Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey.shade900 : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey.shade700 : Color.fromARGB(255, 204, 201, 201)
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _selectedCategory,
+            isExpanded: true,
+            dropdownColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
+            icon: Icon(
+              Icons.keyboard_arrow_down, 
+              color: isDarkMode ? Colors.white : Colors.deepPurple
+            ),
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black, // Couleur du texte sélectionné
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            items: _categories.map((category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(
+                  category,
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white : Colors.black, // Couleur des items dans la liste
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedCategory = value!;
+              });
+            },
           ),
         ),
-        SizedBox(height: 12),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
+      ),
+    ],
+  );
+}
+
+Widget _buildSubjectField(WidgetRef ref) {
+  final l10n = AppLocalizations.of(context);
+  final themeMode = ref.watch(themeProvider);
+  final isDarkMode = themeMode == AppThemeMode.light;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        l10n?.sujet ?? "Sujet",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: isDarkMode ? AppColors.surface : Colors.black,
+        ),
+      ),
+      SizedBox(height: 12),
+      TextFormField(
+        controller: _subjectController,
+        style: TextStyle(
+          color: isDarkMode ? Colors.white : Colors.black, // Couleur du texte saisi
+        ),
+        decoration: InputDecoration(
+          hintText: l10n?.resume ?? "Résumé de votre problème",
+          hintStyle: TextStyle(
+            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+          ),
+          prefixIcon: Icon(
+            Icons.title, 
+            color: isDarkMode ? Colors.grey.shade400 : Colors.deepPurple
+          ),
+          filled: true,
+          fillColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 5,
-                offset: Offset(0, 2),
-              ),
-            ],
+            borderSide: BorderSide.none,
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedCategory,
-              isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down, color: Colors.deepPurple),
-              items: _categories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value!;
-                });
-              },
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade400,
+              width: 1,
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubjectField(WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final themeMode = ref.watch(themeProvider);
-    final isDarkMode = themeMode == AppThemeMode.light;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n?.sujet ?? "Sujet",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color:isDarkMode ? AppColors.surface : AppColors.darkGrey50,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: isDarkMode ? AppColors.primary : AppColors.darkPurpleDark,
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: AppColors.error,
+              width: 1,
+            ),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: AppColors.error,
+              width: 2,
+            ),
           ),
         ),
-        SizedBox(height: 12),
-        TextFormField(
-          controller: _subjectController,
-          decoration: InputDecoration(
-            hintText: l10n?.resume ?? "Résumé de votre problème",
-            prefixIcon: Icon(Icons.title, color: Colors.deepPurple),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.darkPurpleDark, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.error),
-            ),
-          ),
-          validator: (v) => v!.isEmpty ? l10n?.champsrequi ?? 'Champ requis' : null,
-        ),
-      ],
-    );
-  }
+        validator: (v) => v!.isEmpty ? l10n?.champsrequi ?? 'Champ requis' : null,
+      ),
+    ],
+  );
+}
 
   Widget _buildMessageField(WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -383,7 +426,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color:isDarkMode ?AppColors.surface:AppColors.darkGrey50,
+            color:isDarkMode ?AppColors.surface:Colors.black,
           ),
         ),
         SizedBox(height: 12),
@@ -393,22 +436,22 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
           decoration: InputDecoration(
             hintText:  l10n?.poblemedetaille ?? "Décrivez votre problème en détail...",
             prefixIcon: Padding(
-              padding: EdgeInsets.only(bottom: 80),
-              child: Icon(Icons.description, color: AppColors.darkPurpleDark),
+              padding: EdgeInsets.only(bottom: 120),
+              child: Icon(Icons.description, color:isDarkMode ? AppColors.surface : AppColors.darkGrey50),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade400, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.darkPurpleDark, width: 2),
+              borderSide: BorderSide(color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade400, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -421,15 +464,17 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(WidgetRef ref) {
      final l10n = AppLocalizations.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
         onPressed: _isSubmitting ? null : _submitTicket,
         style: ElevatedButton.styleFrom(
-          backgroundColor:AppColors.primary,
+          backgroundColor: isDarkMode ? Colors.grey.shade900 : AppColors.primary,
           foregroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

@@ -44,8 +44,9 @@ static const Color lightGrey50 = Color(0xFFFAFAFA);
 
     // Gradients
   static const List<Color> lightGradient = [
-   AppColors.primary,
-AppColors.surface
+  AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
   ];
   
   static const List<Color> darkGradient = [
@@ -55,8 +56,9 @@ AppColors.surface
   ];
 
     static const List<Color> darkGradientscreen = [
-   Color.fromARGB(255, 63, 45, 221),
-     Color.fromARGB(255, 141, 120, 248),
+    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
 
   ];
 

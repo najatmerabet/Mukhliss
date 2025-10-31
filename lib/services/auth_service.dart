@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -24,25 +25,37 @@ class AuthService {
   // Ajoutez cette propriété
   final DeviceManagementService _deviceService = DeviceManagementService();
   Timer? _activityTimer;
+  
   // ============= AUTHENTICATION METHODS =============
-
   /// Inscription d'un nouveau client avec email et mot de passe
-  /// Inscription d'un nouveau client avec email et mot de passe
-  Future<AuthResponse> signUpClient({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-    String? phone,
-    required String address,
-  }) async {
-    try {
-      final authResponse = await _client.auth.signUp(
-        email: email,
-        password: password,
-      );
+Future<AuthResponse> signUpClient({
+  required String email,
+  required String password,
+  required String firstName,
+  required String lastName,
+  String? phone,
+  required String address,
+}) async {
+  try {
+    _log('📝 Début inscription client: $email');
+    
+    // 1. Créer l'utilisateur dans auth.users
+    final authResponse = await _client.auth.signUp(
+      email: email,
+      password: password,
+    );
 
-      if (authResponse.user != null) {
+    _log('✅ Utilisateur créé dans auth.users: ${authResponse.user?.id}');
+
+    if (authResponse.user != null) {
+      try {
+        // 2. Générer le code unique
+        _log('🔢 Génération du code unique...');
+        final codeUnique = await _generateUniqueCode();
+        _log('✅ Code unique généré: $codeUnique');
+
+        // 3. Créer le profil client
+        _log('👤 Création du profil client...');
         await _createClientProfile(
           userId: authResponse.user!.id,
           email: email,
@@ -50,47 +63,66 @@ class AuthService {
           lastName: lastName,
           phone: phone,
           address: address,
+          codeUnique: codeUnique,
         );
+        _log('✅ Profil client créé dans la table clients');
 
-        // Enregistrer automatiquement l'appareil
+        // 4. Enregistrer l'appareil
+        _log('📱 Enregistrement de l\'appareil...');
         await _deviceService.registerCurrentDevice();
+        _log('✅ Appareil enregistré');
 
-        // Démarrer le suivi d'activité
+        // 5. Démarrer le suivi d'activité
         _startActivityTracking();
 
-        _log('Inscription réussie avec enregistrement appareil ✅');
+        _log('🎉 Inscription complète réussie!');
+      } catch (profileError) {
+        // Si la création du profil échoue, supprimer l'utilisateur auth
+        _logError('❌ Erreur création profil, rollback...', profileError);
+        
+        try {
+          await _client.auth.admin.deleteUser(authResponse.user!.id);
+          _log('♻️ Utilisateur auth supprimé (rollback)');
+        } catch (rollbackError) {
+          _logError('❌ Erreur rollback', rollbackError);
+        }
+        
+        throw Exception(
+          'Erreur lors de la création du profil client: ${profileError.toString()}',
+        );
       }
-
-      return authResponse;
-    } catch (e) {
-      _logError('Erreur inscription client', e);
-      rethrow;
     }
+
+    return authResponse;
+  } catch (e) {
+    _logError('❌ Erreur inscription client', e);
+    rethrow;
   }
+}
 
-  /// Connexion avec email et mot de passe
-  // Future<AuthResponse> login(String email, String password) async {
-  //   try {
-  //     final response = await _client.auth.signInWithPassword(
-  //       email: email,
-  //       password: password,
-  //     );
+Future<int> _generateUniqueCode() async {
+  final random = Random();
+  int code = 0; // ✅ Initialiser la variable
+  bool exists = true;
+  
+  // Réessayer jusqu'à trouver un code unique
+  while (exists) {
+    // Générer un nombre entre 100000 et 999999
+    code = 100000 + random.nextInt(900000);
+    
+    // Vérifier si le code existe déjà
+    final response = await _client
+        .from('clients')
+        .select('code_unique')
+        .eq('code_unique', code)
+        .maybeSingle();
+    
+    exists = response != null;
+  }
+  
+  return code;
+}
 
-  //     if (response.user != null) {
-  //       // Enregistrer automatiquement l'appareil
-  //       await _deviceService.registerCurrentDevice();
-  //       // Démarrer le suivi d'activité
-  //       _startActivityTracking();
-
-  //       _log('Connexion réussie avec enregistrement appareil ✅');
-  //     }
-
-  //     return response;
-  //   } catch (e) {
-  //     _logError('Erreur connexion', e);
-  //     rethrow;
-  //   }
-  // }
   Future<AuthResponse> login(String email, String password) async {
     try {
       // 1. Première vérification : existe-t-il dans la table client ?
@@ -386,6 +418,8 @@ class AuthService {
       if (password.isNotEmpty) {
         await _client.auth.updateUser(UserAttributes(password: password));
       }
+      
+      int codeUnique = await _generateUniqueCode();
 
       // Create or update client profile
       await _createClientProfile(
@@ -395,6 +429,7 @@ class AuthService {
         lastName: lastName,
         phone: phone,
         address: address,
+        codeUnique: codeUnique,
       );
 
       _log('Profile completed successfully for ${user.email}');
@@ -588,49 +623,58 @@ class AuthService {
   }
 
   /// Crée le profil client s'il n'existe pas déjà
-  Future<void> _ensureClientProfileExists() async {
-    final user = currentUser;
-    if (user == null) return;
+  /// Crée le profil client s'il n'existe pas déjà
+Future<void> _ensureClientProfileExists() async {
+  final user = currentUser;
+  if (user == null) return;
 
-    try {
-      final exists = await _isUserInTable(user.id, 'clients');
-      if (exists) {
-        _log('Profil client existe déjà');
-        return;
-      }
-
-      await _createClientProfile(
-        userId: user.id,
-        email: user.email ?? '',
-        lastName: _extractFullName(user),
-        phone: user.phone,
-      );
-    } catch (e) {
-      _logError('Erreur création profil', e);
-      rethrow;
+  try {
+    final exists = await _isUserInTable(user.id, 'clients');
+    if (exists) {
+      _log('Profil client existe déjà');
+      return;
     }
+
+    // ✅ GÉNÉRER LE CODE UNIQUE AVANT DE CRÉER LE PROFIL
+    int codeUnique = await _generateUniqueCode();
+    
+    await _createClientProfile(
+      userId: user.id,
+      email: user.email ?? '',
+      lastName: _extractFullName(user),
+      phone: user.phone,
+      codeUnique: codeUnique, // ✅ Maintenant le code unique est bien passé
+    );
+    
+    _log('Profil client créé avec code unique: $codeUnique ✅');
+  } catch (e) {
+    _logError('Erreur création profil', e);
+    rethrow;
   }
+}
 
   /// Crée un profil client dans la base de données
-  Future<void> _createClientProfile({
-    required String userId,
-    required String email,
-    String? firstName,
-    String? lastName,
-    String? phone,
-    String? address,
-  }) async {
-    await _client.from('clients').insert({
-      'id': userId,
-      'email': email,
-      'prenom': firstName,
-      'nom': lastName,
-      'telephone': phone,
-      'adresse': address,
-      'created_at': DateTime.now().toIso8601String(),
-    });
-    _log('Profil client créé ✅');
-  }
+ Future<void> _createClientProfile({
+  required String userId,
+  required String email,
+  String? firstName,
+  String? lastName,
+  String? phone,
+  String? address,
+  required int codeUnique, // ✅ Bien déclaré comme required
+}) async {
+  await _client.from('clients').insert({
+    'id': userId,
+    'email': email,
+    'prenom': firstName,
+    'nom': lastName,
+    'telephone': phone,
+    'adresse': address,
+    'code_unique': codeUnique, // ✅ Bien utilisé dans l'insertion
+    'created_at': DateTime.now().toIso8601String(),
+  });
+  _log('Profil client créé avec code unique: $codeUnique ✅');
+}
 
   /// Vérifie si un utilisateur existe dans une table
   Future<bool> _isUserInTable(String userId, String tableName) async {

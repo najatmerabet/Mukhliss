@@ -11,6 +11,7 @@ class  Client{
   final String tel;
   final String password;
   final String updatedAt;
+  final int code_unique;
   
   
 
@@ -21,7 +22,7 @@ const  Client({
     required this.email,
     required this.adr,
     required this.tel,
-    
+    required this.code_unique,
     required this.password,
     required this.updatedAt,
     

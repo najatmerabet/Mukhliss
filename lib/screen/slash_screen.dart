@@ -50,7 +50,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // En cas d'erreur, afficher quand même l'écran
       if (mounted) {
         setState(() => _isReady = true);
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 5));
         await _navigateToNextScreen();
       }
     }
@@ -101,22 +101,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
     final l10n = AppLocalizations.of(context);
-    final isDarkMode = themeMode == AppThemeMode.dark;
+    final isDarkMode = themeMode == AppThemeMode.light;
     
     // ✅ SI l'image n'est PAS encore chargée, afficher un écran vide avec la couleur de fond
     if (!_isReady) {
       return Scaffold(
-        backgroundColor: isDarkMode 
-            ? AppColors.darkBackground 
-            : AppColors.lightBackground,
+      
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isDarkMode 
-                  ? AppColors.darkGradientscreen 
-                  : AppColors.lightGradient,
+             colors: isDarkMode
+                ? [
+                    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
+                  ]
+                : [
+                    AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
+                  ],
             ),
           ),
         ),
@@ -133,9 +139,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: isDarkMode 
-                ? AppColors.darkGradientscreen 
-                : AppColors.lightGradient,
+           
+                 colors: isDarkMode
+                ? [
+                    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
+                  ]
+                : [
+                    AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
+                  ],
           ),
         ),
         child: SafeArea(

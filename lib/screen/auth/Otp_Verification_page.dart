@@ -35,9 +35,10 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
-  int _remainingMinutes = 1;
+  int _remainingMinutes = 5;
   int _remainingSeconds = 0;
   late Timer _timer;
+  DateTime? _otpSentTime;
 
   late AnimationController _slideController;
   late AnimationController _fadeController;
@@ -50,6 +51,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage>
   @override
   void initState() {
     super.initState();
+    _otpSentTime = DateTime.now(); 
     _initializeAnimations();
     _startTimer();
 
@@ -197,7 +199,7 @@ Future<void> _verifyOtp() async {
   Future<void> _resendOtp() async {
     final l10n = AppLocalizations.of(context);
     setState(() {
-      _remainingMinutes = 1;
+      _remainingMinutes = 5;
       _remainingSeconds = 0;
       _startTimer();
       _isLoading = true;

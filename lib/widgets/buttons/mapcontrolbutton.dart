@@ -1,46 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
-class MapControllerButton extends StatelessWidget  {
-
+class MapControllerButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
-  final Color backgroundColor;
-  final bool isLoading ;
+  final LinearGradient backgroundGradient;
+  final bool isLoading;
 
-  const MapControllerButton ({
-     required this.icon,
-     required this.onPressed,
-     required this.backgroundColor,
-     required this.isLoading
-  });
+  const MapControllerButton({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    required this.isLoading,
+    required this.backgroundGradient,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-   
-   return Material(
-    shape: const CircleBorder(),
-    elevation: 2,
-    child: Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: backgroundColor,
+    return Material(
+      shape: const CircleBorder(),
+      elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: backgroundGradient, // Utilisation directe du gradient
+        ),
+        child: IconButton(
+          icon: isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                )
+              : Icon(icon, color: Colors.white),
+          onPressed: onPressed,
+        ),
       ),
-      child: IconButton(
-        icon: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Icon(icon, color: Colors.white),
-        onPressed: onPressed,
-      ),
-    ),
-  );
+    );
   }
-
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mukhliss/theme/app_theme.dart';
 
 class CategoryMarkers {
   // Icônes pour le centre des marqueurs
@@ -249,6 +250,6 @@ static final Map<String, Color> _pinColors = {
     for (final key in _pinColors.keys) {
       if (lowerName.contains(key)) return _pinColors[key]!;
     }
-    return Colors.blue;
+    return AppColors.lightPrimary;
   }
 }

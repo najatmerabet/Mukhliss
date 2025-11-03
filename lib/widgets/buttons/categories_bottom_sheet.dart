@@ -188,7 +188,7 @@ void _loadMoreStores() {
                                   icon: Icons.all_inclusive,
                                   title: l10n?.tous ?? 'Tous',
                                   isDarkMode: isDarkMode,
-                                  iconcolor: const Color.fromARGB(255, 145, 126, 126),
+                                  iconcolor:  AppColors.lightPrimary,
                                   isSelected:_selectedCategory?.id==null,
                                   onTap: () {
                                      setState(() {
@@ -402,10 +402,10 @@ Widget _buildHorizontalCategoryItem({
           decoration: BoxDecoration(
             shape: BoxShape.circle, // Forme circulaire
             border: Border.all(
-              color: isSelected ? Colors.blue.shade700 :iconcolor,
+              color: isSelected ? AppColors.primary :iconcolor,
               width: 1.5,
             ),
-            color: isSelected ? Colors.blue.shade50 : Colors.white,
+            color: isSelected ? const Color.fromARGB(255, 234, 234, 247) : Colors.white,
           ),
           child: Material(
             color: Colors.transparent,
@@ -420,7 +420,7 @@ Widget _buildHorizontalCategoryItem({
                     ? Icon(
                         icon,
                         size: 30,
-                        color: isSelected ? Colors.blue.shade700 :iconcolor,
+                        color: isSelected ? AppColors.primary :iconcolor,
                       )
                    
                         : const SizedBox(),
@@ -440,7 +440,7 @@ Widget _buildHorizontalCategoryItem({
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color:isDarkMode ? (isSelected ? Colors.blue.shade700 :Colors.white) : (isSelected ? Colors.blue.shade700 : Colors.grey.shade800),
+            color:isDarkMode ? (isSelected ? AppColors.primary :Colors.white) : (isSelected ? AppColors.primary : Colors.grey.shade800),
             height: 1.2,
           ),
         ),
@@ -452,7 +452,7 @@ Widget _buildHorizontalCategoryItem({
             child: Icon(
               Icons.check_circle,
               size: 16,
-              color: Colors.blue.shade700,
+              color: AppColors.primary,
             ),
           ),
       ],

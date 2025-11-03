@@ -71,28 +71,20 @@ class CustomSliverAppBar extends ConsumerWidget {
       leading: effectiveLeading,
       actions: actions,
       bottom: bottom,
-      backgroundColor: isDarkMode? AppColors.darkPrimary : AppColors.lightPrimary,
+      backgroundColor: Colors.transparent,
       centerTitle: centerTitle,
-      flexibleSpace:  useFlexibleSpace 
-          ? FlexibleSpaceBar(
-              background: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: gradientBegin ?? Alignment.topLeft,
-                        end: gradientEnd ?? Alignment.bottomRight,
-                        colors: customGradientColors ?? (isDarkMode 
-                            ? [AppColors.darkPrimary, AppColors.darkSecondary]
-                            : [AppColors.lightPrimary, AppColors.lightSecondary]),
-                      ),
-                    ),
-                  ),
-                  if (flexibleSpaceContent != null) flexibleSpaceContent!,
-                ],
-              ),
-            )
-          : null,
+      flexibleSpace: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDarkMode
+              ? [AppColors.darkPrimary, AppColors.darkSecondary]
+              : [AppColors.lightPrimary, AppColors.lightSecondary],
+        ),
+      ),
+    // Conserver votre flexibleSpace existant si nécessaire
+    ),
       title: Text(
         title,
         style: titleStyle ?? const TextStyle(

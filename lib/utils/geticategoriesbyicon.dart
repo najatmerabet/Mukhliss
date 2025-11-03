@@ -100,6 +100,7 @@ static final Map<String, IconData> _pinIcons = {
     'warning': Icons.warning,
     'info': Icons.info,
     'place': Icons.place, // Icône par défaut
+    'game':Icons.videogame_asset
   };
 
   // Couleurs des pins
@@ -200,6 +201,7 @@ static final Map<String, Color> _pinColors = {
     'warning': Colors.orange[900]!,
     'info': Colors.blue,
     'place': Colors.grey[600]!,
+    'game':Colors.purple
   };
   // Méthode pour obtenir un widget de marqueur complet
   static Widget getPinWidget(String categoryName, {double size = 20}) {

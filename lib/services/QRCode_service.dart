@@ -252,4 +252,32 @@ class QrcodeService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.containsKey(_qrCacheKey);
   }
+
+  // Dans qrcode_service.dart
+Future<int?> getCurrentUserCode() async {
+  try {
+    final clientData = await _getClientData();
+    
+    // Vérifier si le champ code_unique existe
+    if (clientData.containsKey('code_unique')) {
+      final codeValue = clientData['code_unique'];
+      
+      // Gérer les différents types possibles
+      if (codeValue is int) {
+        return codeValue;
+      } else if (codeValue is String) {
+        return int.tryParse(codeValue);
+      } else if (codeValue is double) {
+        return codeValue.toInt();
+      }
+    }
+    
+    return null;
+  } catch (e) {
+    print('Error getting user code: $e');
+    return null;
+  }
+}
+
+
 }

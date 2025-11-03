@@ -1046,7 +1046,17 @@ void refreshShopRewards(Store? shop) {
                         _polylinePoints = [];
                       });
                     },
-                    backgroundColor: AppColors.error,
+                      backgroundGradient: LinearGradient(
+                   begin: Alignment.topLeft,
+                   end: Alignment.bottomRight,
+                    colors:isDarkMode ? [
+                   Colors.red ,
+                    AppColors.error
+                    ] : [
+                    Colors.red ,
+                    AppColors.error
+                    ],
+                    ),
                     isLoading: false,
                   ),
                 if (_isNavigating) const SizedBox(height: 10),
@@ -1057,8 +1067,16 @@ void refreshShopRewards(Store? shop) {
                       _currentPosition != null
                           ? _centerOnCurrentLocation
                           : null,
-                  backgroundColor:
-                      isDarkMode ? AppColors.darkSurface : AppColors.primary,
+                   backgroundGradient: LinearGradient(
+                   begin: Alignment.topLeft,
+                   end: Alignment.bottomRight,
+                    colors:isDarkMode ? [
+                       AppColors.darkPrimary, AppColors.darkSecondary
+                  
+                    ] : [
+                     AppColors.lightPrimary, AppColors.lightSecondary
+                    ],
+                    ),
                   isLoading: _isLocationLoading,
                 ),
                 const SizedBox(height: 10),
@@ -1068,17 +1086,31 @@ void refreshShopRewards(Store? shop) {
                       _isLocationLoading
                           ? null
                           : () => controller.getCurrentLocation(),
-                  backgroundColor:
-                      isDarkMode ? AppColors.darkSurface : AppColors.primary,
+                 backgroundGradient: LinearGradient(
+                   begin: Alignment.topLeft,
+                   end: Alignment.bottomRight,
+                    colors: isDarkMode ? [
+                    AppColors.darkPrimary, AppColors.darkSecondary
+                    ] : [
+                    AppColors.lightPrimary, AppColors.lightSecondary
+                    ],
+                    ),
                   isLoading: _isLocationLoading,
                 ),
                 const SizedBox(height: 10),
                 MapControllerButton(
+                   isLoading: _isLocationLoading,
                   icon: Icons.layers,
                   onPressed: _toggleMapLayers,
-                  backgroundColor:
-                      isDarkMode ? AppColors.darkSurface : AppColors.primary,
-                  isLoading: _isLocationLoading,
+                  backgroundGradient: LinearGradient(
+                   begin: Alignment.topLeft,
+                   end: Alignment.bottomRight,
+                    colors:isDarkMode ? [
+                    AppColors.darkPrimary, AppColors.darkSecondary
+                    ] : [
+                    AppColors.lightPrimary, AppColors.lightSecondary
+                    ],
+                    ),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -1540,19 +1572,36 @@ void refreshShopRewards(Store? shop) {
     final themeMode = ref.watch(themeProvider);
     final isDarkMode = themeMode == AppThemeMode.light;
     return Material(
-      shape: const CircleBorder(),
-      elevation: 2,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDarkMode ? AppColors.darkSurface : AppColors.primary,
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () => _showSearchBottomSheet(),
-        ),
-      ),
-    );
+  shape: const CircleBorder(),
+  elevation: 2,
+  child: Container(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: isDarkMode 
+          ? LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+               Colors.black,
+                Colors.black
+
+              ],
+            )
+          : LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.lightPrimary, 
+                AppColors.lightSecondary
+              ],
+            ),
+    ),
+    child: IconButton(
+      icon: const Icon(Icons.search, color: Colors.white),
+      onPressed: () => _showSearchBottomSheet(),
+    ),
+  ),
+);
   }
 
   void _showSearchBottomSheet() {

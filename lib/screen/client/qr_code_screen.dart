@@ -7,6 +7,7 @@ import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/widgets/Appbar/app_bar_types.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class QRCodeScreen extends ConsumerStatefulWidget {
   const QRCodeScreen({Key? key}) : super(key: key);
@@ -18,45 +19,46 @@ class QRCodeScreen extends ConsumerStatefulWidget {
 class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
   final QrcodeService _qrcodeService = QrcodeService();
   final Connectivity _connectivity = Connectivity();
-  late Future<Widget> _qrCodeFuture;
+  late Future<Map<String, dynamic>> _userDataFuture;
   bool _isOnline = true;
   bool _isRefreshing = false;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   Timer? _refreshTimer;
-  String? _lastError;
 
   @override
   void initState() {
     super.initState();
+    _userDataFuture = _loadUserData();
     _initConnectivity();
-    _qrCodeFuture = _generateQRWithErrorHandling();
     _startAutoRefresh();
   }
 
-  // Wrapper pour gérer les erreurs de génération QR
-  Future<Widget> _generateQRWithErrorHandling() async {
+  Future<Map<String, dynamic>> _loadUserData() async {
     try {
-      setState(() {
-        _lastError = null;
-      });
-      return await _qrcodeService.generateUserQR();
+      final qrData = await _qrcodeService.getQRDataString();
+      int? userCode = await _qrcodeService.getCurrentUserCode();
+      
+      return {
+        'qrData': qrData,
+        'userCode': userCode,
+        'error': null,
+      };
     } catch (e) {
-      setState(() {
-        _lastError = e.toString();
-      });
-      rethrow;
+      return {
+        'qrData': null,
+        'userCode': null,
+        'error': e.toString(),
+      };
     }
   }
 
   Future<void> _initConnectivity() async {
     try {
-      // Vérifier l'état initial de la connexion
       final connectivityResult = await _connectivity.checkConnectivity();
       setState(() {
         _isOnline = connectivityResult != ConnectivityResult.none;
       });
 
-      // Écouter les changements de connexion
       _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
         (ConnectivityResult result) {
           final newOnlineStatus = result != ConnectivityResult.none;
@@ -66,9 +68,8 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
               _isOnline = newOnlineStatus;
             });
             
-            // Rafraîchir automatiquement quand la connexion revient
             if (_isOnline && !_isRefreshing) {
-              _refreshQRCode();
+              _refreshData();
             }
           }
         },
@@ -82,22 +83,20 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
   }
 
   void _startAutoRefresh() {
-    // Rafraîchir le QR code toutes les 30 secondes quand en ligne et non en cours de rafraîchissement
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (_isOnline && !_isRefreshing && mounted) {
-        _refreshQRCode();
+        _refreshData();
       }
     });
   }
 
-  void _refreshQRCode() {
+  void _refreshData() {
     if (mounted && !_isRefreshing) {
       setState(() {
         _isRefreshing = true;
-        _qrCodeFuture = _generateQRWithErrorHandling();
+        _userDataFuture = _loadUserData();
       });
       
-      // Reset refresh flag après un délai
       Timer(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() {
@@ -111,13 +110,11 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
   Future<void> _manualRefresh() async {
     if (_isRefreshing) return;
     
-    // Animation de rafraîchissement
     setState(() {
       _isRefreshing = true;
-      _qrCodeFuture = _generateQRWithErrorHandling();
+      _userDataFuture = _loadUserData();
     });
     
-    // Délai minimum pour l'animation
     await Future.delayed(const Duration(milliseconds: 500));
     
     if (mounted) {
@@ -134,34 +131,39 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
     super.dispose();
   }
 
-  
-  Widget _buildQRContent(Widget qrWidget) {
+  // CARTE UNIFIÉE - QR Code + Code Unique
+  Widget _buildUnifiedIdentificationCard(String qrData, int? userCode) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: AppColors.primary.withOpacity(0.12),
+            blurRadius: 25,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Conteneur du QR Code avec animation
+          // Section Code Unique
+         
+          
+          // Section QR Code
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: MediaQuery.of(context).size.width * 0.8,
-            height: MediaQuery.of(context).size.width * 0.8,
+            width: MediaQuery.of(context).size.width * 0.65,
+            height: MediaQuery.of(context).size.width * 0.65,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _isRefreshing ? AppColors.primary.withOpacity(0.5) : AppColors.primary,
+                color: _isRefreshing 
+                    ? AppColors.primary.withOpacity(0.5) 
+                    : AppColors.primary,
                 width: 2,
               ),
             ),
@@ -171,25 +173,40 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
                       color: AppColors.primary,
                     ),
                   )
-                : qrWidget,
+                : QrImageView(
+                    data: qrData,
+                    version: QrVersions.auto,
+                    size: MediaQuery.of(context).size.width * 0.6,
+                    backgroundColor: Colors.white,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: Colors.blue,
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: Colors.black,
+                    ),
+                  ),
           ),
-          const SizedBox(height: 24),
           
-          // Instructions
-          Text(
-            AppLocalizations.of(context)?.qrCodeInstructions ?? 
-            'Montrez ce QR code pour bénéficier de vos offres',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          
-    
-          // Bouton de rafraîchissement avec état
-         
+          const SizedBox(height: 20),
+         if (userCode != null) ...[
+  Container(
+   
+    child: Column(
+      children: [
+       
+        // Affichage avec cadres individuels
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _buildDigitBoxes(userCode.toString().padLeft(6, '0')),
+        ),
+      ],
+    ),
+  ),
+  const SizedBox(height: 24),
+],
+       
         ],
       ),
     );
@@ -212,56 +229,28 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
       ),
       child: Column(
         children: [
-          Container(
-            width: MediaQuery.of(context).size.width * 0.8,
-            height: MediaQuery.of(context).size.width * 0.8,
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[300]!, width: 2),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon(
-                //   _isOnline ? Icons.error : Icons.wifi_off,
-                //   color: _isOnline ? Colors.red : Colors.orange,
-                //   size: 48,
-                // ),
-                const SizedBox(height: 16),
-                // Text(
-                //   _isOnline ? 'Erreur de chargement' : 'Hors ligne',
-                //   textAlign: TextAlign.center,
-                //   style: TextStyle(
-                //     fontSize: 18,
-                //     fontWeight: FontWeight.bold,
-                //     color: _isOnline ? Colors.red : Colors.orange,
-                //   ),
-                // ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    _getUserFriendlyErrorMessage(error),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ],
+          Icon(
+            Icons.error_outline,
+            color: Colors.red,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Erreur de chargement',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           Text(
-            'Impossible de charger le QR code pour le moment',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            _getUserFriendlyErrorMessage(error),
             textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -300,7 +289,6 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final themeMode = ref.watch(themeProvider);
     final isDarkMode = themeMode == AppThemeMode.light;
     
@@ -312,33 +300,41 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
           SliverFillRemaining(
             hasScrollBody: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Indicateur de statut de connexion
-                  // _buildConnectionStatus(),
-
-                  // Carte QR Code principale avec gestion d'état améliorée
-                  FutureBuilder<Widget>(
-                    future: _qrCodeFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return _buildQRContent(
-                          const Center(
+                  Expanded(
+                    child: FutureBuilder<Map<String, dynamic>>(
+                      future: _userDataFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.primary,
                             ),
+                          );
+                        }
+
+                        if (snapshot.hasError || snapshot.data?['error'] != null) {
+                          return _buildErrorContent(
+                            snapshot.error?.toString() ?? snapshot.data?['error'] ?? 'Erreur inconnue'
+                          );
+                        }
+
+                        final qrData = snapshot.data?['qrData'];
+                        final userCode = snapshot.data?['userCode'];
+
+                        if (qrData == null) {
+                          return _buildErrorContent('Données QR code non disponibles');
+                        }
+
+                        return Center(
+                          child: SingleChildScrollView(
+                            child: _buildUnifiedIdentificationCard(qrData, userCode),
                           ),
                         );
-                      }
-                      
-                      if (snapshot.hasError) {
-                        return _buildErrorContent(snapshot.error.toString());
-                      }
-                      
-                      return _buildQRContent(snapshot.data ?? const SizedBox());
-                    },
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -348,4 +344,51 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
       ),
     );
   }
+
+  List<Widget> _buildDigitBoxes(String code) {
+  List<Widget> boxes = [];
+  
+  for (int i = 0; i < code.length; i++) {
+    boxes.add(
+      Container(
+        width: 30,
+        height: 30,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            code[i],
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+              fontFeatures: [const FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    // Ajouter un espace entre les groupes de 3 chiffres
+    if (i == 2) {
+      boxes.add(const SizedBox(width: 5));
+    }
+  }
+  
+  return boxes;
+}
 }

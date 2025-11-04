@@ -147,7 +147,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
                    isDarkMode
                     ? (isSelected
                         ? Colors.white
-                        : const Color.fromARGB(255, 90, 93, 99).withOpacity(0.7))
+                        : Colors.white)
                     : (isSelected
                         ? Colors.white
                         : const Color.fromARGB(255, 195, 201, 212).withOpacity(0.7)),

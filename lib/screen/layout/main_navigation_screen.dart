@@ -44,6 +44,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.light;
     return Scaffold(
       body: PageView(
         controller: _pageController,
@@ -56,7 +57,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -140,7 +141,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                   color:
                       isSelected
                           ? Colors.white
-                          : AppColors.textSecondary.withOpacity(0.7),
+                          : const Color.fromARGB(255, 195, 201, 212).withOpacity(0.7),
                   size: 22,
                 ),
               ),

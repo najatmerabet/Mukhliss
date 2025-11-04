@@ -47,7 +47,7 @@ class RouteBottomSheet extends ConsumerWidget {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: isDarkMode ? AppColors.darkSurface : Colors.white,
+            color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(

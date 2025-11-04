@@ -629,7 +629,7 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+        color: isDarkMode ? Color.fromARGB(255, 10, 17, 65) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

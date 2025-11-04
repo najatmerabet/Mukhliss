@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mukhliss/providers/theme_provider.dart';
 import 'package:mukhliss/screen/client/Location/location.dart';
 import 'package:mukhliss/screen/client/offres.dart';
 import 'package:mukhliss/screen/client/profile_new.dart';
@@ -6,12 +8,12 @@ import 'package:mukhliss/screen/client/qr_code_screen.dart';
 import 'package:mukhliss/screen/rewardsexample.dart';
 import 'package:mukhliss/theme/app_theme.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   @override
-  _MainNavigationScreenState createState() => _MainNavigationScreenState();
+   ConsumerState<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen>
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
   late PageController _pageController;
@@ -44,6 +46,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeProvider);
+   final isDarkMode = themeMode == AppThemeMode.light;
     return Scaffold(
       body: PageView(
         controller: _pageController,
@@ -56,7 +60,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -87,6 +91,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   Widget _buildNavItem(int index, IconData icon) {
     final isSelected = index == _currentIndex;
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.light;
 
     return Expanded(
       child: GestureDetector(
@@ -138,9 +144,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                 child: Icon(
                   icon,
                   color:
-                      isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary.withOpacity(0.7),
+                   isDarkMode
+                    ? (isSelected
+                        ? Colors.white
+                        : const Color.fromARGB(255, 90, 93, 99).withOpacity(0.7))
+                    : (isSelected
+                        ? Colors.white
+                        : const Color.fromARGB(255, 195, 201, 212).withOpacity(0.7)),
                   size: 22,
                 ),
               ),

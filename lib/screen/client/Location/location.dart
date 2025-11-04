@@ -1071,7 +1071,7 @@ void refreshShopRewards(Store? shop) {
                    begin: Alignment.topLeft,
                    end: Alignment.bottomRight,
                     colors:isDarkMode ? [
-                       AppColors.darkPrimary, AppColors.darkSecondary
+                       Color(0xFF0A0E27), Color(0xFF0A0E27)
                   
                     ] : [
                      AppColors.lightPrimary, AppColors.lightSecondary
@@ -1090,7 +1090,7 @@ void refreshShopRewards(Store? shop) {
                    begin: Alignment.topLeft,
                    end: Alignment.bottomRight,
                     colors: isDarkMode ? [
-                    AppColors.darkPrimary, AppColors.darkSecondary
+                  Color(0xFF0A0E27), Color(0xFF0A0E27)
                     ] : [
                     AppColors.lightPrimary, AppColors.lightSecondary
                     ],
@@ -1106,7 +1106,7 @@ void refreshShopRewards(Store? shop) {
                    begin: Alignment.topLeft,
                    end: Alignment.bottomRight,
                     colors:isDarkMode ? [
-                    AppColors.darkPrimary, AppColors.darkSecondary
+                    Color(0xFF0A0E27), Color(0xFF0A0E27)
                     ] : [
                     AppColors.lightPrimary, AppColors.lightSecondary
                     ],
@@ -1582,8 +1582,7 @@ void refreshShopRewards(Store? shop) {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-               Colors.black,
-                Colors.black
+            Color(0xFF0A0E27), Color(0xFF0A0E27)
 
               ],
             )

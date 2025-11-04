@@ -171,7 +171,7 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
         final localizedName = category.getName(currentLocale.languageCode);
 
         return Material(
-          color: isDarkMode ? const Color(0xFF121212) : Colors.white,
+          color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: CustomScrollView(
             controller: scrollController,

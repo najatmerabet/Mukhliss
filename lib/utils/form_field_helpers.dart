@@ -42,7 +42,7 @@ class AppFormFields {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color:isDarkMode? (enabled ? Colors.white : Colors.grey.shade600) : (enabled ? Colors.black : Colors.grey.shade600),
+            color:isDarkMode? (enabled ? Colors.white : Colors.grey.shade600) : (enabled ? Color(0xFF0A0E27): Colors.grey.shade600),
           ),
           decoration: InputDecoration(
             prefixIcon: Icon(
@@ -51,7 +51,7 @@ class AppFormFields {
             ),
             hintText: hintText,
             filled: true,
-            fillColor: isDarkMode ? const Color.fromARGB(255, 10, 10, 10) : Colors.white.withOpacity(0.7),
+            fillColor: isDarkMode ? Color(0xFF0A0E27) : Colors.white.withOpacity(0.7),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

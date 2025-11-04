@@ -125,7 +125,7 @@ void _loadMoreStores() {
        snapSizes: [0.3, 0.5, 0.9],
       builder: (context, scrollController) {
         return Material(
-          color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+          color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
@@ -472,7 +472,7 @@ Widget _buildStoreItem({ required BuildContext context,
   return   Container(
     margin: const EdgeInsets.only(bottom: 1),
     decoration: BoxDecoration(
-      color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+      color: isDarkMode ?Color(0xFF0A0E27) : AppColors.surface,
       border: Border(
         bottom: BorderSide(
           color: Colors.grey.shade200,

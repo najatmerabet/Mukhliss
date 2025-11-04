@@ -375,7 +375,7 @@ Widget _buildBottomActionBar(
   return Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+      color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
       border: Border(
         top: BorderSide(
           color: primaryColor.withOpacity(0.1),

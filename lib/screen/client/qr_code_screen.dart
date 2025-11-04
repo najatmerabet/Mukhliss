@@ -133,11 +133,13 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
 
   // CARTE UNIFIÉE - QR Code + Code Unique
   Widget _buildUnifiedIdentificationCard(String qrData, int? userCode) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkmode = themeMode == AppThemeMode.light;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkmode ? Color(0xFF0A0E27) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

@@ -240,9 +240,11 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
   Widget _buildStatsSection() {
     if (_stats.isEmpty) return const SizedBox.shrink();
 final l10n = AppLocalizations.of(context);
+final thememode= ref.watch(themeProvider);
+final isDarkMode= thememode == AppThemeMode.light;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Color.fromARGB(255, 3, 9, 43) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -261,7 +263,7 @@ final l10n = AppLocalizations.of(context);
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
+              color: isDarkMode ? Colors.white : Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 16),
@@ -301,6 +303,8 @@ final l10n = AppLocalizations.of(context);
   }
 
   Widget _buildStatBox(String label, String value, Color color, IconData icon) {
+    final thememode = ref.watch(themeProvider);
+    final isDarkMode = thememode == AppThemeMode.light;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -324,7 +328,7 @@ final l10n = AppLocalizations.of(context);
             label,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey[600],
+              color: isDarkMode ? Colors.white : Colors.grey[400],
             ),
           ),
         ],
@@ -334,6 +338,8 @@ final l10n = AppLocalizations.of(context);
 
   Widget _buildDevicesSection() {
      final l10n = AppLocalizations.of(context);
+     final thememode= ref.watch(themeProvider);
+      final isDarkMode= thememode == AppThemeMode.light;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -342,7 +348,7 @@ final l10n = AppLocalizations.of(context);
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: isDarkMode ? Colors.white : Color(0xFF1F2937),
           ),
         ),
         const SizedBox(height: 16),
@@ -398,12 +404,14 @@ final l10n = AppLocalizations.of(context);
 Widget _buildDeviceCard(UserDevice device) {
   final isCurrent = device.deviceId == _deviceService.currentDeviceId;
   final isActive = device.isActive;
+  final thememode = ref.watch(themeProvider);
+  final isDarkMode = thememode == AppThemeMode.light;
   print(' is active ${_deviceService.currentDeviceId}');
 
   return Container(
     margin: const EdgeInsets.only(bottom: 12),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: isDarkMode ? Color.fromARGB(255, 7, 14, 54) : Colors.white,
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
@@ -447,7 +455,7 @@ Widget _buildDeviceCard(UserDevice device) {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
-                color: isActive ? const Color(0xFF1F2937) : Colors.grey,
+                color: isDarkMode ? (isActive ? Colors.white : Colors.grey) : (isActive ? Colors.grey[800] : Colors.grey[400]),
               ),
             ),
           ),
@@ -500,13 +508,13 @@ Widget _buildDeviceCard(UserDevice device) {
               Icon(
                 _getPlatformIcon(device.platform),
                 size: 16,
-                color: isActive ? Colors.grey[600] : Colors.grey[400],
+                color: isDarkMode ? (isActive ? Colors.white : Colors.grey[400]) : (isActive ?  Colors.grey[800] : Colors.grey[400]),
               ),
               const SizedBox(width: 6),
               Text(
                 '${device.platform.toUpperCase()} • ${device.deviceType.toUpperCase()}',
                 style: TextStyle(
-                  color: isActive ? Colors.grey[600] : Colors.grey[400],
+                  color: isDarkMode ? (isActive ? Colors.white : Colors.grey[400]) : (isActive ? Colors.grey[800] : Colors.grey[400]),
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -518,7 +526,7 @@ Widget _buildDeviceCard(UserDevice device) {
             'Dernière activité: ${_formatDate(device.lastActiveAt)}',
             style: TextStyle(
               fontSize: 12,
-              color: isActive ? Colors.grey[500] : Colors.grey[400],
+              color: isDarkMode ? (isActive ? Colors.white : Colors.grey[400]) : (isActive ? Colors.grey[800] : Colors.grey[400]),
             ),
           ),
           if (device.appVersion != null) ...[
@@ -527,7 +535,7 @@ Widget _buildDeviceCard(UserDevice device) {
               'Version: ${device.appVersion}',
               style: TextStyle(
                 fontSize: 12,
-                color: isActive ? Colors.grey[500] : Colors.grey[400],
+                color: isDarkMode ? (isActive ? Colors.white : Colors.grey[400]) : (isActive ? Colors.grey[800] : Colors.grey[400]),
               ),
             ),
           ],

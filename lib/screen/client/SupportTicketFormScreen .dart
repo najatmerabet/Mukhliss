@@ -96,7 +96,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
         final themeMode = ref.watch(themeProvider);
         final isDarkMode = themeMode == AppThemeMode.light;
         return Scaffold(
-          backgroundColor:isDarkMode ? AppColors.darkSurface : AppColors.surface,
+          backgroundColor:isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
           body:CustomScrollView(
             slivers: [
            AppBarTypes.SupportAppBar(context),
@@ -160,7 +160,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDarkMode ? [const Color.fromARGB(255, 77, 78, 82), const Color.fromARGB(255, 32, 32, 32)] : [AppColors.secondary, AppColors.primary],
+          colors: isDarkMode ? [const Color.fromARGB(255, 59, 66, 94), const Color.fromARGB(255, 41, 47, 75)] : [AppColors.secondary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -237,7 +237,7 @@ class _SupportTicketFormScreenState extends State<SupportTicketFormScreen>
                   margin: EdgeInsets.only(right: 8),
                   padding: EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? color : isDarkMode ? AppColors.darkBackground : AppColors.surface,
+                    color: isSelected ? color : isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? color : isDarkMode ? Colors.grey[700]! : const Color.fromARGB(255, 204, 201, 201),
@@ -290,10 +290,10 @@ Widget _buildCategorySelector(WidgetRef ref) {
       Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey.shade900 : AppColors.surface,
+          color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDarkMode ? Colors.grey.shade700 : Color.fromARGB(255, 204, 201, 201)
+            color: isDarkMode ? Color(0xFF0A0E27) : Color.fromARGB(255, 204, 201, 201)
           ),
           boxShadow: [
             BoxShadow(
@@ -307,7 +307,7 @@ Widget _buildCategorySelector(WidgetRef ref) {
           child: DropdownButton<String>(
             value: _selectedCategory,
             isExpanded: true,
-            dropdownColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
+            dropdownColor: isDarkMode ? Color(0xFF0A0E27): Colors.white,
             icon: Icon(
               Icons.keyboard_arrow_down, 
               color: isDarkMode ? Colors.white : Colors.deepPurple
@@ -366,14 +366,14 @@ Widget _buildSubjectField(WidgetRef ref) {
         decoration: InputDecoration(
           hintText: l10n?.resume ?? "Résumé de votre problème",
           hintStyle: TextStyle(
-            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+            color: isDarkMode ? const Color.fromARGB(255, 228, 230, 241) : Colors.grey.shade600,
           ),
           prefixIcon: Icon(
             Icons.title, 
             color: isDarkMode ? Colors.grey.shade400 : Colors.deepPurple
           ),
           filled: true,
-          fillColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
+          fillColor: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -435,12 +435,15 @@ Widget _buildSubjectField(WidgetRef ref) {
           maxLines: 6,
           decoration: InputDecoration(
             hintText:  l10n?.poblemedetaille ?? "Décrivez votre problème en détail...",
+            hintStyle: TextStyle(
+              color: isDarkMode ? const Color.fromARGB(255, 228, 230, 241) : Colors.grey.shade600,
+            ),
             prefixIcon: Padding(
               padding: EdgeInsets.only(bottom: 120),
-              child: Icon(Icons.description, color:isDarkMode ? AppColors.surface : AppColors.darkGrey50),
+              child: Icon(Icons.description, color:isDarkMode ? AppColors.surface : const Color.fromARGB(255, 212, 223, 231)),
             ),
             filled: true,
-            fillColor: isDarkMode ? Colors.grey.shade900 : Colors.white,
+            fillColor: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -474,7 +477,7 @@ Widget _buildSubjectField(WidgetRef ref) {
       child: ElevatedButton(
         onPressed: _isSubmitting ? null : _submitTicket,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDarkMode ? Colors.grey.shade900 : AppColors.primary,
+          backgroundColor: isDarkMode ? Color.fromARGB(255, 13, 21, 70) : AppColors.primary,
           foregroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

@@ -293,7 +293,7 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
     final isDarkMode = themeMode == AppThemeMode.light;
     
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.lightSurface,
+      backgroundColor: isDarkMode ? Color(0xFF0A0E27) : AppColors.lightSurface,
       body: CustomScrollView(
         slivers: [
           AppBarTypes.identificationAppBar(context),

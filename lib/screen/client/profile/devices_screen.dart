@@ -142,7 +142,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
    final isDarkMode = themeMode == AppThemeMode.light;
 
     return Scaffold(
-      backgroundColor:isDarkMode ? AppColors.darkSurface: AppColors.surface ,
+      backgroundColor:isDarkMode ? Color(0xFF0A0E27): AppColors.surface ,
       appBar: AppBar(
         title:  Text(
        l10n?.mesappariels ??  'Mes Appareils',
@@ -151,7 +151,7 @@ Future<void> _disconnectDeviceRemotely(UserDevice device) async {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.primary,
+        backgroundColor: isDarkMode ? Color(0xFF0A0E27) : AppColors.primary,
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(8),

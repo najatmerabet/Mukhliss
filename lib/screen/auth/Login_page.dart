@@ -267,7 +267,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: Align(alignment: Alignment.topRight),
                   ),
                   const SizedBox(height: 40),
-
                   // Logo et titre
                   Center(
                     child: Column(
@@ -295,6 +294,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                         ),
                                       );
                                     },
+
                                     child: Image.asset(
                                       'images/mukhlislogo1.png',
                                       width: 250,

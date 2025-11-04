@@ -236,7 +236,7 @@ Future<bool> _testSingleEndpoint(String url) async {
    final isDarkMode = themeMode == AppThemeMode.light;
     
     return Scaffold(
-      backgroundColor:isDarkMode ? AppColors.darkSurface :AppColors.surface,
+      backgroundColor:isDarkMode ? Color(0xFF0A0E27) :AppColors.surface,
       body: CustomScrollView(
         slivers: [
           // Modern SliverAppBar
@@ -450,7 +450,7 @@ void _showPrivacyPolicy(BuildContext context) {
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: BoxDecoration(
-        color:isDarkMode ? AppColors.darkSurface : AppColors.surface,
+        color:isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
@@ -619,6 +619,8 @@ Widget _buildPrivacySection({required String title, required String content}) {
     ),
   );
 }
+
+
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
@@ -646,7 +648,7 @@ Widget _buildPrivacySection({required String title, required String content}) {
     final isDarkMode = themeMode == AppThemeMode.light;
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.black : Colors.white,
+        color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -741,7 +743,7 @@ final themeMode = ref.read(themeProvider);
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
       decoration: BoxDecoration(
-        color:isDarkMode ? AppColors.darkPrimary :AppColors. surface,
+        color:isDarkMode ? Color(0xFF0A0E27):AppColors. surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
@@ -810,7 +812,7 @@ final themeMode = ref.read(themeProvider);
             
             Container(
               decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+                color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(

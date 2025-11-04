@@ -209,7 +209,7 @@ Future<void> _loadUserData() async {
     );
   }
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+      backgroundColor: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
       body: CustomScrollView(
         slivers: [
           _buildHeader(),
@@ -433,7 +433,7 @@ Future<void> _loadUserData() async {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkSurface : Colors.white,
+        color: isDarkMode ? Color(0xFF0A0E27) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:
@@ -529,7 +529,7 @@ Connectivity status:
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.darkSurface : AppColors.surface,
+              color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             padding: const EdgeInsets.all(20),
@@ -786,7 +786,7 @@ Widget _buildSaveButton(AppLocalizations? l10n) {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black : Colors.grey[50],
+        color: isDark ? Color(0xFF0A0E27) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
@@ -880,9 +880,9 @@ void _showAbout() {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.darkSurface,
-                            AppColors.darkSurface.withOpacity(0.9),
-                            Color(0xFF1A1A2E),
+                           Color(0xFF0A0E27),
+                             Color(0xFF0A0E27),
+                            Color(0xFF0A0E27),
                           ],
                         )
                       : LinearGradient(

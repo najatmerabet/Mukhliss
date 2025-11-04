@@ -79,7 +79,7 @@ class CustomSliverAppBar extends ConsumerWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: isDarkMode
-              ? [AppColors.darkPrimary, AppColors.darkSecondary]
+              ? [Color(0xFF0A0E27), Color(0xFF0A0E27)]
               : [AppColors.lightPrimary, AppColors.lightSecondary],
         ),
       ),

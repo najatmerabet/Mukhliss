@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
+import 'package:mukhliss/l10n/l10n.dart';
 
 import 'package:mukhliss/models/user_device.dart';
 import 'package:mukhliss/providers/theme_provider.dart';
@@ -406,6 +407,7 @@ Widget _buildDeviceCard(UserDevice device) {
   final isActive = device.isActive;
   final thememode = ref.watch(themeProvider);
   final isDarkMode = thememode == AppThemeMode.light;
+  final L10n = AppLocalizations.of(context);
   print(' is active ${_deviceService.currentDeviceId}');
 
   return Container(
@@ -469,8 +471,8 @@ Widget _buildDeviceCard(UserDevice device) {
                   color: const Color(0xFF10B981).withOpacity(0.3),
                 ),
               ),
-              child: const Text(
-                'Appareil actuel',
+              child:  Text(
+               L10n?.appareilactuel  ?? 'Appareil actuel',
                 style: TextStyle(
                   color: Color(0xFF10B981),
                   fontSize: 12,

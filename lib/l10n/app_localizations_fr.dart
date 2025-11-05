@@ -743,4 +743,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mois => 'mois';
+
+  @override
+  String get codenonattribue => 'Code unique non attribué';
+
+  @override
+  String get appareilactuel => 'Appareil actuel';
 }

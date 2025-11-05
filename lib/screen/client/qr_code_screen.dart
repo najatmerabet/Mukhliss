@@ -132,87 +132,130 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
   }
 
   // CARTE UNIFIÉE - QR Code + Code Unique
-  Widget _buildUnifiedIdentificationCard(String qrData, int? userCode) {
-    final themeMode = ref.watch(themeProvider);
-    final isDarkmode = themeMode == AppThemeMode.light;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: isDarkmode ? Color(0xFF0A0E27) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.12),
-            blurRadius: 25,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Section Code Unique
-         
-          
-          // Section QR Code
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: MediaQuery.of(context).size.width * 0.65,
-            height: MediaQuery.of(context).size.width * 0.65,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isRefreshing 
-                    ? AppColors.primary.withOpacity(0.5) 
-                    : AppColors.primary,
-                width: 2,
-              ),
-            ),
-            child: _isRefreshing
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
-                  )
-                : QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: MediaQuery.of(context).size.width * 0.6,
-                    backgroundColor: Colors.white,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: Colors.blue,
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: Colors.black,
-                    ),
-                  ),
-          ),
-          
-          const SizedBox(height: 20),
-         if (userCode != null) ...[
-  Container(
-   
-    child: Column(
-      children: [
-       
-        // Affichage avec cadres individuels
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: _buildDigitBoxes(userCode.toString().padLeft(6, '0')),
+Widget _buildUnifiedIdentificationCard(String qrData, int? userCode) {
+  final themeMode = ref.watch(themeProvider);
+  final isDarkmode = themeMode == AppThemeMode.light;
+  final L10n = AppLocalizations.of(context);
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(28),
+    decoration: BoxDecoration(
+      color: isDarkmode ? Color(0xFF0A0E27) : Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withOpacity(0.12),
+          blurRadius: 25,
+          offset: const Offset(0, 8),
         ),
       ],
     ),
-  ),
-  const SizedBox(height: 24),
-],
-       
+    child: Column(
+      children: [
+        // Section QR Code
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: MediaQuery.of(context).size.width * 0.65,
+          height: MediaQuery.of(context).size.width * 0.65,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _isRefreshing 
+                  ? AppColors.primary.withOpacity(0.5) 
+                  : AppColors.primary,
+              width: 2,
+            ),
+          ),
+          child: _isRefreshing
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
+                )
+              : QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: MediaQuery.of(context).size.width * 0.6,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Colors.blue,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Colors.black,
+                  ),
+                ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Section Code Unique avec gestion du cas null
+        if (userCode != null) ...[
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8, // Limite la largeur maximale
+            ),
+            child: Column(
+              children: [
+
+                
+                // Affichage avec cadres individuels - CONTEXTE AJOUTÉ
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _buildDigitBoxes(userCode.toString().padLeft(6, '0')),
+                ),
+                
+           
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ] else ...[
+          // Message lorsque le code unique n'est pas disponible
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkmode ? Colors.blueGrey[800] : Colors.blue[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDarkmode ? Colors.blueGrey : Colors.blue[100]!,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: isDarkmode ? Colors.blue[200] : Colors.blue[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                      L10n?.codenonattribue??  'Code unique non attribué',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkmode ? Colors.white : Colors.blue[800],
+                        ),
+                      ),
+                     
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildErrorContent(String error) {
     return Container(
@@ -347,27 +390,27 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
     );
   }
 
-  List<Widget> _buildDigitBoxes(String code) {
+ List<Widget> _buildDigitBoxes(String code) {
   List<Widget> boxes = [];
   
   for (int i = 0; i < code.length; i++) {
     boxes.add(
       Container(
-        width: 30,
-        height: 30,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: 32, // Réduit de 40 à 32
+        height: 32,
+        margin: const EdgeInsets.symmetric(horizontal: 2), // Réduit la marge
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: AppColors.primary.withOpacity(0.3),
-            width: 2,
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -375,7 +418,7 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
           child: Text(
             code[i],
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18, // Réduit de 30 à 18
               fontWeight: FontWeight.w800,
               color: AppColors.primary,
               fontFeatures: [const FontFeature.tabularFigures()],
@@ -385,12 +428,10 @@ class _QRCodeScreenState extends ConsumerState<QRCodeScreen> {
       ),
     );
     
-    // Ajouter un espace entre les groupes de 3 chiffres
-    if (i == 2) {
-      boxes.add(const SizedBox(width: 5));
-    }
+    
   }
   
   return boxes;
 }
+
 }

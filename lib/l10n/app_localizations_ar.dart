@@ -731,5 +731,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get week => 'أسابيع';
 
   @override
-  String get mois => 'mois';
+  String get mois => 'شهر';
+
+  @override
+  String get codenonattribue => 'رمز فريد غير مُخصَّص بعد';
+
+  @override
+  String get appareilactuel => 'الجهاز الحالي';
 }

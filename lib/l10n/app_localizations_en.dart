@@ -736,4 +736,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mois => 'mois';
+
+  @override
+  String get codenonattribue => 'Unique code not assigned';
+
+  @override
+  String get appareilactuel => 'Current device';
 }

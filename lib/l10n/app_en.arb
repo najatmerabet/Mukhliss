@@ -243,8 +243,9 @@
 "h":"h",
 "day":"day",
  "week":"weeks",
-"mois":"mois"
-
+"mois":"mois",
+"codenonattribue":"Unique code not assigned",
+"appareilactuel":"Current device"
 }
 
 

@@ -239,6 +239,7 @@
  "h":"h",
  "day":"jour",
  "week":"semaines",
- "mois":"mois"
-
+ "mois":"mois",
+ "codenonattribue":"Code unique non attribué",
+"appareilactuel":"Appareil actuel"
 }

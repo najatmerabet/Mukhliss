@@ -237,8 +237,9 @@
 "h":"ساعة",
 "day":"يوم",
 "week":"أسابيع",
-"mois":"mois"
-
+"mois":"شهر",
+"codenonattribue":"رمز فريد غير مُخصَّص بعد",
+"appareilactuel":"الجهاز الحالي"
 }
 
 

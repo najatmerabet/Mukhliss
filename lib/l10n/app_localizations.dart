@@ -1515,6 +1515,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'mois'**
   String get mois;
+
+  /// No description provided for @codenonattribue.
+  ///
+  /// In en, this message translates to:
+  /// **'Unique code not assigned'**
+  String get codenonattribue;
+
+  /// No description provided for @appareilactuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current device'**
+  String get appareilactuel;
 }
 
 class _AppLocalizationsDelegate

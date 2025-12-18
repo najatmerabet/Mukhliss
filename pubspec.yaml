@@ -1,8 +1,8 @@
 name: mukhliss
-description: "A new Flutter project."
+description: "Application de fidélité client Mukhliss - Gestion des offres et récompenses."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
@@ -12,18 +12,18 @@ flutter_icons:
   image_path: "images/mukhlis1.png"
 
 environment:
-  sdk: ^3.7.2
+  sdk: ^3.5.0
 
 dependencies:
   flutter:
     sdk: flutter
   supabase_flutter: ^2.0.0
-  flutter_dotenv: ^5.1.0 
+  flutter_dotenv: ^5.1.0
   connectivity_plus: ^5.0.0
   shared_preferences: ^2.2.2
   get: ^4.7.2
   flutter_riverpod: ^2.5.1
-  google_sign_in: ^6.3.0 
+  google_sign_in: ^6.3.0
   qr_flutter: ^4.1.0
   flutter_localizations:
     sdk: flutter
@@ -33,11 +33,12 @@ dependencies:
   device_info_plus: ^11.4.0
   tuple: ^2.0.0
   shimmer: ^2.0.0
-  uuid: ^4.5.1
+  uuid: ^4.5.2
   package_info_plus: ^8.3.0
   geolocator: ^14.0.1
   flutter_map: ^8.1.1
   flutter_polyline_points: ^2.1.0
+  flutter_map_marker_cluster: ^8.2.2
   latlong2: ^0.9.1
   http: ^1.4.0
   cached_network_image: ^3.4.1
@@ -45,14 +46,24 @@ dependencies:
   url_launcher: ^6.1.11
   internet_connection_checker_plus: ^2.0.0
   flutter_launcher_icons: ^0.13.1
-  
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  image: ^4.6.0
 
+# ============================================
+# DEV DEPENDENCIES - Pour les tests et le développement
+# ============================================
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.13
 
 flutter:
   generate: true
   uses-material-design: true
-  
-  
+
   # Assets configuration
   assets:
     - .env

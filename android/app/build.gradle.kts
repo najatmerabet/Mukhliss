@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.mukhliss"
+    namespace = "com.mukhliss.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     
@@ -29,7 +29,9 @@ android {
     }
     
     defaultConfig {
-        applicationId = "com.example.mukhliss"
+        // TODO: Changez ceci vers votre propre domaine inversé
+        // Exemple: com.votreentreprise.mukhliss
+        applicationId = "com.mukhliss.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -38,18 +40,26 @@ android {
     
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
-            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
-            storePassword = keystoreProperties.getProperty("storePassword")
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+                storePassword = keystoreProperties.getProperty("storePassword")
+            } else {
+                // Utiliser debug keystore si pas de release keystore
+                storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
     
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

@@ -51,8 +51,8 @@ class CategoryEntityBottomSheet extends ConsumerStatefulWidget {
 class _CategoryEntityBottomSheetState
     extends ConsumerState<CategoryEntityBottomSheet>
     with TickerProviderStateMixin {
-  final int _storesPerPage = 5; // Nombre de magasins à charger à chaque fois
-  int _visibleStoreEntitysCount = 5; // Nombre actuel de magasins visibles
+  final int _storesPerPage = 5;
+  int _visibleStoreEntitysCount = 5;
   final ScrollController _scrollController = ScrollController();
   final DraggableScrollableController _draggableController =
       DraggableScrollableController();

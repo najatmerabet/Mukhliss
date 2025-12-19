@@ -72,10 +72,10 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.example.mukhliss</string>
+                <string>com.mukhliss.app</string>
             </array>
             <key>CFBundleURLName</key>
-            <string>com.example.mukhliss.auth</string>
+            <string>com.mukhliss.app.auth</string>
         </dict>
         
         <!-- Google Sign-In URL scheme -->

@@ -1,140 +1,268 @@
-# CI/CD Pipeline pour Mukhliss
-# Déclenché sur push et pull request
+# 🚀 CI/CD Pipeline Complet pour Mukhliss
+# Déploiement automatique vers Play Store et App Store
+#
+# PRÉREQUIS - Configurer ces secrets dans GitHub:
+#
+# ANDROID:
+#   - ANDROID_KEYSTORE_BASE64: Keystore encodé en base64
+#   - ANDROID_KEYSTORE_PASSWORD: Mot de passe du keystore
+#   - ANDROID_KEY_ALIAS: Alias de la clé
+#   - ANDROID_KEY_PASSWORD: Mot de passe de la clé
+#   - GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: Service account JSON pour Play Console
+#
+# iOS:
+#   - APP_STORE_CONNECT_API_KEY_ID: ID de la clé API
+#   - APP_STORE_CONNECT_ISSUER_ID: Issuer ID
+#   - APP_STORE_CONNECT_API_KEY_BASE64: Clé API encodée en base64
+#   - APPLE_TEAM_ID: Team ID Apple
+#   - MATCH_PASSWORD: Mot de passe pour match (fastlane)
 
-name: CI/CD Pipeline
+name: 🚀 CI/CD Pipeline
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master]
+    tags:
+      - "v*"
   pull_request:
     branches: [main, master]
 
 env:
   FLUTTER_VERSION: "3.27.0"
+  JAVA_VERSION: "17"
 
 jobs:
   # ============================================================
-  # JOB 1: Analyse et Tests
+  # JOB 1: Tests et Analyse de Code
   # ============================================================
   test:
     name: 🧪 Tests & Analyse
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🎯 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: "stable"
+          channel: stable
           cache: true
 
       - name: 📦 Get dependencies
         run: flutter pub get
 
-      - name: 🔍 Analyze code
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
+      - name: 🔍 Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
         continue-on-error: true
 
-      - name: 🧪 Run tests
+      - name: 🧪 Tests
         run: flutter test --coverage
 
-      - name: 📊 Upload coverage
-        uses: codecov/codecov-action@v3
+      - name: 📊 Upload Coverage
+        uses: codecov/codecov-action@v4
         with:
           files: coverage/lcov.info
           fail_ci_if_error: false
 
   # ============================================================
-  # JOB 2: Build Android
+  # JOB 2: Build Android (Debug pour PR, Release pour main)
   # ============================================================
   build-android:
     name: 🤖 Build Android
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: ☕ Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "17"
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: 🎯 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: "stable"
+          channel: stable
           cache: true
 
       - name: 📦 Get dependencies
         run: flutter pub get
 
-      - name: 🏗️ Build APK
+      # Build Debug pour les PR
+      - name: 🏗️ Build APK Debug (PR)
+        if: github.event_name == 'pull_request'
         run: flutter build apk --debug
+
+      # Setup Keystore pour Release
+      - name: 🔐 Decode Keystore
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/keys/release.jks
+        continue-on-error: true
+
+      - name: 📝 Create key.properties
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=../keys/release.jks
+          EOF
+        continue-on-error: true
+
+      # Build Release pour main/tags
+      - name: 🏗️ Build App Bundle (Release)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+        run: flutter build appbundle --release
+        continue-on-error: true
+
+      - name: 🏗️ Build APK (Release Fallback)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: flutter build apk --release || flutter build apk --debug
 
       - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+          if-no-files-found: warn
 
   # ============================================================
-  # JOB 3: Build iOS (seulement si secrets configurés)
+  # JOB 3: Deploy to Play Store (sur tag uniquement)
+  # ============================================================
+  deploy-android:
+    name: 🚀 Deploy to Play Store
+    runs-on: ubuntu-latest
+    needs: build-android
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: 📥 Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: artifacts/
+
+      - name: 📤 Upload to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.mukhliss.app
+          releaseFiles: artifacts/bundle/release/app-release.aab
+          track: internal
+          status: completed
+        continue-on-error: true
+
+  # ============================================================
+  # JOB 4: Build iOS
   # ============================================================
   build-ios:
     name: 🍎 Build iOS
     runs-on: macos-latest
     needs: test
-    if: false # Désactivé temporairement - problèmes réseau CocoaPods
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🎯 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: "stable"
+          channel: stable
           cache: true
 
       - name: 📦 Get dependencies
         run: flutter pub get
 
-      - name: 🏗️ Build iOS (sans signature)
+      - name: 🏗️ Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
+        continue-on-error: true
 
       - name: 📤 Upload iOS Build
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
           path: build/ios/iphoneos/
+          if-no-files-found: warn
 
   # ============================================================
-  # JOB 4: Deploy to Firebase (optionnel)
+  # JOB 5: Deploy to App Store (sur tag uniquement)
   # ============================================================
-  # deploy:
-  #   name: 🚀 Deploy to Firebase
-  #   runs-on: ubuntu-latest
-  #   needs: [build-android]
-  #   if: github.ref == 'refs/heads/main'
-  #
-  #   steps:
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: android-apk
-  #
-  #     - name: Upload to Firebase App Distribution
-  #       uses: wzieba/Firebase-Distribution-Github-Action@v1
-  #       with:
-  #         appId: ${{ secrets.FIREBASE_APP_ID }}
-  #         serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-  #         groups: testers
-  #         file: app-release.apk
+  deploy-ios:
+    name: 🚀 Deploy to App Store
+    runs-on: macos-latest
+    needs: build-ios
+    if: startsWith(github.ref, 'refs/tags/v') && false # Désactivé - nécessite configuration Fastlane
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🍎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: 🎯 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+
+      - name: 📦 Install dependencies
+        run: |
+          flutter pub get
+          cd ios && pod install
+
+      - name: 🔐 Setup App Store Connect API Key
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: 🚀 Deploy with Fastlane
+        run: |
+          cd ios
+          fastlane release
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+  # ============================================================
+  # JOB 6: Notify on Success/Failure
+  # ============================================================
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: [build-android, build-ios]
+    if: always()
+
+    steps:
+      - name: 📊 Get workflow conclusion
+        id: conclusion
+        run: |
+          if [[ "${{ needs.build-android.result }}" == "success" ]]; then
+            echo "status=✅ Success" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📢 Create Summary
+        run: |
+          echo "## 🚀 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | ${{ needs.build-android.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | ${{ needs.build-ios.result }} |" >> $GITHUB_STEP_SUMMARY

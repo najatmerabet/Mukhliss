@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:mukhliss/features/support/data/models/support_ticket_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class Support_Tickets_Servvice {
+class SupportTicketsService {
   final SupabaseClient _client = Supabase.instance.client;
 
   Future<void> createSupportTicket({
@@ -24,7 +25,7 @@ class Support_Tickets_Servvice {
         'category': category,
       });
     } catch (e, stack) {
-      print('Error creating ticket: $e\n$stack');
+      debugPrint('Error creating ticket: $e\n$stack');
       rethrow;
     }
   }

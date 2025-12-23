@@ -1,7 +1,6 @@
 /// Page d'inscription migrée vers Clean Architecture.
 library;
 
-import 'package:mukhliss/core/logger/app_logger.dart';
 
 // ============================================================
 // MUKHLISS - Page d'Inscription (Migrée)

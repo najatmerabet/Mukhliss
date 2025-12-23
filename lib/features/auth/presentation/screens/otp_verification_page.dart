@@ -10,7 +10,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mukhliss/core/logger/app_logger.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/core/routes/app_router.dart';
 import 'package:mukhliss/core/utils/snackbar_helper.dart';

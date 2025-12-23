@@ -142,10 +142,12 @@ class LocationController {
 
     if (currentPosition == null) {
       await getCurrentLocation();
-      if (_disposed)
+      if (_disposed) {
         throw Exception("Controller disposed during location fetch");
-      if (currentPosition == null)
+      }
+      if (currentPosition == null) {
         throw Exception("Could not obtain current position");
+      }
     }
 
     _safeCallback(onLoadingChanged, true);
@@ -167,18 +169,21 @@ class LocationController {
       );
 
       // Check if disposed after async operation
-      if (_disposed)
+      if (_disposed) {
         throw Exception("Controller disposed during route calculation");
+      }
 
       final routeSteps = await routingService.getRouteSteps(start, end, mode);
 
-      if (_disposed)
+      if (_disposed) {
         throw Exception("Controller disposed during route calculation");
+      }
 
       final routeInfo = await routingService.getRouteInfo(start, end, mode);
 
-      if (_disposed)
+      if (_disposed) {
         throw Exception("Controller disposed during route calculation");
+      }
 
       polylinePoints = routeCoordinates;
       this.routeInfo = routeInfo;

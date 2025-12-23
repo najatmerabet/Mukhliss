@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:mukhliss/core/core.dart';
 
 // ✅ Auth screens (from features - provides LoginPage, SignupPage, etc.)
-import 'package:mukhliss/features/auth/auth.dart';
 
 // Core screens
 import 'package:mukhliss/core/screens/splash_screen.dart';

@@ -199,7 +199,7 @@ class PerformanceOverlay extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          _buildMetric('FPS', '${stats.fps.toStringAsFixed(0)}', 
+          _buildMetric('FPS', stats.fps.toStringAsFixed(0), 
               stats.fps >= 50 ? Colors.green : Colors.orange),
           _buildMetric('Latence', '${stats.avgResponseTimeMs.toStringAsFixed(0)}ms',
               stats.avgResponseTimeMs <= 200 ? Colors.green : Colors.orange),

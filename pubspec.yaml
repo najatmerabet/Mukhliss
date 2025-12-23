@@ -53,6 +53,7 @@ dependencies:
 # ============================================
 # DEV DEPENDENCIES - Pour les tests et le développement
 # ============================================
+  path_provider: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

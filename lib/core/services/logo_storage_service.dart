@@ -6,7 +6,6 @@
 /// des magasins dans Supabase Storage.
 library;
 
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -103,7 +102,7 @@ class LogoStorageService {
         );
 
         if (resizedBytes != null) {
-          final variantPath = 'variants/${size}x${size}/${storeId}_$fileId.webp';
+          final variantPath = 'variants/${size}x$size/${storeId}_$fileId.webp';
           
           await _supabase.storage
               .from(LogoStorageConfig.bucketName)

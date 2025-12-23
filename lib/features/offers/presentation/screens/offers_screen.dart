@@ -7,7 +7,6 @@
 library;
 
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
@@ -832,37 +831,6 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
     );
   }
 
-  Widget _buildGlassLogo(Color accentColor) {
-    return Container(
-      color: accentColor.withValues(alpha: 0.1),
-      child: Center(
-        child: Icon(Icons.storefront_rounded, size: 24, color: accentColor),
-      ),
-    );
-  }
-
-  Widget _buildLogoPlaceholder(bool isDarkMode) {
-    return Container(
-      color:
-          isDarkMode
-              ? Colors.white.withValues(alpha: 0.05)
-              : const Color(0xFFF9FAFB),
-      child: Center(
-        child: Icon(
-          Icons.storefront_rounded,
-          size: 22,
-          color:
-              isDarkMode
-                  ? Colors.white.withValues(alpha: 0.25)
-                  : const Color(0xFFD1D5DB),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStorePlaceholder(bool isDarkMode) {
-    return _buildLogoPlaceholder(isDarkMode);
-  }
 
   Widget _buildClaimedRewardCard(ClaimedOffer offer, bool isDarkMode) {
     final l10n = AppLocalizations.of(context);

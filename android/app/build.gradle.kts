@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.mukhliss.app"
+    namespace = "com.nextgen.mukhliss"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
     
@@ -31,7 +31,7 @@ android {
     defaultConfig {
         // TODO: Changez ceci vers votre propre domaine inversé
         // Exemple: com.votreentreprise.mukhliss
-        applicationId = "com.mukhliss.app"
+        applicationId = "com.nextgen.mukhliss"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

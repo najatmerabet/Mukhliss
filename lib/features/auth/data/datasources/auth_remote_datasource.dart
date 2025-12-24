@@ -105,20 +105,21 @@ class SupabaseAuthClient implements IAuthClient {
   late final GoogleSignIn _googleSignIn;
 
   SupabaseAuthClient({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client {
+      : _client = client ?? Supabase.instance.client {
     _googleSignIn = _createGoogleSignIn();
   }
 
   GoogleSignIn _createGoogleSignIn() {
+    print("defaultTargetPlatform: $defaultTargetPlatform");
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return GoogleSignIn(
         clientId:
-            '1044422915838-4f1i5v8s88efr6u8qogjq6o4kdvl9uvm.apps.googleusercontent.com',
+            '562124159804-f6p1std0vf6dfl6gncg73vj7f4n5ni3n.apps.googleusercontent.com',
       );
     }
     return GoogleSignIn(
       serverClientId:
-          '1044422915838-4f1i5v8s88efr6u8qogjq6o4kdvl9uvm.apps.googleusercontent.com',
+          '562124159804-t9fsl2c9bbcmtj9jvt2pcooamlhmi4oq.apps.googleusercontent.com',
     );
   }
 
@@ -206,6 +207,38 @@ class SupabaseAuthClient implements IAuthClient {
         );
       }
 
+      // Créer ou mettre à jour le profil client avec code_unique
+      try {
+        final user = response.user!;
+        final existingClient = await _client
+            .from('clients')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (existingClient == null) {
+          // Nouveau utilisateur - créer le profil
+          final codeUnique = _generateUniqueCode();
+          final displayName = googleUser.displayName ?? '';
+          final nameParts = displayName.split(' ');
+          final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+          final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+          await _client.from('clients').insert({
+            'id': user.id,
+            'email': user.email ?? googleUser.email,
+            'prenom': firstName,
+            'nom': lastName,
+            'code_unique': codeUnique,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          AppLogger.info('Profil client créé pour Google user: ${user.email}');
+        }
+      } catch (e) {
+        AppLogger.warning('Erreur création/vérification profil client: $e');
+        // Ne pas échouer la connexion si le profil existe déjà
+      }
+
       return Result.success(_mapToAppUser(response.user!));
     } on AuthException catch (e) {
       return Result.failure(_mapAuthException(e));
@@ -214,6 +247,7 @@ class SupabaseAuthClient implements IAuthClient {
       return Result.failure(UnknownFailure(e.toString()));
     }
   }
+
 
   @override
   Future<Result<AppUser>> signInWithFacebook() async {
@@ -255,7 +289,7 @@ class SupabaseAuthClient implements IAuthClient {
       try {
         // Générer un code unique (timestamp + random)
         final codeUnique = _generateUniqueCode();
-        
+
         await _client.from('clients').insert({
           'id': response.user!.id,
           'email': email.trim(),
@@ -286,8 +320,50 @@ class SupabaseAuthClient implements IAuthClient {
       AppLogger.debug('Envoi OTP à: $email (isRecovery: $isRecovery)');
 
       if (isRecovery) {
-        await _client.auth.resetPasswordForEmail(email.trim());
+        // Mode récupération de mot de passe
+        // Vérifier d'abord si l'email existe dans la base
+        try {
+          final existingClient = await _client
+              .from('clients')
+              .select('email')
+              .eq('email', email.trim().toLowerCase())
+              .maybeSingle();
+
+          if (existingClient == null) {
+            // L'email n'existe pas - ne pas envoyer d'email
+            return Result.failure(const UserNotFoundFailure());
+          }
+        } catch (e) {
+          AppLogger.debug('Vérification email recovery: $e');
+          // En cas d'erreur, on continue quand même
+        }
+
+        // Envoyer un code OTP pour récupération
+        await _client.auth.signInWithOtp(
+          email: email.trim(),
+          shouldCreateUser: false, // Ne pas créer de compte si n'existe pas
+        );
       } else {
+        // Mode inscription - vérifier d'abord si l'email existe
+        // Vérifier dans la table auth.users via une tentative de connexion
+        try {
+          // Essayer de voir si l'utilisateur existe dans la table clients
+          final existingClient = await _client
+              .from('clients')
+              .select('email')
+              .eq('email', email.trim().toLowerCase())
+              .maybeSingle();
+
+          if (existingClient != null) {
+            // L'email existe déjà
+            return Result.failure(const EmailAlreadyInUseFailure());
+          }
+        } catch (e) {
+          // Ignorer les erreurs de vérification et continuer
+          AppLogger.debug('Vérification email: $e');
+        }
+
+        // Envoyer l'OTP pour inscription
         await _client.auth.signInWithOtp(
           email: email.trim(),
           shouldCreateUser: true,
@@ -296,11 +372,17 @@ class SupabaseAuthClient implements IAuthClient {
 
       return const Result.success(null);
     } on AuthException catch (e) {
+      // Supabase retourne cette erreur si l'utilisateur existe déjà
+      if (e.message.toLowerCase().contains('user already registered') ||
+          e.message.toLowerCase().contains('email already registered')) {
+        return Result.failure(const EmailAlreadyInUseFailure());
+      }
       return Result.failure(_mapAuthException(e));
     } catch (e) {
       return Result.failure(UnknownFailure(e.toString()));
     }
   }
+
 
   @override
   Future<Result<AppUser>> verifyOtp({

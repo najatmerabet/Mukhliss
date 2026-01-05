@@ -162,6 +162,19 @@ class MockAuthClient implements IAuthClient {
         const Result.failure(AuthFailure('signInWithFacebook non configuré'));
   }
 
+  @override
+  Future<Result<AppUser>> signInWithApple() async {
+    return signInWithGoogleResult ??
+        const Result.failure(AuthFailure('signInWithApple non configuré'));
+  }
+
+  @override
+  Future<Result<void>> deleteAccount() async {
+    _currentUser = null;
+    _isAuthenticated = false;
+    return const Result.success(null);
+  }
+
   // ============================================
   // MÉTHODES UTILITAIRES POUR LES TESTS
   // ============================================

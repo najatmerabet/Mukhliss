@@ -265,8 +265,7 @@ class MapControlButton extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color:
-            backgroundColor ??
+        color: backgroundColor ??
             (isDarkMode ? AppColors.darkSurface : Colors.white),
         shape: BoxShape.circle,
         boxShadow: [
@@ -448,13 +447,18 @@ class ArrivalNotification extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Vous êtes arrivé!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n?.vousEtesArrive ?? 'Vous êtes arrivé!',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    );
+                  },
                 ),
                 Text(
                   storeName,

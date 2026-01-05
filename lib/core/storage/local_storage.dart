@@ -178,10 +178,29 @@ class LocalStorage {
   // ============================================================
 
   /// Efface les données de session (garde les préférences)
+  ///
+  /// Note: Les tokens sont maintenant gérés par [SecureStorage]
+  /// Cette méthode ne gère que les données non-sensibles
   static Future<void> clearSession() async {
-    await remove(AppConstants.authTokenKey);
-    await remove(AppConstants.refreshTokenKey);
+    // Les tokens sont maintenant dans SecureStorage
+    // Voir: SecureStorage.clearSession()
     await remove(AppConstants.userIdKey);
-    AppLogger.info('Session effacée', tag: 'Storage');
+    AppLogger.info('Session effacée (local storage)', tag: 'Storage');
+  }
+
+  // ============================================================
+  // ⚠️ DEPRECATED - Utiliser SecureStorage
+  // ============================================================
+
+  /// @deprecated Utiliser SecureStorage.getAuthToken() à la place
+  @Deprecated('Utiliser SecureStorage.getAuthToken() pour les tokens')
+  static String? getAuthToken() {
+    return getString(AppConstants.authTokenKey);
+  }
+
+  /// @deprecated Utiliser SecureStorage.setAuthToken() à la place
+  @Deprecated('Utiliser SecureStorage.setAuthToken() pour les tokens')
+  static Future<bool> setAuthToken(String token) {
+    return setString(AppConstants.authTokenKey, token);
   }
 }

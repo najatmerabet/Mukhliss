@@ -39,31 +39,66 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
   }
 
   Future<void> _initialize() async {
-    // Charger currentDeviceId depuis Supabase
-    await _deviceService.initCurrentDeviceFromSession();
-    // Charger la liste des appareils
-    await _loadDevices();
+    try {
+      // D'abord essayer de charger le deviceId depuis la session existante
+      await _deviceService.initCurrentDeviceFromSession();
+
+      // Si aucun deviceId n'est trouvé, enregistrer l'appareil actuel
+      if (_deviceService.currentDeviceId == null) {
+        debugPrint(
+            '🔹 [DevicesScreen] Aucun appareil trouvé, enregistrement...');
+        final device = await _deviceService.registerCurrentDevice();
+        if (device != null) {
+          debugPrint(
+              '✅ [DevicesScreen] Appareil enregistré: ${device.deviceName}');
+        } else {
+          debugPrint(
+              '⚠️ [DevicesScreen] Échec d\'enregistrement de l\'appareil');
+        }
+      } else {
+        debugPrint(
+            '✅ [DevicesScreen] Appareil actuel: ${_deviceService.currentDeviceId}');
+      }
+
+      // Charger la liste des appareils
+      await _loadDevices();
+    } catch (e) {
+      debugPrint('❌ [DevicesScreen] Erreur initialisation: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Erreur de chargement: $e';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadDevices() async {
-    if (!mounted) return; // <- garde avant le premier setState
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
+      debugPrint('🔹 [DevicesScreen] Chargement des appareils...');
       final devices = await _deviceService.getUserDevices();
-      final stats = await _deviceService.getDeviceStats();
+      debugPrint('🔹 [DevicesScreen] ${devices.length} appareil(s) trouvé(s)');
 
-      if (!mounted) return; // <- garde avant le setState final
+      final stats = await _deviceService.getDeviceStats();
+      debugPrint('🔹 [DevicesScreen] Stats: $stats');
+      debugPrint(
+          '🔹 [DevicesScreen] Current Device ID: ${_deviceService.currentDeviceId}');
+
+      if (!mounted) return;
       setState(() {
         _devices = devices;
         _stats = stats;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return; // <- garde avant le setState d’erreur
+      debugPrint('❌ [DevicesScreen] Erreur chargement: $e');
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -210,6 +245,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
     }
 
     if (_error != null) {
+      final l10n = AppLocalizations.of(context);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -217,7 +253,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'Erreur de chargement',
+              l10n?.erreurChargement ?? 'Erreur de chargement',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
@@ -229,7 +265,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadDevices,
-              child: const Text('Réessayer'),
+              child: Text(l10n?.reessayer ?? 'Réessayer'),
             ),
           ],
         ),
@@ -257,7 +293,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
     if (_stats.isEmpty) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final thememode = ref.watch(themeProvider);
-    final isDarkMode = thememode == AppThemeMode.light;
+    final isDarkMode = thememode == AppThemeMode.dark;
     return Container(
       decoration: BoxDecoration(
         color: isDarkMode ? Color.fromARGB(255, 3, 9, 43) : Colors.white,
@@ -320,7 +356,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
 
   Widget _buildStatBox(String label, String value, Color color, IconData icon) {
     final thememode = ref.watch(themeProvider);
-    final isDarkMode = thememode == AppThemeMode.light;
+    final isDarkMode = thememode == AppThemeMode.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -355,7 +391,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
   Widget _buildDevicesSection() {
     final l10n = AppLocalizations.of(context);
     final thememode = ref.watch(themeProvider);
-    final isDarkMode = thememode == AppThemeMode.light;
+    final isDarkMode = thememode == AppThemeMode.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -368,7 +404,6 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
           ),
         ),
         const SizedBox(height: 16),
-
         if (_devices.isEmpty)
           _buildEmptyState()
         else
@@ -378,9 +413,13 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context);
+    final thememode = ref.watch(themeProvider);
+    final isDarkMode = thememode == AppThemeMode.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? const Color(0xFF1A1F3C) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -393,20 +432,25 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
       padding: const EdgeInsets.all(32),
       child: Column(
         children: [
-          Icon(Icons.devices, size: 64, color: Colors.grey[400]),
+          Icon(Icons.devices,
+              size: 64,
+              color: isDarkMode ? Colors.grey[600] : Colors.grey[400]),
           const SizedBox(height: 16),
-          const Text(
-            'Aucun appareil enregistré',
+          Text(
+            l10n?.aucunAppareil ?? 'Aucun appareil enregistré',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
+              color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Vos appareils connectés apparaîtront ici',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            l10n?.appareilsApparaitront ??
+                'Vos appareils connectés apparaîtront ici',
+            style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14),
           ),
         ],
       ),
@@ -418,8 +462,8 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
     final isCurrent = device.deviceId == _deviceService.currentDeviceId;
     final isActive = device.isActive;
     final thememode = ref.watch(themeProvider);
-    final isDarkMode = thememode == AppThemeMode.light;
-    final L10n = AppLocalizations.of(context);
+    final isDarkMode = thememode == AppThemeMode.dark;
+    final l10n = AppLocalizations.of(context);
     AppLogger.debug(' is active ${_deviceService.currentDeviceId}');
 
     return Container(
@@ -434,10 +478,9 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
             offset: const Offset(0, 4),
           ),
         ],
-        border:
-            isCurrent
-                ? Border.all(color: const Color(0xFF10B981), width: 2)
-                : null,
+        border: isCurrent
+            ? Border.all(color: const Color(0xFF10B981), width: 2)
+            : null,
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(20),
@@ -445,20 +488,18 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color:
-                isCurrent
-                    ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                    : isActive
+            color: isCurrent
+                ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                : isActive
                     ? const Color(0xFF3B82F6).withValues(alpha: 0.1)
                     : Colors.grey.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             _getDeviceIcon(device.deviceType, device.platform),
-            color:
-                isCurrent
-                    ? const Color(0xFF10B981)
-                    : isActive
+            color: isCurrent
+                ? const Color(0xFF10B981)
+                : isActive
                     ? const Color(0xFF3B82F6)
                     : Colors.grey,
             size: 24,
@@ -472,10 +513,9 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color:
-                      isDarkMode
-                          ? (isActive ? Colors.white : Colors.grey)
-                          : (isActive ? Colors.grey[800] : Colors.grey[400]),
+                  color: isDarkMode
+                      ? (isActive ? Colors.white : Colors.grey)
+                      : (isActive ? Colors.grey[800] : Colors.grey[400]),
                 ),
               ),
             ),
@@ -493,7 +533,7 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
                   ),
                 ),
                 child: Text(
-                  L10n?.appareilactuel ?? 'Appareil actuel',
+                  l10n?.appareilactuel ?? 'Appareil actuel',
                   style: TextStyle(
                     color: Color(0xFF10B981),
                     fontSize: 12,
@@ -512,8 +552,8 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                 ),
-                child: const Text(
-                  'Déconnecté',
+                child: Text(
+                  l10n?.deconnecte ?? 'Déconnecté',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 12,
@@ -532,19 +572,17 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
                 Icon(
                   _getPlatformIcon(device.platform),
                   size: 16,
-                  color:
-                      isDarkMode
-                          ? (isActive ? Colors.white : Colors.grey[400])
-                          : (isActive ? Colors.grey[800] : Colors.grey[400]),
+                  color: isDarkMode
+                      ? (isActive ? Colors.white : Colors.grey[400])
+                      : (isActive ? Colors.grey[800] : Colors.grey[400]),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '${device.platform.toUpperCase()} • ${device.deviceType.toUpperCase()}',
                   style: TextStyle(
-                    color:
-                        isDarkMode
-                            ? (isActive ? Colors.white : Colors.grey[400])
-                            : (isActive ? Colors.grey[800] : Colors.grey[400]),
+                    color: isDarkMode
+                        ? (isActive ? Colors.white : Colors.grey[400])
+                        : (isActive ? Colors.grey[800] : Colors.grey[400]),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -553,13 +591,12 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Dernière activité: ${_formatDate(device.lastActiveAt)}',
+              '${l10n?.derniereActivite ?? "Derni\u00e8re activit\u00e9"}: ${_formatDate(device.lastActiveAt, l10n)}',
               style: TextStyle(
                 fontSize: 12,
-                color:
-                    isDarkMode
-                        ? (isActive ? Colors.white : Colors.grey[400])
-                        : (isActive ? Colors.grey[800] : Colors.grey[400]),
+                color: isDarkMode
+                    ? (isActive ? Colors.white : Colors.grey[400])
+                    : (isActive ? Colors.grey[800] : Colors.grey[400]),
               ),
             ),
             if (device.appVersion != null) ...[
@@ -568,30 +605,28 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
                 'Version: ${device.appVersion}',
                 style: TextStyle(
                   fontSize: 12,
-                  color:
-                      isDarkMode
-                          ? (isActive ? Colors.white : Colors.grey[400])
-                          : (isActive ? Colors.grey[800] : Colors.grey[400]),
+                  color: isDarkMode
+                      ? (isActive ? Colors.white : Colors.grey[400])
+                      : (isActive ? Colors.grey[800] : Colors.grey[400]),
                 ),
               ),
             ],
           ],
         ),
         // Afficher le bouton de déconnexion seulement si l'appareil est actif et n'est pas l'appareil courant
-        trailing:
-            isActive && !isCurrent
-                ? Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    onPressed: () => _disconnectDeviceRemotely(device),
-                    icon: const Icon(Icons.logout, color: Colors.red, size: 20),
-                    tooltip: 'Déconnecter à distance',
-                  ),
-                )
-                : null,
+        trailing: isActive && !isCurrent
+            ? Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  onPressed: () => _disconnectDeviceRemotely(device),
+                  icon: const Icon(Icons.logout, color: Colors.red, size: 20),
+                  tooltip: 'Déconnecter à distance',
+                ),
+              )
+            : null,
         isThreeLine: true,
       ),
     );
@@ -625,12 +660,12 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
     }
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, [AppLocalizations? l10n]) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inMinutes < 1) {
-      return 'À l\'instant';
+      return l10n?.aLinstant ?? '\u00c0 l\'instant';
     } else if (difference.inHours < 1) {
       return 'Il y a ${difference.inMinutes} min';
     } else if (difference.inDays < 1) {
@@ -643,64 +678,64 @@ class _DevicesScreenState extends ConsumerState<_DevicesScreenContent> {
   }
 
   Future<bool> _showConfirmDialog(String title, String content) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            content: Text(
-              content,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Annuler',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Déconnecter',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
           ),
+        ),
+        content: Text(
+          content,
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              l10n?.cancel ?? 'Annuler',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              l10n?.deconnecterBtn ?? 'D\u00e9connecter',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
     return result ?? false;
   }

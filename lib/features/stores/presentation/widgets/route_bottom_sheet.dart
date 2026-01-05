@@ -83,7 +83,6 @@ class RouteBottomSheet extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 16),
-
                         if (showTransportModes) ...[
                           _buildTransportSection(
                             context,
@@ -92,14 +91,12 @@ class RouteBottomSheet extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                         ],
-
                         if (routeInfo != null)
                           _buildRouteInfoSection(
                             context,
                             AppColors.success,
                             AppColors.accent,
                           ),
-
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -151,10 +148,10 @@ class RouteBottomSheet extends ConsumerWidget {
           Text(
             l10n?.mode ?? 'CHOISISSEZ VOTRE MOYEN DE TRANSPORT',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: secondaryColor,
-              letterSpacing: 0.5,
-              fontWeight: FontWeight.w600,
-            ),
+                  color: secondaryColor,
+                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -208,16 +205,15 @@ class RouteBottomSheet extends ConsumerWidget {
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        boxShadow:
-            isSelected
-                ? [
-                  BoxShadow(
-                    color: buttonColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : null,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: buttonColor.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: OutlinedButton(
         onPressed: () => onModeChanged(mode),
@@ -242,8 +238,9 @@ class RouteBottomSheet extends ConsumerWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
             ),
           ],
         ),
@@ -294,10 +291,10 @@ class RouteBottomSheet extends ConsumerWidget {
               Text(
                 l10n?.detailsiterinaire ?? 'DÉTAILS DE L\'ITINÉRAIRE',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: successColor,
-                  letterSpacing: 0.5,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: successColor,
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ),
@@ -338,7 +335,7 @@ class RouteBottomSheet extends ConsumerWidget {
                     context,
                     _getModeIcon(selectedMode),
                     l10n?.mode ?? 'Mode',
-                    _getModeName(selectedMode),
+                    _getModeName(selectedMode, context),
                     _getModeColor(selectedMode), // Couleur spécifique au mode
                   ),
                 ),
@@ -373,17 +370,17 @@ class RouteBottomSheet extends ConsumerWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color.withValues(alpha: 0.8),
-              fontWeight: FontWeight.w500,
-            ),
+                  color: color.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
         ],
       ),
@@ -440,14 +437,15 @@ class RouteBottomSheet extends ConsumerWidget {
     );
   }
 
-  String _getModeName(TransportMode mode) {
+  String _getModeName(TransportMode mode, [BuildContext? context]) {
+    final l10n = context != null ? AppLocalizations.of(context) : null;
     switch (mode) {
       case TransportMode.driving:
-        return 'Voiture';
+        return l10n?.voiture ?? 'Voiture';
       case TransportMode.walking:
-        return 'Marche';
+        return l10n?.marche ?? 'Marche';
       case TransportMode.cycling:
-        return 'Vélo';
+        return l10n?.velo ?? 'Vélo';
     }
   }
 

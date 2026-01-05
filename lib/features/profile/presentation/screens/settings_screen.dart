@@ -19,6 +19,9 @@ import 'package:mukhliss/core/providers/theme_provider.dart';
 
 import 'package:mukhliss/core/widgets/Appbar/app_bar_types.dart';
 
+import 'package:mukhliss/features/auth/presentation/providers/auth_providers.dart';
+import 'package:mukhliss/core/routes/app_router.dart';
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -230,10 +233,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         _buildModernSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: l10n?.theme ?? 'Thème sombre',
-                          subtitle:
-                              isDarkMode
-                                  ? l10n?.active ?? 'Activé'
-                                  : l10n?.desactive ?? 'Désactivé',
+                          subtitle: isDarkMode
+                              ? l10n?.active ?? 'Activé'
+                              : l10n?.desactive ?? 'Désactivé',
                           trailing: Switch.adaptive(
                             value: isDarkMode,
                             onChanged: (value) {
@@ -273,15 +275,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       children: [
                         _buildModernSettingTile(
                           icon: Icons.devices_outlined,
-                          title:
-                              l10n?.gestionappariels ??
+                          title: l10n?.gestionappariels ??
                               'Gestion des appareils ',
-                          subtitle:
-                              _hasConnection
-                                  ? l10n?.apparielsconnecte ??
-                                      'Appareils connectés'
-                                  : l10n?.horsligne ??
-                                      'Hors ligne - Connexion requise',
+                          subtitle: _hasConnection
+                              ? l10n?.apparielsconnecte ?? 'Appareils connectés'
+                              : l10n?.horsligne ??
+                                  'Hors ligne - Connexion requise',
                           onTap: () => _handleDeviceManagement(context),
                           iconColor: const Color(0xFF3B82F6),
                           // ignore: deprecated_member_use
@@ -292,8 +291,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         _buildModernDivider(),
                         _buildModernSettingTile(
                           icon: Icons.privacy_tip_outlined,
-                          title:
-                              l10n?.politiques ??
+                          title: l10n?.politiques ??
                               'Politique de confidentialité',
                           onTap: () => _showPrivacyPolicy(context),
                           iconColor: const Color(0xFFEC4899),
@@ -301,6 +299,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           iconBgColor: const Color(
                             0xFFEC4899,
                           ).withValues(alpha: 0.1),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    // Danger Zone Section
+                    _buildSectionHeader(
+                      l10n?.zoneDangereuse ?? 'ZONE DANGEREUSE',
+                      Icons.warning_outlined,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildModernSettingCard(
+                      children: [
+                        _buildModernSettingTile(
+                          icon: Icons.delete_forever_outlined,
+                          title: l10n?.supprimerMonCompte ??
+                              'Supprimer mon compte',
+                          subtitle: l10n?.suppressionDefinitive ??
+                              'Suppression définitive de toutes vos données',
+                          onTap: () => _showDeleteAccountDialog(context),
+                          iconColor: Colors.red,
+                          iconBgColor: Colors.red.withValues(alpha: 0.1),
                         ),
                       ],
                     ),
@@ -312,6 +332,186 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ],
       ),
     );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == AppThemeMode.dark;
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF1A1F3C) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.warning_rounded,
+                color: Colors.red,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n?.supprimerLeCompte ?? 'Supprimer le compte',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n?.actionIrreversible ??
+                  'Cette action est irréversible. Toutes vos données seront supprimées définitivement :',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black87,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildDeleteInfoItem(l10n?.profilInfo ??
+                'Votre profil et informations personnelles'),
+            _buildDeleteInfoItem(
+                l10n?.historiquePoints ?? 'Votre historique de points'),
+            _buildDeleteInfoItem(
+                l10n?.offresRecompenses ?? 'Vos offres et récompenses'),
+            const SizedBox(height: 16),
+            Text(
+              l10n?.etesVousSur ?? 'Êtes-vous sûr de vouloir continuer ?',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n?.cancel ?? 'Annuler',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performAccountDeletion(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              l10n?.supprimerDefinitivement ?? 'Supprimer définitivement',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteInfoItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.remove_circle, color: Colors.red, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performAccountDeletion(BuildContext dialogContext) async {
+    // Sauvegarder les références AVANT l'opération async
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    // Afficher un indicateur de chargement
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final success =
+          await ref.read(authNotifierProvider.notifier).deleteAccount();
+
+      // Fermer le loading dialog
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+
+      if (success) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n?.compteSupprimeSucces ??
+                'Votre compte a été supprimé avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Naviguer vers la page de login
+        navigator.pushNamedAndRemoveUntil(
+          AppRouter.login,
+          (route) => false,
+        );
+      } else {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n?.somethingwrong ?? 'Une erreur est survenue'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Fermer le loading dialog
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la suppression : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _handleDeviceManagement(BuildContext context) {
@@ -346,81 +546,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     showDialog(
       context: context,
       barrierDismissible: true, // Permet de fermer en cliquant à l'extérieur
-      builder:
-          (context) => Dialog(
-            backgroundColor:
-                Colors.transparent, // on garde la transparence derrière
-            insetPadding: const EdgeInsets.all(40), // marge autour
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+      builder: (context) => Dialog(
+        backgroundColor:
+            Colors.transparent, // on garde la transparence derrière
+        insetPadding: const EdgeInsets.all(40), // marge autour
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Icône wifi off dans un cercle rouge pâle
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: Colors.red.withValues(alpha: 0.1),
-                    child: Icon(
-                      Icons.warning_amber_rounded,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Texte d’erreur
-                  Text(
-                    l10n?.somethingwrong ?? "Something went wrong",
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Bouton "Réessayer"
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Ferme le dialog
-                        _checkConnectivity(); // Vérifie la connexion
-                      },
-
-                      label: Text(
-                        l10n?.retry ?? 'Réessayer',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icône wifi off dans un cercle rouge pâle
+              CircleAvatar(
+                radius: 48,
+                backgroundColor: Colors.red.withValues(alpha: 0.1),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  size: 64,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Texte d’erreur
+              Text(
+                l10n?.somethingwrong ?? "Something went wrong",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Bouton "Réessayer"
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Ferme le dialog
+                    _checkConnectivity(); // Vérifie la connexion
+                  },
+                  label: Text(
+                    l10n?.retry ?? 'Réessayer',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -433,162 +631,151 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder:
-          (context) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.9,
-            ),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(28),
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
                 children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.pink.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.security,
-                          color: Colors.pink,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n?.politiques ??
-                                  'Politique de confidentialité',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.surface
-                                        : AppColors.darkGrey50,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n?.datemiseajour ?? 'Dernière mise à jour:',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.surface
-                                        : AppColors.darkGrey50,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Content with uniform padding
-                  _buildPrivacySection(
-                    title: l10n?.premierstep ?? '1. Collecte des données',
-                    content:
-                        l10n?.contentstepone ??
-                        'Mukhliss collecte les données suivantes pour fournir le service de carte de fidélité :\n\n'
-                            '- Informations personnelles (nom, prénom, email, téléphone)\n'
-                            '- Données de localisation (pour trouver les magasins partenaires)\n'
-                            '- Historique des achats et points accumulés\n'
-                            '- Données de paiement (pour les offres premium)',
-                  ),
-
-                  _buildPrivacySection(
-                    title: l10n?.deusiemestep ?? '2. Utilisation des données',
-                    content:
-                        l10n?.contentsteptwo ??
-                        'Vos données sont utilisées pour :\n\n'
-                            '- Gérer votre compte et carte de fidélité\n'
-                            '- Vous informer des offres personnalisées\n'
-                            '- Analyser les tendances d\'achat\n'
-                            '- Améliorer notre service\n'
-                            '- Prévenir les fraudes',
-                  ),
-
-                  _buildPrivacySection(
-                    title: l10n?.troisemestep ?? '3. Partage des données',
-                    content:
-                        l10n?.contentstepthre ??
-                        'Vos données peuvent être partagées avec :\n\n'
-                            '- Les magasins partenaires où vous utilisez votre carte\n'
-                            '- Les prestataires de paiement\n'
-                            '- Les services d\'analyse (de manière anonyme)\n\n'
-                            'Nous ne vendons jamais vos données personnelles.',
-                  ),
-
-                  _buildPrivacySection(
-                    title: l10n?.quatriemestep ?? '4. Sécurité des données',
-                    content:
-                        l10n?.contentstepfor ??
-                        'Nous protégeons vos données par :\n\n'
-                            '- Chiffrement AES-256\n'
-                            '- Authentification à deux facteurs\n'
-                            '- Audits de sécurité réguliers\n'
-                            '- Stockage sécurisé conforme RGPD',
-                  ),
-
-                  _buildPrivacySection(
-                    title: l10n?.cinquemestep ?? '5. Vos droits',
-                    content:
-                        l10n?.contentstepfive ??
-                        'Vous avez le droit de :\n\n'
-                            '- Accéder à vos données\n'
-                            '- Demander leur correction\n'
-                            '- Supprimer votre compte\n'
-                            '- Exporter vos données\n'
-                            '- Vous opposer au traitement\n\n'
-                            'Contactez-nous à mukhlissfidelite@gmail.com pour toute demande.',
-                  ),
-
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                      backgroundColor:
-                          isDarkMode ? AppColors.surface : AppColors.darkGrey50,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.pink.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      l10n?.compris ?? 'J\'ai compris',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color:
-                            isDarkMode
-                                ? AppColors.darkPrimary
-                                : AppColors.surface,
-                      ),
+                    child: const Icon(
+                      Icons.security,
+                      color: Colors.pink,
+                      size: 28,
                     ),
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).viewInsets.bottom + 16,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n?.politiques ?? 'Politique de confidentialité',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? AppColors.surface
+                                : AppColors.darkGrey50,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n?.datemiseajour ?? 'Dernière mise à jour:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDarkMode
+                                ? AppColors.surface
+                                : AppColors.darkGrey50,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Content with uniform padding
+              _buildPrivacySection(
+                title: l10n?.premierstep ?? '1. Collecte des données',
+                content: l10n?.contentstepone ??
+                    'Mukhliss collecte les données suivantes pour fournir le service de carte de fidélité :\n\n'
+                        '- Informations personnelles (nom, prénom, email, téléphone)\n'
+                        '- Données de localisation (pour trouver les magasins partenaires)\n'
+                        '- Historique des achats et points accumulés\n'
+                        '- Données de paiement (pour les offres premium)',
+              ),
+
+              _buildPrivacySection(
+                title: l10n?.deusiemestep ?? '2. Utilisation des données',
+                content: l10n?.contentsteptwo ??
+                    'Vos données sont utilisées pour :\n\n'
+                        '- Gérer votre compte et carte de fidélité\n'
+                        '- Vous informer des offres personnalisées\n'
+                        '- Analyser les tendances d\'achat\n'
+                        '- Améliorer notre service\n'
+                        '- Prévenir les fraudes',
+              ),
+
+              _buildPrivacySection(
+                title: l10n?.troisemestep ?? '3. Partage des données',
+                content: l10n?.contentstepthre ??
+                    'Vos données peuvent être partagées avec :\n\n'
+                        '- Les magasins partenaires où vous utilisez votre carte\n'
+                        '- Les prestataires de paiement\n'
+                        '- Les services d\'analyse (de manière anonyme)\n\n'
+                        'Nous ne vendons jamais vos données personnelles.',
+              ),
+
+              _buildPrivacySection(
+                title: l10n?.quatriemestep ?? '4. Sécurité des données',
+                content: l10n?.contentstepfor ??
+                    'Nous protégeons vos données par :\n\n'
+                        '- Chiffrement AES-256\n'
+                        '- Authentification à deux facteurs\n'
+                        '- Audits de sécurité réguliers\n'
+                        '- Stockage sécurisé conforme RGPD',
+              ),
+
+              _buildPrivacySection(
+                title: l10n?.cinquemestep ?? '5. Vos droits',
+                content: l10n?.contentstepfive ??
+                    'Vous avez le droit de :\n\n'
+                        '- Accéder à vos données\n'
+                        '- Demander leur correction\n'
+                        '- Supprimer votre compte\n'
+                        '- Exporter vos données\n'
+                        '- Vous opposer au traitement\n\n'
+                        'Contactez-nous à mukhlissfidelite@gmail.com pour toute demande.',
+              ),
+
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  backgroundColor:
+                      isDarkMode ? AppColors.surface : AppColors.darkGrey50,
+                ),
+                child: Text(
+                  l10n?.compris ?? 'J\'ai compris',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color:
+                        isDarkMode ? AppColors.darkPrimary : AppColors.surface,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 
@@ -702,18 +889,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           fontSize: 16,
         ),
       ),
-      subtitle:
-          subtitle != null
-              ? Text(
-                subtitle,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Color(0xFF1F2937),
-                  fontSize: 14,
-                ),
-              )
-              : null,
-      trailing:
-          trailing ??
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Color(0xFF1F2937),
+                fontSize: 14,
+              ),
+            )
+          : null,
+      trailing: trailing ??
           const Icon(
             Icons.chevron_right_rounded,
             color: Color(0xFF9CA3AF),
@@ -743,150 +928,139 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
       isScrollControlled: true,
-      builder:
-          (context) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.75,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(28),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
             ),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
+          ],
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.darkGrey50,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              ),
+              const SizedBox(height: 20),
+              Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 4,
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.darkGrey50,
-                      borderRadius: BorderRadius.circular(2),
+                      // ignore: deprecated_member_use
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.language,
+                      color: Color(0xFF10B981),
+                      size: 24,
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
-                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localizations.selectLanguage,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? AppColors.surface
+                                : AppColors.darkSurface,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.language,
-                          color: Color(0xFF10B981),
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              localizations.selectLanguage,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.surface
-                                        : AppColors.darkSurface,
-                              ),
-                            ),
-                            Text(
-                              localizations.languageSubtitle,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.surface
-                                        : AppColors.darkSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                        Text(
+                          localizations.languageSubtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDarkMode
+                                ? AppColors.surface
+                                : AppColors.darkSurface,
+                          ),
                         ),
                       ],
                     ),
-                    child: Column(
-                      children:
-                          LanguageNotifier.supportedLanguages.map((lang) {
-                            final isSelected =
-                                lang.locale.languageCode ==
-                                currentLanguage.locale.languageCode;
-                            return Column(
-                              children: [
-                                _buildLanguageOption(
-                                  context,
-                                  language: lang.name,
-                                  flag: lang.flag,
-                                  selected: isSelected,
-                                  locale: lang.locale,
-                                ),
-                                if (lang !=
-                                    LanguageNotifier.supportedLanguages.last)
-                                  _buildModernDivider(),
-                              ],
-                            );
-                          }).toList(),
-                    ),
                   ),
-                  const SizedBox(height: 20),
-
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppColors.darkGrey50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      minimumSize: const Size(double.infinity, 0),
-                    ),
-                    child: Text(
-                      localizations.cancel,
-                      style: TextStyle(
-                        color:
-                            isDarkMode
-                                ? AppColors.surface
-                                : AppColors.darkSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Color(0xFF0A0E27) : AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: LanguageNotifier.supportedLanguages.map((lang) {
+                    final isSelected = lang.locale.languageCode ==
+                        currentLanguage.locale.languageCode;
+                    return Column(
+                      children: [
+                        _buildLanguageOption(
+                          context,
+                          language: lang.name,
+                          flag: lang.flag,
+                          selected: isSelected,
+                          locale: lang.locale,
+                        ),
+                        if (lang != LanguageNotifier.supportedLanguages.last)
+                          _buildModernDivider(),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: AppColors.darkGrey50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  minimumSize: const Size(double.infinity, 0),
+                ),
+                child: Text(
+                  localizations.cancel,
+                  style: TextStyle(
+                    color:
+                        isDarkMode ? AppColors.surface : AppColors.darkSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+            ],
           ),
+        ),
+      ),
     );
   }
 
@@ -923,14 +1097,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           fontSize: 16,
         ),
       ),
-      trailing:
-          selected
-              ? const Icon(
-                Icons.check_circle,
-                color: AppColors.primary,
-                size: 20,
-              )
-              : null,
+      trailing: selected
+          ? const Icon(
+              Icons.check_circle,
+              color: AppColors.primary,
+              size: 20,
+            )
+          : null,
     );
   }
 }

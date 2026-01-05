@@ -738,4 +738,115 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appareilactuel => 'الجهاز الحالي';
+
+  @override
+  String get lePlusRapide => 'الأسرع';
+
+  @override
+  String get demarrer => 'ابدأ';
+
+  @override
+  String get navigationEnCours => 'الملاحة جارية';
+
+  @override
+  String get zoneDangereuse => 'منطقة خطرة';
+
+  @override
+  String get supprimerMonCompte => 'حذف حسابي';
+
+  @override
+  String get suppressionDefinitive => 'حذف نهائي لجميع بياناتك';
+
+  @override
+  String get supprimerLeCompte => 'حذف الحساب';
+
+  @override
+  String get actionIrreversible =>
+      'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بياناتك نهائياً:';
+
+  @override
+  String get profilInfo => 'ملفك الشخصي ومعلوماتك الشخصية';
+
+  @override
+  String get historiquePoints => 'سجل نقاطك';
+
+  @override
+  String get offresRecompenses => 'عروضك ومكافآتك';
+
+  @override
+  String get etesVousSur => 'هل أنت متأكد أنك تريد المتابعة؟';
+
+  @override
+  String get supprimerDefinitivement => 'حذف نهائي';
+
+  @override
+  String get compteSupprimeSucces => 'تم حذف حسابك بنجاح';
+
+  @override
+  String get erreurSuppression => 'خطأ أثناء الحذف';
+
+  @override
+  String get glisserCategories => 'اسحب لرؤية الفئات';
+
+  @override
+  String get rechercherMagasin => 'ابحث عن متجر...';
+
+  @override
+  String get adresseNonDisponible => 'العنوان غير متوفر';
+
+  @override
+  String get vousEtesArrive => 'لقد وصلت!';
+
+  @override
+  String get erreurChargement => 'خطأ في التحميل';
+
+  @override
+  String get reessayer => 'أعد المحاولة';
+
+  @override
+  String get aucunAppareil => 'لا توجد أجهزة مسجلة';
+
+  @override
+  String get appareilsApparaitront => 'ستظهر أجهزتك المتصلة هنا';
+
+  @override
+  String get deconnecte => 'غير متصل';
+
+  @override
+  String get derniereActivite => 'آخر نشاط';
+
+  @override
+  String get aLinstant => 'الآن';
+
+  @override
+  String ilYaMinutes(Object count) {
+    return 'منذ $count دقيقة';
+  }
+
+  @override
+  String ilYaHeures(Object count) {
+    return 'منذ $count ساعة';
+  }
+
+  @override
+  String ilYaJours(Object count, Object plural) {
+    return 'منذ $count يوم';
+  }
+
+  @override
+  String get deconnecterDistance => 'فصل عن بُعد';
+
+  @override
+  String confirmDeconnexion(Object deviceName) {
+    return 'هل أنت متأكد أنك تريد فصل \"$deviceName\" عن بُعد؟\n\nسيتم فصل الجهاز تلقائياً.';
+  }
+
+  @override
+  String get deconnecterBtn => 'فصل';
+
+  @override
+  String get appareilDeconnecte => 'تم فصل الجهاز عن بُعد';
+
+  @override
+  String get erreurDeconnexion => 'خطأ أثناء الفصل';
 }

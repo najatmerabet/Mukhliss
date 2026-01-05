@@ -7,6 +7,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import '../../domain/entities/store_entity.dart';
 import 'package:mukhliss/features/location/data/services/osrm_service.dart';
 
@@ -63,32 +64,38 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
               ),
             ),
           ),
-          
+
           // Sélection du mode de transport
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildModeButton(
-                  TransportMode.driving,
-                  Icons.directions_car,
-                  'Voiture',
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildModeButton(
+                      TransportMode.driving,
+                      Icons.directions_car,
+                      l10n?.voiture ?? 'Voiture',
+                    ),
+                    _buildModeButton(
+                      TransportMode.cycling,
+                      Icons.directions_bike,
+                      l10n?.velo ?? 'Vélo',
+                    ),
+                    _buildModeButton(
+                      TransportMode.walking,
+                      Icons.directions_walk,
+                      l10n?.marche ?? 'À pied',
+                    ),
+                  ],
                 ),
-                _buildModeButton(
-                  TransportMode.cycling,
-                  Icons.directions_bike,
-                  'Vélo',
-                ),
-                _buildModeButton(
-                  TransportMode.walking,
-                  Icons.directions_walk,
-                  'À pied',
-                ),
-              ],
-            ),
+              );
+            },
           ),
-          
+
           // Informations de route
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -107,7 +114,8 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
                       Row(
                         children: [
                           Text(
-                            _formatDuration(widget.routeInfo?['duration'] as double?),
+                            _formatDuration(
+                                widget.routeInfo?['duration'] as double?),
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -115,26 +123,33 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Le plus rapide',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green.shade700,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  l10n?.lePlusRapide ?? 'Le plus rapide',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _formatDistance(widget.routeInfo?['distance'] as double?),
+                        _formatDistance(
+                            widget.routeInfo?['distance'] as double?),
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey.shade600,
@@ -143,12 +158,13 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
                     ],
                   ),
                 ),
-                
+
                 // Icône de mode
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _getModeColor(widget.selectedMode).withValues(alpha: 0.1),
+                    color: _getModeColor(widget.selectedMode)
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -160,9 +176,9 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Destination
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -174,7 +190,8 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.place, color: Colors.red.shade400, size: 20),
+                  child:
+                      Icon(Icons.place, color: Colors.red.shade400, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -204,9 +221,9 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Bouton démarrer navigation
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -225,28 +242,33 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Bouton démarrer
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: widget.onStartNavigation,
-                    icon: const Icon(Icons.navigation, color: Colors.white),
-                    label: const Text(
-                      'Démarrer',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getModeColor(widget.selectedMode),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return ElevatedButton.icon(
+                        onPressed: widget.onStartNavigation,
+                        icon: const Icon(Icons.navigation, color: Colors.white),
+                        label: Text(
+                          l10n?.demarrer ?? 'Démarrer',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getModeColor(widget.selectedMode),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          elevation: 0,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -260,14 +282,15 @@ class _RoutePreviewSheetState extends State<RoutePreviewSheet> {
   Widget _buildModeButton(TransportMode mode, IconData icon, String label) {
     final isSelected = widget.selectedMode == mode;
     final color = _getModeColor(mode);
-    
+
     return GestureDetector(
       onTap: () => widget.onModeChanged(mode),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+          color:
+              isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
@@ -379,13 +402,18 @@ class ActiveNavigationBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    eta ?? 'Navigation en cours',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(
+                        eta ?? l10n?.navigationEnCours ?? 'Navigation en cours',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      );
+                    },
                   ),
                   Text(
                     '$distance • $destination',

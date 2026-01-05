@@ -15,6 +15,9 @@ import 'package:mukhliss/core/routes/app_router.dart';
 import 'package:mukhliss/core/screens/splash_screen.dart';
 import 'package:mukhliss/core/services/onboarding_service.dart';
 import 'package:mukhliss/features/profile/data/services/device_management_service.dart';
+import 'package:mukhliss/features/profile/presentation/providers/profile_provider.dart';
+import 'package:mukhliss/features/stores/presentation/providers/client_store_provider.dart';
+import 'package:mukhliss/features/stores/presentation/providers/clientmagazin_provider.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
 import 'package:mukhliss/l10n/l10n.dart';
 import 'package:mukhliss/core/providers/langue_provider.dart';
@@ -165,8 +168,28 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     }
 
     try {
-      debugPrint('🔹 [AuthStateHandler] Initializing realtime monitoring');
+      debugPrint('🔹 [AuthStateHandler] Initializing device monitoring');
+
+      // D'abord essayer de charger le deviceId depuis la session existante
       await _deviceService.initCurrentDeviceFromSession();
+
+      // Si aucun deviceId n'a été trouvé, enregistrer l'appareil actuel
+      if (_deviceService.currentDeviceId == null) {
+        debugPrint(
+            '🔹 [AuthStateHandler] No existing device found, registering current device');
+        final device = await _deviceService.registerCurrentDevice();
+        if (device != null) {
+          debugPrint(
+              '✅ [AuthStateHandler] Device registered: ${device.deviceName}');
+        } else {
+          debugPrint('⚠️ [AuthStateHandler] Failed to register device');
+        }
+      } else {
+        debugPrint(
+            '✅ [AuthStateHandler] Existing device found: ${_deviceService.currentDeviceId}');
+      }
+
+      // Initialiser le monitoring temps réel
       await _deviceService.initializeRealtimeMonitoring();
       _startActivityTimer();
       _monitoringInitialized = true;
@@ -200,6 +223,23 @@ class _AuthStateHandlerState extends ConsumerState<AuthStateHandler> {
     _activityTimer?.cancel();
     _activityTimer = null;
     _deviceService.dispose();
+
+    // Invalider les providers Riverpod pour forcer le rechargement des données
+    // au prochain login avec un autre compte
+    try {
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(totalPointsProvider);
+      ref.invalidate(clientStoresProvider);
+      
+      // ⚠️ IMPORTANT: Effacer le cache des points cumulés
+      // Cela force le rechargement des points pour le nouveau compte
+      ref.read(clientPointsCacheRefreshProvider.notifier).state++;
+      debugPrint('🧹 [AuthStateHandler] Client points cache invalidated');
+      
+      debugPrint('✅ [AuthStateHandler] Providers invalidated');
+    } catch (e) {
+      debugPrint('⚠️ [AuthStateHandler] Provider invalidation error: $e');
+    }
   }
 
   /// Navigue vers une route donnée

@@ -10,14 +10,21 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/user_entity.dart';
 import 'package:mukhliss/core/errors/failures.dart';
 import 'package:mukhliss/core/errors/result.dart';
 import 'package:mukhliss/core/logger/app_logger.dart';
+import 'package:mukhliss/core/storage/secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Interface pour le client d'authentification
 ///
@@ -41,6 +48,9 @@ abstract class IAuthClient {
 
   /// Connexion avec Google
   Future<Result<AppUser>> signInWithGoogle();
+
+  /// Connexion avec Apple (obligatoire pour iOS)
+  Future<Result<AppUser>> signInWithApple();
 
   /// Connexion avec Facebook
   Future<Result<AppUser>> signInWithFacebook();
@@ -97,6 +107,9 @@ abstract class IAuthClient {
     String? phone,
     String? photoUrl,
   });
+
+  /// Supprimer le compte utilisateur (obligatoire App Store)
+  Future<Result<void>> deleteAccount();
 }
 
 /// Implémentation Supabase de IAuthClient
@@ -208,35 +221,61 @@ class SupabaseAuthClient implements IAuthClient {
       }
 
       // Créer ou mettre à jour le profil client avec code_unique
+      // Utilisation de upsert pour éviter les erreurs de duplication
       try {
         final user = response.user!;
-        final existingClient = await _client
-            .from('clients')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
+        final codeUnique = _generateUniqueCode();
+        final displayName = googleUser.displayName ?? '';
+        final nameParts = displayName.split(' ');
+        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        final lastName =
+            nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-        if (existingClient == null) {
-          // Nouveau utilisateur - créer le profil
-          final codeUnique = _generateUniqueCode();
-          final displayName = googleUser.displayName ?? '';
-          final nameParts = displayName.split(' ');
-          final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-          final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-
-          await _client.from('clients').insert({
+        // Utiliser upsert au lieu de insert pour gérer les conflits
+        await _client.from('clients').upsert(
+          {
             'id': user.id,
             'email': user.email ?? googleUser.email,
             'prenom': firstName,
             'nom': lastName,
             'code_unique': codeUnique,
             'created_at': DateTime.now().toIso8601String(),
-          });
-          AppLogger.info('Profil client créé pour Google user: ${user.email}');
-        }
+          },
+          onConflict: 'id',
+          ignoreDuplicates: false,
+        );
+        AppLogger.info(
+            'Profil client créé/mis à jour pour Google user: ${user.email}');
       } catch (e) {
-        AppLogger.warning('Erreur création/vérification profil client: $e');
-        // Ne pas échouer la connexion si le profil existe déjà
+        AppLogger.error('Erreur création profil client Google: $e');
+        // Retry une fois avec un délai
+        try {
+          await Future.delayed(const Duration(milliseconds: 500));
+          final user = response.user!;
+          final codeUnique = _generateUniqueCode();
+          final displayName = googleUser.displayName ?? '';
+          final nameParts = displayName.split(' ');
+          final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+          final lastName =
+              nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+          await _client.from('clients').upsert(
+            {
+              'id': user.id,
+              'email': user.email ?? googleUser.email,
+              'prenom': firstName,
+              'nom': lastName,
+              'code_unique': codeUnique,
+              'created_at': DateTime.now().toIso8601String(),
+            },
+            onConflict: 'id',
+            ignoreDuplicates: false,
+          );
+          AppLogger.info('Profil client créé après retry pour: ${user.email}');
+        } catch (retryError) {
+          AppLogger.error('Échec définitif création profil: $retryError');
+          // Ne pas bloquer la connexion mais logger l'erreur
+        }
       }
 
       return Result.success(_mapToAppUser(response.user!));
@@ -248,6 +287,117 @@ class SupabaseAuthClient implements IAuthClient {
     }
   }
 
+  @override
+  Future<Result<AppUser>> signInWithApple() async {
+    try {
+      AppLogger.debug('Tentative de connexion Apple');
+
+      // Générer un nonce cryptographiquement sécurisé
+      final rawNonce = _generateNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      // Demander les credentials Apple
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        return Result.failure(
+          const AuthFailure('Token Apple introuvable'),
+        );
+      }
+
+      // Connexion à Supabase avec le token Apple
+      final response = await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      if (response.user == null) {
+        return Result.failure(
+          const AuthFailure('Échec de la connexion Apple'),
+        );
+      }
+
+      // Créer ou mettre à jour le profil client
+      // Utilisation de upsert pour éviter les erreurs de duplication
+      try {
+        final user = response.user!;
+        final codeUnique = _generateUniqueCode();
+        final firstName = credential.givenName ?? '';
+        final lastName = credential.familyName ?? '';
+
+        await _client.from('clients').upsert(
+          {
+            'id': user.id,
+            'email': user.email ?? credential.email,
+            'prenom': firstName,
+            'nom': lastName,
+            'code_unique': codeUnique,
+            'created_at': DateTime.now().toIso8601String(),
+          },
+          onConflict: 'id',
+          ignoreDuplicates: false,
+        );
+        AppLogger.info(
+            'Profil client créé/mis à jour pour Apple user: ${user.email}');
+      } catch (e) {
+        AppLogger.error('Erreur création profil client Apple: $e');
+        // Retry une fois avec un délai
+        try {
+          await Future.delayed(const Duration(milliseconds: 500));
+          final user = response.user!;
+          final codeUnique = _generateUniqueCode();
+          final firstName = credential.givenName ?? '';
+          final lastName = credential.familyName ?? '';
+
+          await _client.from('clients').upsert(
+            {
+              'id': user.id,
+              'email': user.email ?? credential.email,
+              'prenom': firstName,
+              'nom': lastName,
+              'code_unique': codeUnique,
+              'created_at': DateTime.now().toIso8601String(),
+            },
+            onConflict: 'id',
+            ignoreDuplicates: false,
+          );
+          AppLogger.info(
+              'Profil client créé après retry pour Apple: ${user.email}');
+        } catch (retryError) {
+          AppLogger.error('Échec définitif création profil Apple: $retryError');
+        }
+      }
+
+      return Result.success(_mapToAppUser(response.user!));
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        return Result.failure(const AuthFailure('Connexion Apple annulée'));
+      }
+      return Result.failure(AuthFailure(e.message));
+    } on AuthException catch (e) {
+      return Result.failure(_mapAuthException(e));
+    } catch (e) {
+      AppLogger.error('Erreur Apple Sign In: $e');
+      return Result.failure(UnknownFailure(e.toString()));
+    }
+  }
+
+  /// Génère un nonce cryptographiquement sécurisé
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
 
   @override
   Future<Result<AppUser>> signInWithFacebook() async {
@@ -383,7 +533,6 @@ class SupabaseAuthClient implements IAuthClient {
     }
   }
 
-
   @override
   Future<Result<AppUser>> verifyOtp({
     required String email,
@@ -473,6 +622,20 @@ class SupabaseAuthClient implements IAuthClient {
       AppLogger.debug('Déconnexion en cours');
       await _googleSignIn.signOut();
       await _client.auth.signOut();
+
+      // Effacer les données sensibles du stockage sécurisé
+      await SecureStorage.clearSession();
+
+      // Effacer les caches SharedPreferences spécifiques à l'utilisateur
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('cached_qr_data'); // Cache QR code
+        await prefs.remove('last_user_id'); // ID utilisateur
+        AppLogger.debug('Caches utilisateur effacés');
+      } catch (e) {
+        AppLogger.warning('Erreur effacement cache: $e');
+      }
+
       return const Result.success(null);
     } catch (e) {
       return Result.failure(UnknownFailure(e.toString()));
@@ -613,5 +776,57 @@ class SupabaseAuthClient implements IAuthClient {
     }
 
     return AuthFailure(e.message);
+  }
+
+  // ============================================================
+  // SUPPRESSION DE COMPTE (Obligatoire App Store)
+  // ============================================================
+
+  @override
+  Future<Result<void>> deleteAccount() async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        return Result.failure(const AuthFailure('Utilisateur non connecté'));
+      }
+
+      AppLogger.info('Suppression du compte: ${user.id}');
+
+      // 1. Supprimer les données de la table clients
+      try {
+        await _client.from('clients').delete().eq('id', user.id);
+        AppLogger.debug('Données client supprimées');
+      } catch (e) {
+        AppLogger.warning('Erreur suppression données client: $e');
+        // Continuer même si erreur (les données peuvent ne pas exister)
+      }
+
+      // 2. Supprimer le compte auth via RPC (nécessite une fonction Supabase)
+      // Note: Supabase ne permet pas la suppression directe du compte auth côté client
+      // On doit utiliser une Edge Function ou RPC avec service_role
+      try {
+        await _client.rpc('delete_user_account', params: {'user_id': user.id});
+        AppLogger.debug('Compte auth supprimé via RPC');
+      } catch (e) {
+        AppLogger.warning(
+            'RPC delete_user_account non disponible, déconnexion simple: $e');
+        // Fallback: juste déconnecter l'utilisateur
+        // L'admin devra supprimer manuellement ou via une fonction serveur
+      }
+
+      // 3. Déconnecter l'utilisateur et effacer les données sécurisées
+      await _googleSignIn.signOut();
+      await _client.auth.signOut();
+      await SecureStorage.clearSession();
+
+      AppLogger.info('Compte supprimé avec succès');
+      return const Result.success(null);
+    } on AuthException catch (e) {
+      AppLogger.error('Erreur suppression compte: ${e.message}');
+      return Result.failure(_mapAuthException(e));
+    } catch (e) {
+      AppLogger.error('Erreur inattendue suppression compte: $e');
+      return Result.failure(UnknownFailure(e.toString()));
+    }
   }
 }

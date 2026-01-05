@@ -8,6 +8,8 @@
 /// - ref.listen pour la navigation (meilleure pratique)
 library;
 
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mukhliss/l10n/app_localizations.dart';
@@ -16,6 +18,7 @@ import 'package:mukhliss/core/routes/app_router.dart';
 import 'package:mukhliss/core/utils/form_field_helpers.dart';
 import 'package:mukhliss/core/utils/snackbar_helper.dart';
 import 'package:mukhliss/core/utils/validators.dart';
+import 'package:mukhliss/core/providers/guest_mode_provider.dart';
 
 // ✅ Core inclut: AppLogger, themeProvider, OtpVerificationType, OtpVerificationPage
 import 'package:mukhliss/core/core.dart';
@@ -89,6 +92,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.read(authNotifierProvider.notifier).signInWithGoogle();
   }
 
+  /// ✅ Connexion Apple (obligatoire pour iOS)
+  void _loginWithApple() {
+    AppLogger.auth('Tentative connexion Apple');
+    ref.read(authNotifierProvider.notifier).signInWithApple();
+  }
+
+  /// ✅ Mode invité - continuer sans compte (obligatoire App Store 5.1.1)
+  void _continueAsGuest() {
+    AppLogger.auth('Activation du mode invité');
+    ref.read(guestModeProvider.notifier).enableGuestMode();
+    Navigator.pushReplacementNamed(context, AppRouter.main);
+  }
+
   void _showEmailResetDialog() {
     final emailController = TextEditingController(text: _emailController.text);
     final themeMode = ref.watch(themeProvider);
@@ -97,115 +113,109 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor:
-                isDarkMode ? AppColors.darkPrimary : AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Réinitialisation par email',
-              style: TextStyle(
-                color: AppColors.purpleDark,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: l10n?.email ?? 'Email',
-                    hintText: 'votre@email.com',
-                    prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: AppColors.purpleDark,
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? AppColors.darkPrimary : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Réinitialisation par email',
+          style: TextStyle(
+            color: AppColors.purpleDark,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: emailController,
+              decoration: InputDecoration(
+                labelText: l10n?.email ?? 'Email',
+                hintText: 'votre@email.com',
+                prefixIcon: Icon(Icons.email, color: AppColors.purpleDark),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.purpleDark.withValues(alpha: 0.7),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppColors.purpleDark,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.purpleDark.withValues(alpha: 0.7),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Un code OTP vous sera envoyé par email',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color:
+                          isDarkMode ? AppColors.surface : Colors.grey.shade700,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Un code OTP vous sera envoyé par email',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color:
-                              isDarkMode
-                                  ? AppColors.surface
-                                  : Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  l10n?.cancel ?? 'Annuler',
-                  style: TextStyle(
-                    color:
-                        isDarkMode ? AppColors.surface : Colors.grey.shade700,
-                  ),
-                ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n?.cancel ?? 'Annuler',
+              style: TextStyle(
+                color: isDarkMode ? AppColors.surface : Colors.grey.shade700,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (emailController.text.trim().isEmpty ||
-                      !emailController.text.contains('@')) {
-                    Navigator.pop(context);
-                    showErrorSnackbar(
-                      context: context,
-                      message:
-                          l10n?.emailinvalide ??
-                          'Veuillez entrer un email valide',
-                    );
-                    return;
-                  }
-
-                  Navigator.pop(context);
-                  _sendResetOtp(emailController.text.trim());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purpleDark,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  l10n?.envoiencours ?? 'Envoyer le code',
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ],
+            ),
           ),
+          ElevatedButton(
+            onPressed: () async {
+              if (emailController.text.trim().isEmpty ||
+                  !emailController.text.contains('@')) {
+                Navigator.pop(context);
+                showErrorSnackbar(
+                  context: context,
+                  message:
+                      l10n?.emailinvalide ?? 'Veuillez entrer un email valide',
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+              _sendResetOtp(emailController.text.trim());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.purpleDark,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              l10n?.envoiencours ?? 'Envoyer le code',
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -221,11 +231,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => OtpVerificationPage(
-                    email: email,
-                    type: OtpVerificationType.passwordReset,
-                  ),
+              builder: (context) => OtpVerificationPage(
+                email: email,
+                type: OtpVerificationType.passwordReset,
+              ),
             ),
           );
         }
@@ -275,18 +284,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [
-                      AppColors.darkWhite,
-                      AppColors.darkGrey50,
-                      AppColors.darkPurpleDark,
-                    ]
-                    : [
-                      AppColors.lightWhite,
-                      AppColors.lightGrey50,
-                      AppColors.lightPurpleDark,
-                    ],
+            colors: isDarkMode
+                ? [
+                    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
+                  ]
+                : [
+                    AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -328,40 +336,39 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             height: 250,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
-              child:
-                  _isImageLoaded
-                      ? TweenAnimationBuilder<double>(
-                        key: const ValueKey('logo-loaded'),
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 600),
-                        curve: Curves.easeOutBack,
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: 0.7 + (0.3 * value.clamp(0.0, 1.0)),
-                            child: Opacity(
-                              opacity: value.clamp(0.0, 1.0),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Image.asset(
-                          'images/mukhlislogo1.png',
-                          width: 250,
-                          height: 250,
-                          fit: BoxFit.contain,
-                        ),
-                      )
-                      : Center(
-                        key: const ValueKey('logo-loading'),
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: CircularProgressIndicator(
-                            color: AppColors.purpleDark.withValues(alpha: 0.6),
-                            strokeWidth: 3,
+              child: _isImageLoaded
+                  ? TweenAnimationBuilder<double>(
+                      key: const ValueKey('logo-loaded'),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutBack,
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: 0.7 + (0.3 * value.clamp(0.0, 1.0)),
+                          child: Opacity(
+                            opacity: value.clamp(0.0, 1.0),
+                            child: child,
                           ),
+                        );
+                      },
+                      child: Image.asset(
+                        'images/mukhlislogo1.png',
+                        width: 250,
+                        height: 250,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Center(
+                      key: const ValueKey('logo-loading'),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          color: AppColors.purpleDark.withValues(alpha: 0.6),
+                          strokeWidth: 3,
                         ),
                       ),
+                    ),
             ),
           ),
           const SizedBox(height: 16),
@@ -375,9 +382,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Text(
                   l10n?.welcome ?? 'Bienvenue',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.purpleDark,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.purpleDark,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -424,8 +431,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             controller: _passwordController,
             label: l10n?.password ?? 'Mot de passe',
             isObscure: _obscurePassword,
-            onToggleVisibility:
-                () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggleVisibility: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
             validator: (value) => Validators.validatePassword(value, context),
             hintText: '••••••••',
           ),
@@ -466,26 +473,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child:
-                  isLoading
-                      ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                          strokeWidth: 2.5,
+              child: isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white,
                         ),
-                      )
-                      : Text(
-                        l10n?.connecter ?? 'Se connecter',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                        strokeWidth: 2.5,
                       ),
+                    )
+                  : Text(
+                      l10n?.connecter ?? 'Se connecter',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
 
@@ -520,6 +526,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
 
+          // Bouton Apple (uniquement sur iOS)
+          if (Platform.isIOS) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: _buildAppleSignInButton(
+                label: 'Se connecter avec Apple',
+                onPressed: isLoading ? null : _loginWithApple,
+              ),
+            ),
+          ],
+
           const SizedBox(height: 32),
 
           // Créer un compte
@@ -530,10 +547,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Text(
                   l10n?.pasdecompte ?? 'Pas encore de compte ?',
                   style: TextStyle(
-                    color:
-                        isDarkMode
-                            ? AppColors.lightGrey50
-                            : AppColors.darkGrey50,
+                    color: isDarkMode
+                        ? AppColors.lightGrey50
+                        : AppColors.darkGrey50,
                     fontSize: 15,
                   ),
                   textAlign: TextAlign.center,
@@ -549,16 +565,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Text(
                   l10n?.creecompte ?? 'Créer un compte',
                   style: TextStyle(
-                    color:
-                        isDarkMode
-                            ? AppColors.lightPrimary
-                            : AppColors.darkPrimary,
+                    color: isDarkMode
+                        ? AppColors.lightPrimary
+                        : AppColors.darkPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Bouton Mode Invité - Continuer sans compte
+          Center(
+            child: TextButton.icon(
+              onPressed: isLoading ? null : _continueAsGuest,
+              icon: Icon(
+                Icons.visibility_outlined,
+                color: Colors.grey.shade600,
+                size: 20,
+              ),
+              label: Text(
+                'Continuer sans compte',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
           ),
         ],
       ),
@@ -594,6 +635,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Bouton Sign in with Apple avec style officiel
+  Widget _buildAppleSignInButton({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.apple,
+              size: 24,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                fontSize: 15,
               ),
             ),
           ],

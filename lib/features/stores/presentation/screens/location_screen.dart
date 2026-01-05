@@ -12,6 +12,7 @@ import 'package:mukhliss/core/theme/app_theme.dart';
 import 'package:mukhliss/core/utils/map_layer_utils.dart';
 import 'package:mukhliss/core/widgets/buttons/buildmaplayerbutton.dart';
 import 'package:mukhliss/features/stores/stores.dart';
+import 'package:mukhliss/l10n/app_localizations.dart';
 import '../widgets/location_widgets.dart';
 import '../widgets/optimized_map_cluster.dart';
 import '../widgets/navigation_bar_widget.dart';
@@ -78,7 +79,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
   void _onMapPositionChanged(MapCamera camera, bool hasGesture) {
     // Ignorer les changements pendant l'animation vers un magasin
     if (_isAnimatingToStore) return;
-    
+
     // Mettre à jour la position utilisateur pour le tri par distance
     if (_currentPosition != null) {
       ref.read(currentUserPositionProvider.notifier).state = UserPosition(
@@ -97,7 +98,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
     );
 
     // Ne recharger que si les bounds ont changé significativement
-    if (_currentViewportBounds == null || _boundsChangedSignificantly(_currentViewportBounds!, newBounds)) {
+    if (_currentViewportBounds == null ||
+        _boundsChangedSignificantly(_currentViewportBounds!, newBounds)) {
       _currentViewportBounds = newBounds;
       // Invalidate le provider pour recharger les magasins
       ref.invalidate(storesInBoundsProvider(newBounds));
@@ -109,11 +111,11 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
     const threshold = 0.1; // 10%
     final latDiff = (old.maxLat - old.minLat).abs();
     final lngDiff = (old.maxLng - old.minLng).abs();
-    
+
     return (old.minLat - newB.minLat).abs() > latDiff * threshold ||
-           (old.maxLat - newB.maxLat).abs() > latDiff * threshold ||
-           (old.minLng - newB.minLng).abs() > lngDiff * threshold ||
-           (old.maxLng - newB.maxLng).abs() > lngDiff * threshold;
+        (old.maxLat - newB.maxLat).abs() > latDiff * threshold ||
+        (old.minLng - newB.minLng).abs() > lngDiff * threshold ||
+        (old.maxLng - newB.maxLng).abs() > lngDiff * threshold;
   }
 
   @override
@@ -137,10 +139,9 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
   Widget build(BuildContext context) {
     // Utiliser mock stores pour les tests de charge ou Supabase pour production
     final useMock = ref.watch(mockModeProvider);
-    final storesAsync = useMock 
-        ? ref.watch(mockStoresProvider)
-        : ref.watch(storesProvider);
-    
+    final storesAsync =
+        useMock ? ref.watch(mockStoresProvider) : ref.watch(storesProvider);
+
     final isDark = ref.watch(themeProvider) == AppThemeMode.dark;
     final bgColor = isDark ? AppColors.darkSurface : AppColors.surface;
 
@@ -157,10 +158,9 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
       );
     }
 
-    final center =
-        _currentPosition != null
-            ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-            : const LatLng(34.0209, -6.8416);
+    final center = _currentPosition != null
+        ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+        : const LatLng(34.0209, -6.8416);
 
     return Scaffold(
       body: Stack(
@@ -190,7 +190,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
               // Clustering des magasins
               storesAsync.when(
                 data: (stores) {
-                  debugPrint('📍 LocationScreen: ${stores.length} magasins chargés');
+                  debugPrint(
+                      '📍 LocationScreen: ${stores.length} magasins chargés');
                   if (stores.isEmpty) {
                     debugPrint('⚠️ Aucun magasin retourné par le provider!');
                     return const SizedBox.shrink();
@@ -232,7 +233,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
             MapNavigationBar(
               isNavigating: isNavigating,
               destination: selectedShop?.name,
-              estimatedTime: routeInfo?['duration'] != null 
+              estimatedTime: routeInfo?['duration'] != null
                   ? _formatDuration(routeInfo!['duration'] as double)
                   : null,
               distanceToNext: routeInfo?['distance'] != null
@@ -249,7 +250,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
               right: 16,
               child: ActiveNavigationBar(
                 destination: selectedShop!.name,
-                eta: routeInfo?['duration'] != null 
+                eta: routeInfo?['duration'] != null
                     ? _formatDuration(routeInfo!['duration'] as double)
                     : null,
                 distance: routeInfo?['distance'] != null
@@ -284,20 +285,28 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'Rechercher un magasin...',
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.grey),
-                          onPressed: clearSearch,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
-                      onChanged: (query) => _performSearch(query),
+                    child: Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return TextField(
+                          controller: searchController,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: l10n?.rechercherMagasin ??
+                                'Rechercher un magasin...',
+                            prefixIcon:
+                                const Icon(Icons.search, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.close, color: Colors.grey),
+                              onPressed: clearSearch,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                          ),
+                          onChanged: (query) => _performSearch(query),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -327,15 +336,26 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
                                 color: Colors.blue.shade50,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Icon(Icons.store, color: Colors.blue.shade600),
+                              child: Icon(Icons.store,
+                                  color: Colors.blue.shade600),
                             ),
                             title: Text(
                               store.name,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
                             ),
-                            subtitle: Text(
-                              store.address ?? 'Adresse non disponible',
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                            subtitle: Builder(
+                              builder: (context) {
+                                final l10n = AppLocalizations.of(context);
+                                return Text(
+                                  store.address ??
+                                      l10n?.adresseNonDisponible ??
+                                      'Adresse non disponible',
+                                  style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12),
+                                );
+                              },
                             ),
                             onTap: () => _onSearchSelect(store),
                           );
@@ -353,17 +373,17 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
               right: 20,
               child: MapLayerSelectorPanel(
                 selectedLayer: _selectedLayer,
-                onLayerSelected:
-                    (layer) => _safeSetState(() {
-                      _selectedLayer = layer;
-                      hideMapLayers();
-                    }),
+                onLayerSelected: (layer) => _safeSetState(() {
+                  _selectedLayer = layer;
+                  hideMapLayers();
+                }),
                 onClose: hideMapLayers,
               ),
             ),
 
           // Zone de swipe up en bas (pour afficher les catégories quand fermé)
-          if (bottomSheetState == BottomSheetState.none && _currentPosition != null)
+          if (bottomSheetState == BottomSheetState.none &&
+              _currentPosition != null)
             Positioned(
               bottom: 0,
               left: 0,
@@ -382,7 +402,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
                   height: 60, // Plus grand pour faciliter le geste
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.1),
@@ -403,12 +424,18 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Glisser pour voir les catégories',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Text(
+                            l10n?.glisserCategories ??
+                                'Glisser pour voir les catégories',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -439,16 +466,14 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
           height: 60,
           child: AnimatedBuilder(
             animation: _animController!,
-            builder:
-                (_, __) => PulsatingNavigationMarker(
-                  bearing:
-                      calculateNavigationBearing(
-                        currentPosition: point,
-                        polylinePoints: polylinePoints,
-                      ) ??
-                      0,
-                  pulseValue: _animController!.value,
-                ),
+            builder: (_, __) => PulsatingNavigationMarker(
+              bearing: calculateNavigationBearing(
+                    currentPosition: point,
+                    polylinePoints: polylinePoints,
+                  ) ??
+                  0,
+              pulseValue: _animController!.value,
+            ),
           ),
         ),
       ];
@@ -479,8 +504,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
             currentPosition: _currentPosition,
             mapController: _mapController,
             onStoreEntitySelected: _onSelectStore,
-            onCategorySelected:
-                (c, _) => _safeSetState(() => _selectedCategory = c),
+            onCategorySelected: (c, _) =>
+                _safeSetState(() => _selectedCategory = c),
             onClose: closeAllSheets,
           ),
         ),
@@ -501,8 +526,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
             onRefresh: () {},
           ),
         ),
-      if (bottomSheetState == BottomSheetState.route &&
-          selectedShop != null)
+      if (bottomSheetState == BottomSheetState.route && selectedShop != null)
         _wrapSheet(
           RoutePreviewSheet(
             destination: selectedShop!,
@@ -525,27 +549,28 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
         ),
     ];
   }
+
   // Wrapper - Positioned.fill pour donner les bonnes contraintes
   Widget _wrapSheet(Widget child) => Positioned.fill(
-    child: child,
-  );
+        child: child,
+      );
 
   Widget _buildSearchButton() => GestureDetector(
-    onTap: toggleSearchBar,
-    child: Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-      ),
-      child: Icon(
-        showSearchBar ? Icons.close : Icons.search,
-        color: Colors.blue.shade700,
-      ),
-    ),
-  );
+        onTap: toggleSearchBar,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+          ),
+          child: Icon(
+            showSearchBar ? Icons.close : Icons.search,
+            color: Colors.blue.shade700,
+          ),
+        ),
+      );
 
   // ============ FORMATAGE ============
   String _formatDuration(double seconds) {
@@ -580,10 +605,10 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
     if (store != null) {
       selectShop(store);
       _safeSetState(() => _selectedCategory = category);
-      
+
       // Déplacer la carte vers le magasin avec animation
       _animateToStore(store);
-      
+
       showShopDetailsSheet();
       debugPrint(
         '🔵 After: selectedShop=${selectedShop?.name}, state=$bottomSheetState',
@@ -595,18 +620,19 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
   void _animateToStore(StoreEntity store) {
     // Bloquer le reload pendant l'animation
     _isAnimatingToStore = true;
-    
+
     final targetLatLng = LatLng(store.latitude, store.longitude);
     final currentZoom = _mapController.camera.zoom;
-    
+
     // Zoom minimum de 16 pour bien voir le magasin
     final targetZoom = currentZoom < 16 ? 16.0 : currentZoom;
-    
+
     // Animation fluide vers le magasin
     _mapController.move(targetLatLng, targetZoom);
-    
-    debugPrint('🗺️ Carte déplacée vers: ${store.name} (${store.latitude}, ${store.longitude})');
-    
+
+    debugPrint(
+        '🗺️ Carte déplacée vers: ${store.name} (${store.latitude}, ${store.longitude})');
+
     // Débloquer après un court délai pour laisser l'animation se terminer
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -647,12 +673,12 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
   void _performSearch(String query) {
     // Annuler la recherche précédente
     searchDebounceTimer?.cancel();
-    
+
     if (query.isEmpty) {
       updateSearchResults([]);
       return;
     }
-    
+
     // Debounce de 300ms pour éviter trop de requêtes
     searchDebounceTimer = Timer(const Duration(milliseconds: 300), () async {
       try {

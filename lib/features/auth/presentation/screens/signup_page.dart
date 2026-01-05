@@ -1,7 +1,6 @@
 /// Page d'inscription migrée vers Clean Architecture.
 library;
 
-
 // ============================================================
 // MUKHLISS - Page d'Inscription (Migrée)
 // ============================================================
@@ -176,18 +175,17 @@ class _SignupPageState extends ConsumerState<SignupPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors:
-                isDarkMode
-                    ? [
-                      AppColors.darkWhite,
-                      AppColors.darkGrey50,
-                      AppColors.darkPurpleDark,
-                    ]
-                    : [
-                      AppColors.lightWhite,
-                      AppColors.lightGrey50,
-                      AppColors.lightPurpleDark,
-                    ],
+            colors: isDarkMode
+                ? [
+                    AppColors.darkWhite,
+                    AppColors.darkGrey50,
+                    AppColors.darkPurpleDark,
+                  ]
+                : [
+                    AppColors.lightWhite,
+                    AppColors.lightGrey50,
+                    AppColors.lightPurpleDark,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -209,7 +207,14 @@ class _SignupPageState extends ConsumerState<SignupPage>
 
                           // Back Button
                           IconButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushReplacementNamed(
+                                    context, AppRouter.login);
+                              }
+                            },
                             icon: Icon(
                               Icons.arrow_back_ios_rounded,
                               color: AppColors.purpleDark,
@@ -264,9 +269,9 @@ class _SignupPageState extends ConsumerState<SignupPage>
           Text(
             l10n?.creecompte ?? 'Créer un compte',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.purpleDark,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.purpleDark,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -295,8 +300,8 @@ class _SignupPageState extends ConsumerState<SignupPage>
                   controller: _firstNameController,
                   label: l10n?.prenom ?? 'Prénom',
                   icon: Icons.person_outline_rounded,
-                  validator:
-                      (value) => Validators.validateRequired(value, context),
+                  validator: (value) =>
+                      Validators.validateRequired(value, context),
                 ),
               ),
               const SizedBox(width: 16),
@@ -306,8 +311,8 @@ class _SignupPageState extends ConsumerState<SignupPage>
                   controller: _lastNameController,
                   label: l10n?.nom ?? 'Nom',
                   icon: Icons.badge_outlined,
-                  validator:
-                      (value) => Validators.validateRequired(value, context),
+                  validator: (value) =>
+                      Validators.validateRequired(value, context),
                 ),
               ),
             ],
@@ -377,8 +382,8 @@ class _SignupPageState extends ConsumerState<SignupPage>
             controller: _passwordController,
             label: l10n?.password ?? 'Mot de passe',
             isObscure: _obscurePassword,
-            onToggleVisibility:
-                () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggleVisibility: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
             validator: (value) {
               final errorRequired = Validators.validateRequired(value, context);
               if (errorRequired != null) return errorRequired;
@@ -396,10 +401,9 @@ class _SignupPageState extends ConsumerState<SignupPage>
             controller: _confirmPasswordController,
             label: l10n?.confirmepassword ?? 'Confirmer le mot de passe',
             isObscure: _obscureConfirmPassword,
-            onToggleVisibility:
-                () => setState(
-                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                ),
+            onToggleVisibility: () => setState(
+              () => _obscureConfirmPassword = !_obscureConfirmPassword,
+            ),
             validator: (value) {
               final error = Validators.validateConfirmPassword(
                 value,
@@ -429,21 +433,20 @@ class _SignupPageState extends ConsumerState<SignupPage>
           elevation: 0,
           shadowColor: Colors.transparent,
         ),
-        child:
-            _isLoading
-                ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 2.5,
-                )
-                : Text(
-                  l10n?.creecompte ?? 'Créer mon compte',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                    color: Colors.white,
-                  ),
+        child: _isLoading
+            ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 2.5,
+              )
+            : Text(
+                l10n?.creecompte ?? 'Créer mon compte',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                  color: Colors.white,
                 ),
+              ),
       ),
     );
   }
@@ -457,8 +460,8 @@ class _SignupPageState extends ConsumerState<SignupPage>
           style: TextStyle(color: Colors.grey.shade600),
         ),
         TextButton(
-          onPressed:
-              () => Navigator.pushReplacementNamed(context, AppRouter.login),
+          onPressed: () =>
+              Navigator.pushReplacementNamed(context, AppRouter.login),
           child: Text(
             l10n?.connecter ?? 'Se connecter',
             style: TextStyle(

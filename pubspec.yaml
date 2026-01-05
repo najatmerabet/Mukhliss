@@ -4,7 +4,7 @@ description: "Application de fidélité client Mukhliss - Gestion des offres et 
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.4+7
 
 flutter_icons:
   android: true
@@ -24,6 +24,8 @@ dependencies:
   get: ^4.7.2
   flutter_riverpod: ^2.5.1
   google_sign_in: ^6.3.0
+  sign_in_with_apple: ^6.1.4
+  crypto: ^3.0.6
   qr_flutter: ^4.1.0
   flutter_localizations:
     sdk: flutter
@@ -50,10 +52,11 @@ dependencies:
   hive_flutter: ^1.1.0
   image: ^4.6.0
 
-# ============================================
-# DEV DEPENDENCIES - Pour les tests et le développement
-# ============================================
+  # ============================================
+  # DEV DEPENDENCIES - Pour les tests et le développement
+  # ============================================
   path_provider: any
+  flutter_secure_storage: ^9.2.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

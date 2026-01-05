@@ -749,4 +749,117 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appareilactuel => 'Appareil actuel';
+
+  @override
+  String get lePlusRapide => 'Le plus rapide';
+
+  @override
+  String get demarrer => 'Démarrer';
+
+  @override
+  String get navigationEnCours => 'Navigation en cours';
+
+  @override
+  String get zoneDangereuse => 'ZONE DANGEREUSE';
+
+  @override
+  String get supprimerMonCompte => 'Supprimer mon compte';
+
+  @override
+  String get suppressionDefinitive =>
+      'Suppression définitive de toutes vos données';
+
+  @override
+  String get supprimerLeCompte => 'Supprimer le compte';
+
+  @override
+  String get actionIrreversible =>
+      'Cette action est irréversible. Toutes vos données seront supprimées définitivement :';
+
+  @override
+  String get profilInfo => 'Votre profil et informations personnelles';
+
+  @override
+  String get historiquePoints => 'Votre historique de points';
+
+  @override
+  String get offresRecompenses => 'Vos offres et récompenses';
+
+  @override
+  String get etesVousSur => 'Étes-vous sûr de vouloir continuer ?';
+
+  @override
+  String get supprimerDefinitivement => 'Supprimer définitivement';
+
+  @override
+  String get compteSupprimeSucces => 'Votre compte a été supprimé avec succès';
+
+  @override
+  String get erreurSuppression => 'Erreur lors de la suppression';
+
+  @override
+  String get glisserCategories => 'Glisser pour voir les catégories';
+
+  @override
+  String get rechercherMagasin => 'Rechercher un magasin...';
+
+  @override
+  String get adresseNonDisponible => 'Adresse non disponible';
+
+  @override
+  String get vousEtesArrive => 'Vous êtes arrivé!';
+
+  @override
+  String get erreurChargement => 'Erreur de chargement';
+
+  @override
+  String get reessayer => 'Réessayer';
+
+  @override
+  String get aucunAppareil => 'Aucun appareil enregistré';
+
+  @override
+  String get appareilsApparaitront =>
+      'Vos appareils connectés apparaîtront ici';
+
+  @override
+  String get deconnecte => 'Déconnecté';
+
+  @override
+  String get derniereActivite => 'Dernière activité';
+
+  @override
+  String get aLinstant => 'À l\'instant';
+
+  @override
+  String ilYaMinutes(Object count) {
+    return 'Il y a $count min';
+  }
+
+  @override
+  String ilYaHeures(Object count) {
+    return 'Il y a ${count}h';
+  }
+
+  @override
+  String ilYaJours(Object count, Object plural) {
+    return 'Il y a $count jour$plural';
+  }
+
+  @override
+  String get deconnecterDistance => 'Déconnecter à distance';
+
+  @override
+  String confirmDeconnexion(Object deviceName) {
+    return 'Êtes-vous sûr de vouloir déconnecter \"$deviceName\" à distance ?\n\nL\'appareil sera déconnecté automatiquement.';
+  }
+
+  @override
+  String get deconnecterBtn => 'Déconnecter';
+
+  @override
+  String get appareilDeconnecte => 'Appareil déconnecté à distance';
+
+  @override
+  String get erreurDeconnexion => 'Erreur lors de la déconnexion';
 }

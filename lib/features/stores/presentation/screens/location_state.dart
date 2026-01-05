@@ -1,18 +1,15 @@
-/// ============================================================
-/// Location Screen State - Gestion complète de l'état
-/// ============================================================
-///
-/// Contient toute la logique métier de LocationScreen
-/// pour respecter le principe SRP et MVVM pattern
+
 library;
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:mukhliss/features/auth/presentation/providers/auth_providers.dart';
 
 import 'package:mukhliss/features/stores/stores.dart';
 import 'package:mukhliss/features/location/data/services/osrm_service.dart';
@@ -25,8 +22,33 @@ enum BottomSheetState { none, categories, shopDetails, route, search }
 mixin ConnectivityMixin<T extends StatefulWidget> on State<T> {
   bool isCheckingConnectivity = true;
   bool hasConnection = true;
+  String? _currentUserId;
   StreamSubscription<ConnectivityResult>? connectivitySubscription;
-
+  
+ void initializeUserId(WidgetRef ref) {
+    final authClient = ref.read(authClientProvider);
+    final currentUser = authClient.currentUser;
+    if (currentUser != null) {
+      _currentUserId = currentUser.id;
+      debugPrint('📍 LocationScreen - UserId initialisé: $_currentUserId');
+    }
+  }
+ 
+ void checkUserChange(WidgetRef ref, VoidCallback onUserChanged) {
+    final authClient = ref.read(authClientProvider);
+    final currentUser = authClient.currentUser;
+    
+    if (currentUser != null && currentUser.id != _currentUserId) {
+      debugPrint('🔄 LocationScreen - Changement d\'utilisateur détecté!');
+      debugPrint('   Ancien: $_currentUserId');
+      debugPrint('   Nouveau: ${currentUser.id}');
+      _currentUserId = currentUser.id;
+      onUserChanged();
+    }
+  }
+  void resetUserId() {
+    _currentUserId = null;
+  }
   Future<void> checkConnectivity() async {
     try {
       final hasInternet = await InternetConnection().hasInternetAccess;
@@ -42,7 +64,7 @@ mixin ConnectivityMixin<T extends StatefulWidget> on State<T> {
       }
     }
   }
-
+ 
   Future<void> checkConnectivityWithRetry({int retryCount = 0}) async {
     if (!mounted || retryCount > 3) return;
 

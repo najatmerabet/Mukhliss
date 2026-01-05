@@ -1527,6 +1527,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current device'**
   String get appareilactuel;
+
+  /// No description provided for @lePlusRapide.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest'**
+  String get lePlusRapide;
+
+  /// No description provided for @demarrer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get demarrer;
+
+  /// No description provided for @navigationEnCours.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation in progress'**
+  String get navigationEnCours;
+
+  /// No description provided for @zoneDangereuse.
+  ///
+  /// In en, this message translates to:
+  /// **'DANGER ZONE'**
+  String get zoneDangereuse;
+
+  /// No description provided for @supprimerMonCompte.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get supprimerMonCompte;
+
+  /// No description provided for @suppressionDefinitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent deletion of all your data'**
+  String get suppressionDefinitive;
+
+  /// No description provided for @supprimerLeCompte.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get supprimerLeCompte;
+
+  /// No description provided for @actionIrreversible.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible. All your data will be permanently deleted:'**
+  String get actionIrreversible;
+
+  /// No description provided for @profilInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile and personal information'**
+  String get profilInfo;
+
+  /// No description provided for @historiquePoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Your points history'**
+  String get historiquePoints;
+
+  /// No description provided for @offresRecompenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Your offers and rewards'**
+  String get offresRecompenses;
+
+  /// No description provided for @etesVousSur.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to continue?'**
+  String get etesVousSur;
+
+  /// No description provided for @supprimerDefinitivement.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get supprimerDefinitivement;
+
+  /// No description provided for @compteSupprimeSucces.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been successfully deleted'**
+  String get compteSupprimeSucces;
+
+  /// No description provided for @erreurSuppression.
+  ///
+  /// In en, this message translates to:
+  /// **'Error during deletion'**
+  String get erreurSuppression;
+
+  /// No description provided for @glisserCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to see categories'**
+  String get glisserCategories;
+
+  /// No description provided for @rechercherMagasin.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a store...'**
+  String get rechercherMagasin;
+
+  /// No description provided for @adresseNonDisponible.
+  ///
+  /// In en, this message translates to:
+  /// **'Address not available'**
+  String get adresseNonDisponible;
+
+  /// No description provided for @vousEtesArrive.
+  ///
+  /// In en, this message translates to:
+  /// **'You have arrived!'**
+  String get vousEtesArrive;
+
+  /// No description provided for @erreurChargement.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading error'**
+  String get erreurChargement;
+
+  /// No description provided for @reessayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get reessayer;
+
+  /// No description provided for @aucunAppareil.
+  ///
+  /// In en, this message translates to:
+  /// **'No registered devices'**
+  String get aucunAppareil;
+
+  /// No description provided for @appareilsApparaitront.
+  ///
+  /// In en, this message translates to:
+  /// **'Your connected devices will appear here'**
+  String get appareilsApparaitront;
+
+  /// No description provided for @deconnecte.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get deconnecte;
+
+  /// No description provided for @derniereActivite.
+  ///
+  /// In en, this message translates to:
+  /// **'Last activity'**
+  String get derniereActivite;
+
+  /// No description provided for @aLinstant.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get aLinstant;
+
+  /// No description provided for @ilYaMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String ilYaMinutes(Object count);
+
+  /// No description provided for @ilYaHeures.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String ilYaHeures(Object count);
+
+  /// No description provided for @ilYaJours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day{plural} ago'**
+  String ilYaJours(Object count, Object plural);
+
+  /// No description provided for @deconnecterDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect remotely'**
+  String get deconnecterDistance;
+
+  /// No description provided for @confirmDeconnexion.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to disconnect \"{deviceName}\" remotely?\n\nThe device will be disconnected automatically.'**
+  String confirmDeconnexion(Object deviceName);
+
+  /// No description provided for @deconnecterBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get deconnecterBtn;
+
+  /// No description provided for @appareilDeconnecte.
+  ///
+  /// In en, this message translates to:
+  /// **'Device disconnected remotely'**
+  String get appareilDeconnecte;
+
+  /// No description provided for @erreurDeconnexion.
+  ///
+  /// In en, this message translates to:
+  /// **'Error during disconnection'**
+  String get erreurDeconnexion;
 }
 
 class _AppLocalizationsDelegate

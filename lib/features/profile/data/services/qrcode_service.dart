@@ -78,6 +78,9 @@ class QrcodeService {
   // Récupérer les données du client avec gestion d'erreur améliorée
   Future<Map<String, dynamic>> _getClientData() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // ⚠️ Capturer l'ID utilisateur pour vérification du cache dans les catch blocks
+    String? currentUserId;
 
     try {
       // Obtenir l'utilisateur de manière sécurisée
@@ -93,18 +96,44 @@ class QrcodeService {
         }
         throw Exception('User not authenticated and no cached data available');
       }
+      
+      // Sauvegarder l'ID pour les catch blocks
+      currentUserId = user.id;
+
+      // ⚠️ IMPORTANT: Vérifier si l'utilisateur a changé depuis le dernier cache
+      // Si oui, effacer le cache pour éviter d'afficher les données d'un autre compte
+      final lastUserId = prefs.getString(_lastUserIdKey);
+      if (lastUserId != null && lastUserId != user.id) {
+        AppLogger.info(
+          'User changed from $lastUserId to ${user.id} - clearing cache',
+          tag: 'QRCode',
+        );
+        // Effacer le cache de l'ancien utilisateur
+        await prefs.remove(_qrCacheKey);
+      }
 
       // Sauvegarder l'ID utilisateur pour référence future
       await prefs.setString(_lastUserIdKey, user.id);
 
       // Si pas de connexion, utiliser les données en cache
+      // SEULEMENT si le cache appartient au même utilisateur
       if (!await isConnected) {
         final cachedData = prefs.getString(_qrCacheKey);
         if (cachedData != null) {
           final data = jsonDecode(cachedData);
-          data['_isCached'] = true;
-          data['_isOffline'] = true;
-          return data;
+          // Vérifier que les données en cache appartiennent à cet utilisateur
+          if (data['id'] == user.id) {
+            data['_isCached'] = true;
+            data['_isOffline'] = true;
+            return data;
+          } else {
+            // Le cache appartient à un autre utilisateur, le supprimer
+            await prefs.remove(_qrCacheKey);
+            AppLogger.warning(
+              'Cache belongs to different user - cleared',
+              tag: 'QRCode',
+            );
+          }
         }
         throw Exception('No internet connection and no cached data available');
       }
@@ -120,16 +149,24 @@ class QrcodeService {
 
       // ✅ Gérer le cas où aucun profil n'existe
       if (response == null) {
-        // Essayer d'utiliser le cache s'il existe
+        AppLogger.warning(
+          'Profil client non trouvé pour user: ${user.id}',
+          tag: 'QRCode',
+        );
+        // Essayer d'utiliser le cache s'il existe ET appartient à cet utilisateur
         final cachedData = prefs.getString(_qrCacheKey);
         if (cachedData != null) {
           final data = jsonDecode(cachedData);
-          data['_isCached'] = true;
-          data['_isOffline'] = false;
-          data['_error'] = 'Profile not found in database';
-          return data;
+          if (data['id'] == user.id) {
+            data['_isCached'] = true;
+            data['_isOffline'] = false;
+            data['_error'] = 'Profile not found in database';
+            return data;
+          }
         }
-        throw Exception('User profile not found and no cached data available');
+        throw Exception(
+          'Profil non trouvé. Veuillez vous déconnecter et vous reconnecter.',
+        );
       }
 
       // Mettre en cache les données avec métadonnées
@@ -140,31 +177,45 @@ class QrcodeService {
 
       return response;
     } on SocketException catch (e) {
-      return _handleFallbackToCache(prefs, 'Network error: ${e.message}');
+      return _handleFallbackToCache(prefs, 'Network error: ${e.message}', currentUserId: currentUserId);
     } on TimeoutException {
-      return _handleFallbackToCache(prefs, 'Request timeout');
+      return _handleFallbackToCache(prefs, 'Request timeout', currentUserId: currentUserId);
     } on PostgrestException catch (e) {
-      return _handleFallbackToCache(prefs, 'Database error: ${e.message}');
+      return _handleFallbackToCache(prefs, 'Database error: ${e.message}', currentUserId: currentUserId);
     } on AuthException catch (e) {
       return _handleFallbackToCache(
         prefs,
         'Authentication error: ${e.message}',
+        currentUserId: currentUserId,
       );
     } catch (e) {
-      return _handleFallbackToCache(prefs, 'Unexpected error: $e');
+      return _handleFallbackToCache(prefs, 'Unexpected error: $e', currentUserId: currentUserId);
     }
   }
 
   // Méthode pour gérer le fallback vers le cache
+  // ⚠️ IMPORTANT: Vérifie que le cache appartient à l'utilisateur actuel
   Future<Map<String, dynamic>> _handleFallbackToCache(
     SharedPreferences prefs,
-    String error,
-  ) async {
+    String error, {
+    String? currentUserId,
+  }) async {
     AppLogger.debug('Falling back to cache due to: $error', tag: 'QRCode');
 
     final cachedData = prefs.getString(_qrCacheKey);
     if (cachedData != null) {
       final data = jsonDecode(cachedData);
+      
+      // Vérifier que le cache appartient à l'utilisateur actuel
+      if (currentUserId != null && data['id'] != currentUserId) {
+        AppLogger.warning(
+          'Cache belongs to different user (cache=${data['id']}, current=$currentUserId) - not using',
+          tag: 'QRCode',
+        );
+        await prefs.remove(_qrCacheKey);
+        throw Exception('$error and cache belongs to different user');
+      }
+      
       data['_isCached'] = true;
       data['_isOffline'] = true;
       data['_error'] = error;

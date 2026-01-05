@@ -742,4 +742,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appareilactuel => 'Current device';
+
+  @override
+  String get lePlusRapide => 'Fastest';
+
+  @override
+  String get demarrer => 'Start';
+
+  @override
+  String get navigationEnCours => 'Navigation in progress';
+
+  @override
+  String get zoneDangereuse => 'DANGER ZONE';
+
+  @override
+  String get supprimerMonCompte => 'Delete my account';
+
+  @override
+  String get suppressionDefinitive => 'Permanent deletion of all your data';
+
+  @override
+  String get supprimerLeCompte => 'Delete account';
+
+  @override
+  String get actionIrreversible =>
+      'This action is irreversible. All your data will be permanently deleted:';
+
+  @override
+  String get profilInfo => 'Your profile and personal information';
+
+  @override
+  String get historiquePoints => 'Your points history';
+
+  @override
+  String get offresRecompenses => 'Your offers and rewards';
+
+  @override
+  String get etesVousSur => 'Are you sure you want to continue?';
+
+  @override
+  String get supprimerDefinitivement => 'Delete permanently';
+
+  @override
+  String get compteSupprimeSucces =>
+      'Your account has been successfully deleted';
+
+  @override
+  String get erreurSuppression => 'Error during deletion';
+
+  @override
+  String get glisserCategories => 'Swipe to see categories';
+
+  @override
+  String get rechercherMagasin => 'Search for a store...';
+
+  @override
+  String get adresseNonDisponible => 'Address not available';
+
+  @override
+  String get vousEtesArrive => 'You have arrived!';
+
+  @override
+  String get erreurChargement => 'Loading error';
+
+  @override
+  String get reessayer => 'Try again';
+
+  @override
+  String get aucunAppareil => 'No registered devices';
+
+  @override
+  String get appareilsApparaitront => 'Your connected devices will appear here';
+
+  @override
+  String get deconnecte => 'Disconnected';
+
+  @override
+  String get derniereActivite => 'Last activity';
+
+  @override
+  String get aLinstant => 'Just now';
+
+  @override
+  String ilYaMinutes(Object count) {
+    return '$count min ago';
+  }
+
+  @override
+  String ilYaHeures(Object count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String ilYaJours(Object count, Object plural) {
+    return '$count day$plural ago';
+  }
+
+  @override
+  String get deconnecterDistance => 'Disconnect remotely';
+
+  @override
+  String confirmDeconnexion(Object deviceName) {
+    return 'Are you sure you want to disconnect \"$deviceName\" remotely?\n\nThe device will be disconnected automatically.';
+  }
+
+  @override
+  String get deconnecterBtn => 'Disconnect';
+
+  @override
+  String get appareilDeconnecte => 'Device disconnected remotely';
+
+  @override
+  String get erreurDeconnexion => 'Error during disconnection';
 }

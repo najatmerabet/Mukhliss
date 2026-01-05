@@ -140,10 +140,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
             color: isDarkMode ? const Color(0xFF1A1F36) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color:
-                  isDarkMode
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.black.withValues(alpha: 0.08),
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.08),
               width: 1,
             ),
             boxShadow: [
@@ -188,29 +187,31 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               indicatorPadding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               tabs: [
                 Tab(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      l10n?.offredisponible ?? 'Disponibles',
-                      textAlign: TextAlign.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        l10n?.offredisponible ?? 'Disponibles',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
                 Tab(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      l10n?.offreutilise ?? 'Utilisées',
-                      textAlign: TextAlign.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        l10n?.offreutilise ?? 'Utilisées',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -335,10 +336,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors:
-                  isDarkMode
-                      ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
-                      : [Colors.white, const Color(0xFFF8F9FE)],
+              colors: isDarkMode
+                  ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
+                  : [Colors.white, const Color(0xFFF8F9FE)],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -453,10 +453,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors:
-                  isDarkMode
-                      ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
-                      : [Colors.white, const Color(0xFFF8F9FE)],
+              colors: isDarkMode
+                  ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
+                  : [Colors.white, const Color(0xFFF8F9FE)],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -524,10 +523,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors:
-                  isDarkMode
-                      ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
-                      : [Colors.white, const Color(0xFFF8F9FE)],
+              colors: isDarkMode
+                  ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
+                  : [Colors.white, const Color(0xFFF8F9FE)],
             ),
             borderRadius: BorderRadius.circular(24),
           ),
@@ -620,10 +618,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color:
-                isDarkMode
-                    ? Colors.black.withValues(alpha: 0.4)
-                    : Colors.black.withValues(alpha: 0.06),
+            color: isDarkMode
+                ? Colors.black.withValues(alpha: 0.4)
+                : Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -658,42 +655,37 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
                   ],
                 ),
                 child: ClipOval(
-                  child:
-                      reward.storeLogoUrl != null &&
-                              reward.storeLogoUrl!.isNotEmpty
-                          ? Image.network(
-                            reward.storeLogoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => Container(
-                                  color:
-                                      isDarkMode
-                                          ? const Color(0xFF2C2C2E)
-                                          : const Color(0xFFF2F2F7),
-                                  child: Icon(
-                                    Icons.storefront_rounded,
-                                    size: 24,
-                                    color:
-                                        isDarkMode
-                                            ? Colors.white30
-                                            : Colors.grey.shade400,
-                                  ),
-                                ),
-                          )
-                          : Container(
-                            color:
-                                isDarkMode
-                                    ? const Color(0xFF2C2C2E)
-                                    : const Color(0xFFF2F2F7),
+                  child: reward.storeLogoUrl != null &&
+                          reward.storeLogoUrl!.isNotEmpty
+                      ? Image.network(
+                          reward.storeLogoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            color: isDarkMode
+                                ? const Color(0xFF2C2C2E)
+                                : const Color(0xFFF2F2F7),
                             child: Icon(
                               Icons.storefront_rounded,
                               size: 24,
-                              color:
-                                  isDarkMode
-                                      ? Colors.white30
-                                      : Colors.grey.shade400,
+                              color: isDarkMode
+                                  ? Colors.white30
+                                  : Colors.grey.shade400,
                             ),
                           ),
+                        )
+                      : Container(
+                          color: isDarkMode
+                              ? const Color(0xFF2C2C2E)
+                              : const Color(0xFFF2F2F7),
+                          child: Icon(
+                            Icons.storefront_rounded,
+                            size: 24,
+                            color: isDarkMode
+                                ? Colors.white30
+                                : Colors.grey.shade400,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -831,7 +823,6 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
     );
   }
 
-
   Widget _buildClaimedRewardCard(ClaimedOffer offer, bool isDarkMode) {
     final l10n = AppLocalizations.of(context);
 
@@ -841,10 +832,9 @@ class _MyOffersScreenState extends ConsumerState<MyOffersScreen>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors:
-              isDarkMode
-                  ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
-                  : [Colors.white, const Color(0xFFF8F9FE)],
+          colors: isDarkMode
+              ? [const Color(0xFF1E2337), const Color(0xFF0F1425)]
+              : [Colors.white, const Color(0xFFF8F9FE)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(

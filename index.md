@@ -32,5 +32,8 @@ R : Envoyez-nous un email avec :
 - Plateformes supportées : iOS, iPadOS
 - Dernière mise à jour : [Date]
 
+### 🔗 Liens utiles
+- [Politique de confidentialité](privacy.md)
+- [Conditions d'utilisation](terms.md)
 
 *Nous répondons généralement dans les 24-48h.*

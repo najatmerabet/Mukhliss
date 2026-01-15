@@ -273,7 +273,8 @@
 "confirmDeconnexion":"هل أنت متأكد أنك تريد فصل \"{deviceName}\" عن بُعد؟\n\nسيتم فصل الجهاز تلقائياً.",
 "deconnecterBtn":"فصل",
 "appareilDeconnecte":"تم فصل الجهاز عن بُعد",
-"erreurDeconnexion":"خطأ أثناء الفصل"
+"erreurDeconnexion":"خطأ أثناء الفصل",
+"optionnel": "اختياري"
 }
 
 

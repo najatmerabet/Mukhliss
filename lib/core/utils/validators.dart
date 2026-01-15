@@ -33,10 +33,13 @@ class Validators {
     return null;
   }
 
+  /// Validates phone number format only if provided (optional field).
+  /// Returns null if empty (field is optional) or if format is valid.
   static String? validatePhone(String? value, BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (value?.isEmpty ?? true) return l10n?.requis ?? 'Requis';
-    if (value!.length < 10) return l10n?.invalidphone ?? 'Numéro invalide';
+    // Phone is optional - only validate format if provided
+    if (value == null || value.isEmpty) return null;
+    if (value.length < 10) return l10n?.invalidphone ?? 'Numéro invalide';
     return null;
   }
 

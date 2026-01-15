@@ -849,4 +849,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get erreurDeconnexion => 'خطأ أثناء الفصل';
+
+  @override
+  String get optionnel => 'اختياري';
 }

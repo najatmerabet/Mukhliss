@@ -1731,6 +1731,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error during disconnection'**
   String get erreurDeconnexion;
+
+  /// No description provided for @optionnel.
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get optionnel;
 }
 
 class _AppLocalizationsDelegate

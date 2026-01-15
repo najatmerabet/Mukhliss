@@ -854,4 +854,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get erreurDeconnexion => 'Error during disconnection';
+
+  @override
+  String get optionnel => 'optional';
 }

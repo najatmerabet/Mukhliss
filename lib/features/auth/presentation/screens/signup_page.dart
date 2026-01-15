@@ -338,40 +338,31 @@ class _SignupPageState extends ConsumerState<SignupPage>
 
           const SizedBox(height: 24),
 
-          // Phone
+          // Phone (optional - per App Store Guideline 5.1.1)
           AppFormFields.buildModernTextField(
             context: context,
             controller: _phoneController,
-            label: l10n?.numphone ?? 'Numéro de téléphone',
+            label: '${l10n?.numphone ?? 'Numéro de téléphone'} (${l10n?.optionnel ?? 'optionnel'})',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(10),
             ],
-            validator: (value) {
-              final requiredError = Validators.validateRequired(value, context);
-              if (requiredError != null) return requiredError;
-              final phoneError = Validators.validatePhone(value, context);
-              if (phoneError != null) return phoneError;
-              return null;
-            },
+            // Phone is optional - only validate format if provided
+            validator: (value) => Validators.validatePhone(value, context),
           ),
 
           const SizedBox(height: 24),
 
-          // Address
+          // Address (optional - per App Store Guideline 5.1.1)
           AppFormFields.buildModernTextField(
             context: context,
             controller: _addressController,
-            label: l10n?.adressecomplet ?? 'Adresse complète',
+            label: '${l10n?.adressecomplet ?? 'Adresse complète'} (${l10n?.optionnel ?? 'optionnel'})',
             icon: Icons.location_on_outlined,
             maxLines: 2,
-            validator: (value) {
-              final requiredError = Validators.validateRequired(value, context);
-              if (requiredError != null) return requiredError;
-              return null;
-            },
+            // Address is optional - no validation required
           ),
 
           const SizedBox(height: 24),

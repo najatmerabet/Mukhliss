@@ -279,7 +279,8 @@
 "confirmDeconnexion":"Are you sure you want to disconnect \"{deviceName}\" remotely?\n\nThe device will be disconnected automatically.",
 "deconnecterBtn":"Disconnect",
 "appareilDeconnecte":"Device disconnected remotely",
-"erreurDeconnexion":"Error during disconnection"
+"erreurDeconnexion":"Error during disconnection",
+"optionnel": "optional"
 }
 
 

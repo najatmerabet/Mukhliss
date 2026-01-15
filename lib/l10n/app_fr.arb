@@ -275,5 +275,6 @@
 "confirmDeconnexion":"\u00cates-vous s\u00fbr de vouloir d\u00e9connecter \"{deviceName}\" \u00e0 distance ?\n\nL'appareil sera d\u00e9connect\u00e9 automatiquement.",
 "deconnecterBtn":"D\u00e9connecter",
 "appareilDeconnecte":"Appareil d\u00e9connect\u00e9 \u00e0 distance",
-"erreurDeconnexion":"Erreur lors de la d\u00e9connexion"
+"erreurDeconnexion":"Erreur lors de la d\u00e9connexion",
+"optionnel": "optionnel"
 }

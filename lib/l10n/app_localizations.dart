@@ -1743,6 +1743,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your unique code will be available in a few moments.'**
   String get codedisponiblebientot;
+
   /// No description provided for @optionnel.
   ///
   /// In en, this message translates to:

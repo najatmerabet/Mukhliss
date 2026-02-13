@@ -281,7 +281,7 @@
 "appareilDeconnecte":"Device disconnected remotely",
 "erreurDeconnexion":"Error during disconnection",
 "codeencours":"Code currently being assigned",
-"codedisponiblebientot":"Your unique code will be available in a few moments."
+"codedisponiblebientot":"Your unique code will be available in a few moments.",
 "optionnel": "optional"
 }
 

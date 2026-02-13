@@ -856,5 +856,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get codedisponiblebientot =>
       'سيكون رمزك الفريد متاحًا خلال لحظات قليلة.';
+
+  @override
   String get optionnel => 'اختياري';
 }

@@ -20,18 +20,17 @@ class PaginatedStoresDataResult {
   final int totalCount;
   final int currentPage;
   final int pageSize;
-  
+
   PaginatedStoresDataResult({
     required this.stores,
     required this.totalCount,
     required this.currentPage,
     required this.pageSize,
   });
-  
+
   bool get hasMore => (currentPage + 1) * pageSize < totalCount;
   int get totalPages => (totalCount / pageSize).ceil();
 }
-
 
 /// Interface pour la source de données distante
 abstract class StoresRemoteDataSource {
@@ -39,7 +38,7 @@ abstract class StoresRemoteDataSource {
   Future<StoreModel?> getStoreById(String id);
   Future<List<StoreModel>> searchStores(String query);
   Future<List<StoreModel>> getStoresByCategory(String categoryId);
-  
+
   /// Récupère les magasins dans une zone géographique (viewport)
   Future<List<StoreModel>> getStoresInBounds({
     required double minLat,
@@ -47,7 +46,7 @@ abstract class StoresRemoteDataSource {
     required double minLng,
     required double maxLng,
   });
-  
+
   /// Récupère les magasins proches triés par distance (via RPC PostGIS)
   Future<List<StoreModel>> getNearbyStoresSorted({
     required double userLat,
@@ -55,7 +54,7 @@ abstract class StoresRemoteDataSource {
     int limit = 50,
     double radiusMeters = 50000,
   });
-  
+
   /// Récupère les magasins avec pagination
   Future<PaginatedStoresDataResult> getStoresPaginated({
     int page = 0,
@@ -65,12 +64,13 @@ abstract class StoresRemoteDataSource {
   });
 }
 
+/// il faut travailler mieux que ca
 /// Implémentation Supabase de la source de données
 class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
   final SupabaseClient _client;
 
   StoresRemoteDataSourceImpl({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+      : _client = client ?? Supabase.instance.client;
 
   @override
   Future<List<StoreModel>> getStores() async {
@@ -81,10 +81,9 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
         .order('nom_enseigne')
         .limit(100); // Limite pour l'affichage initial
 
-    final stores =
-        (response as List).map((json) {
-          return StoreModel.fromJson(json);
-        }).toList();
+    final stores = (response as List).map((json) {
+      return StoreModel.fromJson(json);
+    }).toList();
 
     debugPrint('📦 Chargé ${stores.length} magasins (limité à 100)');
     return stores;
@@ -129,8 +128,9 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
     required double minLng,
     required double maxLng,
   }) async {
-    debugPrint('📍 Loading stores in bounds: lat[$minLat-$maxLat] lng[$minLng-$maxLng]');
-    
+    debugPrint(
+        '📍 Loading stores in bounds: lat[$minLat-$maxLat] lng[$minLng-$maxLng]');
+
     final response = await _client
         .from('magasins')
         .select()
@@ -140,9 +140,10 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
         .lte('longitude', maxLng)
         .limit(150); // Limite pour les performances de la carte
 
-    final stores = (response as List).map((json) => StoreModel.fromJson(json)).toList();
+    final stores =
+        (response as List).map((json) => StoreModel.fromJson(json)).toList();
     debugPrint('📍 Found ${stores.length} stores in bounds');
-    
+
     return stores;
   }
 
@@ -154,7 +155,7 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
     double radiusMeters = 50000,
   }) async {
     debugPrint('📍 Loading nearby stores via RPC from ($userLat, $userLng)');
-    
+
     try {
       // Utiliser la fonction RPC PostGIS pour le calcul côté serveur
       final response = await _client.rpc(
@@ -172,11 +173,12 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
         final storeJson = Map<String, dynamic>.from(json);
         return StoreModel.fromJson(storeJson);
       }).toList();
-      
+
       debugPrint('📍 RPC returned ${stores.length} nearby stores');
       return stores;
     } catch (e) {
-      debugPrint('⚠️ RPC get_nearby_stores failed: $e, falling back to client-side calculation');
+      debugPrint(
+          '⚠️ RPC get_nearby_stores failed: $e, falling back to client-side calculation');
       // Fallback: calcul côté client si la RPC échoue
       return _getNearbyStoresFallback(userLat, userLng, limit);
     }
@@ -193,15 +195,18 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
         .select()
         .limit(500); // Limite pour le fallback
 
-    final stores = (response as List).map((json) => StoreModel.fromJson(json)).toList();
-    
+    final stores =
+        (response as List).map((json) => StoreModel.fromJson(json)).toList();
+
     // Trier par distance côté client
     stores.sort((a, b) {
-      final distA = _calculateDistance(userLat, userLng, a.latitude, a.longitude);
-      final distB = _calculateDistance(userLat, userLng, b.latitude, b.longitude);
+      final distA =
+          _calculateDistance(userLat, userLng, a.latitude, a.longitude);
+      final distB =
+          _calculateDistance(userLat, userLng, b.latitude, b.longitude);
       return distA.compareTo(distB);
     });
-    
+
     return stores.take(limit).toList();
   }
 
@@ -213,7 +218,7 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
     String? searchQuery,
   }) async {
     debugPrint('📦 Loading page $page with pageSize $pageSize');
-    
+
     try {
       // Utiliser la fonction RPC pour la pagination
       final response = await _client.rpc(
@@ -222,12 +227,14 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
           'page_number': page,
           'page_size': pageSize,
           if (categoryId != null) 'category_filter': int.parse(categoryId),
-          if (searchQuery != null && searchQuery.isNotEmpty) 'search_query': searchQuery,
+          if (searchQuery != null && searchQuery.isNotEmpty)
+            'search_query': searchQuery,
         },
       );
 
-      final List<Map<String, dynamic>> data = (response as List).cast<Map<String, dynamic>>();
-      
+      final List<Map<String, dynamic>> data =
+          (response as List).cast<Map<String, dynamic>>();
+
       if (data.isEmpty) {
         return PaginatedStoresDataResult(
           stores: [],
@@ -239,7 +246,7 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
 
       // Le total_count est retourné dans chaque ligne
       final totalCount = data.first['total_count'] as int? ?? 0;
-      
+
       final stores = data.map((json) {
         final storeJson = Map<String, dynamic>.from(json);
         storeJson.remove('total_count'); // Supprimer le champ ajouté
@@ -247,7 +254,7 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
       }).toList();
 
       debugPrint('📦 Page $page: ${stores.length} stores (total: $totalCount)');
-      
+
       return PaginatedStoresDataResult(
         stores: stores,
         totalCount: totalCount,
@@ -255,9 +262,11 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
         pageSize: pageSize,
       );
     } catch (e) {
-      debugPrint('⚠️ RPC get_stores_paginated failed: $e, falling back to range query');
+      debugPrint(
+          '⚠️ RPC get_stores_paginated failed: $e, falling back to range query');
       // Fallback: pagination manuelle
-      return _getStoresPaginatedFallback(page, pageSize, categoryId, searchQuery);
+      return _getStoresPaginatedFallback(
+          page, pageSize, categoryId, searchQuery);
     }
   }
 
@@ -269,15 +278,15 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
     String? searchQuery,
   ) async {
     var query = _client.from('magasins').select();
-    
+
     if (categoryId != null) {
       query = query.eq('Categorieid', int.parse(categoryId));
     }
-    
+
     if (searchQuery != null && searchQuery.isNotEmpty) {
       query = query.ilike('nom_enseigne', '%$searchQuery%');
     }
-    
+
     // Compter le total (dans une requête séparée)
     final countQuery = _client.from('magasins').select('id');
     if (categoryId != null) {
@@ -288,14 +297,15 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
     }
     final countResponse = await countQuery;
     final totalCount = (countResponse as List).length;
-    
+
     // Récupérer la page
     final response = await query
         .order('nom_enseigne')
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
-    final stores = (response as List).map((json) => StoreModel.fromJson(json)).toList();
-    
+    final stores =
+        (response as List).map((json) => StoreModel.fromJson(json)).toList();
+
     return PaginatedStoresDataResult(
       stores: stores,
       totalCount: totalCount,
@@ -305,19 +315,21 @@ class StoresRemoteDataSourceImpl implements StoresRemoteDataSource {
   }
 
   /// Calcule la distance en km entre deux points (formule Haversine)
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
     const double earthRadius = 6371; // km
-    
+
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
-    
-    final a = 
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_toRadians(lat1)) * math.cos(_toRadians(lat2)) *
-        math.sin(dLon / 2) * math.sin(dLon / 2);
-    
+
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    
+
     return earthRadius * c;
   }
 

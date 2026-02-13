@@ -672,7 +672,7 @@ Connectivity status:
         controller: _addressController,
         label: l10n?.address ?? 'Adresse',
         icon: Icons.location_on_outlined,
-        validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+        // Address is optional - no validation required (per App Store Guideline 5.1.1)
         context: context,
         isDarkMode: isDarkMode,
       ),
@@ -681,7 +681,7 @@ Connectivity status:
         controller: _phoneController,
         label: l10n?.phone ?? 'Téléphone',
         icon: Icons.phone_outlined,
-        validator: (value) => value?.isEmpty ?? true ? 'Requis' : null,
+        // Phone is optional - no validation required (per App Store Guideline 5.1.1)
         context: context,
         isDarkMode: isDarkMode,
       ),

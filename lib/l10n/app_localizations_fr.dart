@@ -869,4 +869,5 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get codedisponiblebientot =>
       'Votre code unique sera disponible dans quelques instants';
+  String get optionnel => 'optionnel';
 }

@@ -61,14 +61,15 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
       (p) {
         _safeSetState(() => _currentPosition = p);
         // Afficher le bottom sheet des catégories quand la position est disponible
-        if (p != null && bottomSheetState == BottomSheetState.none) {
-          showCategoriesSheet();
-        }
+       
       },
       (l) => _safeSetState(() => _isLoading = l),
       updateRoute,
       (n) => n ? startNavigation() : stopNavigation(),
     );
+    Future.delayed(const Duration(milliseconds: 200), () {
+  if (mounted) showCategoriesSheet();
+});
     checkConnectivity();
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _controller.getCurrentLocation();
@@ -489,14 +490,14 @@ class _LocationScreenState extends ConsumerState<LocationScreen>
     ];
   }
 
-  // ============ BOTTOM SHEETS ============
+  // ============ BOTTOM SHEETS ============ _currentPosition != null
   List<Widget> _buildBottomSheets() {
     debugPrint(
       '🟢 Building sheets: state=$bottomSheetState, shop=${selectedShop?.name}',
     );
     return [
-      if (bottomSheetState == BottomSheetState.categories &&
-          _currentPosition != null)
+      if (bottomSheetState == BottomSheetState.categories 
+          )
         _wrapSheet(
           CategoryEntityBottomSheet(
             navigatorKey: _navigatorKey,

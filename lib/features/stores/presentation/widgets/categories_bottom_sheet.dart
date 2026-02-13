@@ -166,33 +166,26 @@ class _CategoryEntityBottomSheetState
               ),
 
               // Titre
-       SliverToBoxAdapter(
-  child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-    child: Row(
-      children: [
-        // Flèche retour ← qui ferme le BottomSheet
-        IconButton(
-          onPressed: widget.onClose,
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          l10n?.categories ?? 'Mes Catégories',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
-          ),
-        ),
-      ],
-    ),
-  ),
-),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Text(
+                        l10n?.categories ?? 'Mes Catégories',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isDarkMode
+                                  ? AppColors.surface
+                                  : AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               // Liste HORIZONTALE des catégories - MULTILINGUE - FIXED VERSION
               Consumer(

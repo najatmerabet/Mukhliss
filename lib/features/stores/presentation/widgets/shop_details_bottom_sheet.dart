@@ -167,38 +167,68 @@ class _ShopDetailsBottomSheetState extends ConsumerState<ShopDetailsBottomSheet>
             controller: scrollController,
             slivers: [
               // Handle avec geste de drag
-              SliverToBoxAdapter(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragUpdate: (details) {
-                    final delta = details.primaryDelta ?? 0;
-                    final newSize = _draggableController.size - (delta / MediaQuery.of(context).size.height);
-                    if (newSize >= 0.1 && newSize <= 0.9) {
-                      _draggableController.jumpTo(newSize);
-                    }
-                  },
-                  onVerticalDragEnd: (details) {
-                    // Fermer si en dessous de 0.15
-                    if (_draggableController.size < 0.15) {
-                      widget.closeCategoriesSheet();
-                    }
-                  },
-                  onTap: widget.closeCategoriesSheet,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    alignment: Alignment.center,
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ),
+           SliverToBoxAdapter(
+  child: Column(
+    children: [
+      // Drag handle
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          final delta = details.primaryDelta ?? 0;
+          final newSize = _draggableController.size - (delta / MediaQuery.of(context).size.height);
+          if (newSize >= 0.1 && newSize <= 0.9) {
+            _draggableController.jumpTo(newSize);
+          }
+        },
+        onVerticalDragEnd: (details) {
+          if (_draggableController.size < 0.15) {
+            widget.closeCategoriesSheet();
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          alignment: Alignment.center,
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+      ),
+
+      // Flèche retour ←
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: widget.closeCategoriesSheet,
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+                size: 20,
               ),
+            ),
+            Text(
+              widget.shop?.name ?? '',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? AppColors.surface : AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),

@@ -342,7 +342,7 @@ class _SignupPageState extends ConsumerState<SignupPage>
           AppFormFields.buildModernTextField(
             context: context,
             controller: _phoneController,
-            label: l10n?.numphone ?? 'Numéro de téléphone',
+            label: '${l10n?.numphone ?? 'Numéro de téléphone'} (optionnel)',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             inputFormatters: [
@@ -350,10 +350,12 @@ class _SignupPageState extends ConsumerState<SignupPage>
               LengthLimitingTextInputFormatter(10),
             ],
             validator: (value) {
-              final requiredError = Validators.validateRequired(value, context);
-              if (requiredError != null) return requiredError;
+              // final requiredError = Validators.validateRequired(value, context);
+              if (value != null  && value.isNotEmpty) {
               final phoneError = Validators.validatePhone(value, context);
               if (phoneError != null) return phoneError;
+              }
+             
               return null;
             },
           ),
@@ -364,13 +366,12 @@ class _SignupPageState extends ConsumerState<SignupPage>
           AppFormFields.buildModernTextField(
             context: context,
             controller: _addressController,
-            label: l10n?.adressecomplet ?? 'Adresse complète',
+            label:'${l10n?.adressecomplet ?? 'Adresse complète'} (optionnel)',
             icon: Icons.location_on_outlined,
             maxLines: 2,
             validator: (value) {
-              final requiredError = Validators.validateRequired(value, context);
-              if (requiredError != null) return requiredError;
-              return null;
+            
+             return null;
             },
           ),
 

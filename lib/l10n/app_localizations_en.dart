@@ -854,4 +854,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get erreurDeconnexion => 'Error during disconnection';
+
+  @override
+  String get codeencours => 'Code currently being assigned';
+
+  @override
+  String get codedisponiblebientot =>
+      'Your unique code will be available in a few moments.';
 }

@@ -849,4 +849,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get erreurDeconnexion => 'خطأ أثناء الفصل';
+
+  @override
+  String get codeencours => 'يتم تعيين الرمز حاليًا';
+
+  @override
+  String get codedisponiblebientot =>
+      'سيكون رمزك الفريد متاحًا خلال لحظات قليلة.';
 }

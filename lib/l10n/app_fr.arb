@@ -276,5 +276,7 @@
 "deconnecterBtn":"D\u00e9connecter",
 "appareilDeconnecte":"Appareil d\u00e9connect\u00e9 \u00e0 distance",
 "erreurDeconnexion":"Erreur lors de la d\u00e9connexion",
+"codeencours":"Code en cours d'attribution",
+"codedisponiblebientot":"Votre code unique sera disponible dans quelques instants"
 "optionnel": "optionnel"
 }

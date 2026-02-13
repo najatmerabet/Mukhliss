@@ -851,5 +851,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get erreurDeconnexion => 'خطأ أثناء الفصل';
 
   @override
+  String get codeencours => 'يتم تعيين الرمز حاليًا';
+
+  @override
+  String get codedisponiblebientot =>
+      'سيكون رمزك الفريد متاحًا خلال لحظات قليلة.';
   String get optionnel => 'اختياري';
 }

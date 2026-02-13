@@ -75,126 +75,171 @@ class QrcodeService {
     }
   }
 
-  // Récupérer les données du client avec gestion d'erreur améliorée
-  Future<Map<String, dynamic>> _getClientData() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // ⚠️ Capturer l'ID utilisateur pour vérification du cache dans les catch blocks
-    String? currentUserId;
+  
+ // Récupérer les données du client avec gestion d'erreur améliorée
+Future<Map<String, dynamic>> _getClientData() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? currentUserId;
 
-    try {
-      // Obtenir l'utilisateur de manière sécurisée
-      final user = await _getCurrentUserSafely();
-      if (user == null) {
-        // Pas d'utilisateur, essayer d'utiliser les dernières données en cache
-        final cachedData = prefs.getString(_qrCacheKey);
-        if (cachedData != null) {
-          final data = jsonDecode(cachedData);
+  try {
+    // Obtenir l'utilisateur de manière sécurisée
+    final user = await _getCurrentUserSafely();
+    if (user == null) {
+      final cachedData = prefs.getString(_qrCacheKey);
+      if (cachedData != null) {
+        final data = jsonDecode(cachedData);
+        data['_isCached'] = true;
+        data['_isOffline'] = true;
+        return data;
+      }
+      throw Exception('User not authenticated and no cached data available');
+    }
+    
+    currentUserId = user.id;
+
+    // Vérifier si l'utilisateur a changé
+    final lastUserId = prefs.getString(_lastUserIdKey);
+    if (lastUserId != null && lastUserId != user.id) {
+      AppLogger.info(
+        'User changed from $lastUserId to ${user.id} - clearing cache',
+        tag: 'QRCode',
+      );
+      await prefs.remove(_qrCacheKey);
+    }
+
+    await prefs.setString(_lastUserIdKey, user.id);
+
+    // Si pas de connexion, utiliser le cache
+    if (!await isConnected) {
+      final cachedData = prefs.getString(_qrCacheKey);
+      if (cachedData != null) {
+        final data = jsonDecode(cachedData);
+        if (data['id'] == user.id) {
           data['_isCached'] = true;
           data['_isOffline'] = true;
           return data;
+        } else {
+          await prefs.remove(_qrCacheKey);
+          AppLogger.warning(
+            'Cache belongs to different user - cleared',
+            tag: 'QRCode',
+          );
         }
-        throw Exception('User not authenticated and no cached data available');
       }
-      
-      // Sauvegarder l'ID pour les catch blocks
-      currentUserId = user.id;
-
-      // ⚠️ IMPORTANT: Vérifier si l'utilisateur a changé depuis le dernier cache
-      // Si oui, effacer le cache pour éviter d'afficher les données d'un autre compte
-      final lastUserId = prefs.getString(_lastUserIdKey);
-      if (lastUserId != null && lastUserId != user.id) {
-        AppLogger.info(
-          'User changed from $lastUserId to ${user.id} - clearing cache',
-          tag: 'QRCode',
-        );
-        // Effacer le cache de l'ancien utilisateur
-        await prefs.remove(_qrCacheKey);
-      }
-
-      // Sauvegarder l'ID utilisateur pour référence future
-      await prefs.setString(_lastUserIdKey, user.id);
-
-      // Si pas de connexion, utiliser les données en cache
-      // SEULEMENT si le cache appartient au même utilisateur
-      if (!await isConnected) {
-        final cachedData = prefs.getString(_qrCacheKey);
-        if (cachedData != null) {
-          final data = jsonDecode(cachedData);
-          // Vérifier que les données en cache appartiennent à cet utilisateur
-          if (data['id'] == user.id) {
-            data['_isCached'] = true;
-            data['_isOffline'] = true;
-            return data;
-          } else {
-            // Le cache appartient à un autre utilisateur, le supprimer
-            await prefs.remove(_qrCacheKey);
-            AppLogger.warning(
-              'Cache belongs to different user - cleared',
-              tag: 'QRCode',
-            );
-          }
-        }
-        throw Exception('No internet connection and no cached data available');
-      }
-
-      // Essayer de récupérer depuis Supabase avec timeout court
-      // ✅ Utilisation de maybeSingle() au lieu de single()
-      final response = await client
-          .from('clients')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle()
-          .timeout(const Duration(seconds: 8));
-
-      // ✅ Gérer le cas où aucun profil n'existe
-      if (response == null) {
-        AppLogger.warning(
-          'Profil client non trouvé pour user: ${user.id}',
-          tag: 'QRCode',
-        );
-        // Essayer d'utiliser le cache s'il existe ET appartient à cet utilisateur
-        final cachedData = prefs.getString(_qrCacheKey);
-        if (cachedData != null) {
-          final data = jsonDecode(cachedData);
-          if (data['id'] == user.id) {
-            data['_isCached'] = true;
-            data['_isOffline'] = false;
-            data['_error'] = 'Profile not found in database';
-            return data;
-          }
-        }
-        throw Exception(
-          'Profil non trouvé. Veuillez vous déconnecter et vous reconnecter.',
-        );
-      }
-
-      // Mettre en cache les données avec métadonnées
-      response['_isCached'] = false;
-      response['_isOffline'] = false;
-      response['_lastUpdate'] = DateTime.now().toIso8601String();
-      await prefs.setString(_qrCacheKey, jsonEncode(response));
-
-      return response;
-    } on SocketException catch (e) {
-      return _handleFallbackToCache(prefs, 'Network error: ${e.message}', currentUserId: currentUserId);
-    } on TimeoutException {
-      return _handleFallbackToCache(prefs, 'Request timeout', currentUserId: currentUserId);
-    } on PostgrestException catch (e) {
-      return _handleFallbackToCache(prefs, 'Database error: ${e.message}', currentUserId: currentUserId);
-    } on AuthException catch (e) {
-      return _handleFallbackToCache(
-        prefs,
-        'Authentication error: ${e.message}',
-        currentUserId: currentUserId,
-      );
-    } catch (e) {
-      return _handleFallbackToCache(prefs, 'Unexpected error: $e', currentUserId: currentUserId);
+      throw Exception('No internet connection and no cached data available');
     }
+
+    // ✅ SOLUTION : Essayer de récupérer le profil
+    final response = await client
+        .from('clients')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle()
+        .timeout(const Duration(seconds: 8));
+
+    // ✅ Si aucun profil n'existe, créer automatiquement
+    if (response == null) {
+      AppLogger.info(
+        'Première connexion détectée - Création automatique du profil pour: ${user.id}',
+        tag: 'QRCode',
+      );
+      
+      return await _createUserProfile(user, prefs);
+    }
+
+    // Profil existant trouvé, le mettre en cache
+    response['_isCached'] = false;
+    response['_isOffline'] = false;
+    response['_lastUpdate'] = DateTime.now().toIso8601String();
+    await prefs.setString(_qrCacheKey, jsonEncode(response));
+
+    return response;
+  } on SocketException catch (e) {
+    return _handleFallbackToCache(prefs, 'Network error: ${e.message}', currentUserId: currentUserId);
+  } on TimeoutException {
+    return _handleFallbackToCache(prefs, 'Request timeout', currentUserId: currentUserId);
+  } on PostgrestException catch (e) {
+    return _handleFallbackToCache(prefs, 'Database error: ${e.message}', currentUserId: currentUserId);
+  } on AuthException catch (e) {
+    return _handleFallbackToCache(
+      prefs,
+      'Authentication error: ${e.message}',
+      currentUserId: currentUserId,
+    );
+  } catch (e) {
+    return _handleFallbackToCache(prefs, 'Unexpected error: $e', currentUserId: currentUserId);
   }
+}
+
+
+Future<Map<String, dynamic>> _createUserProfile(
+  User user,
+  SharedPreferences prefs,
+) async {
+  try {
+    // Générer un code unique aléatoire (6 chiffres)
+    final codeUnique = _generateUniqueCode();
+    
+    // Créer le profil avec les données de l'auth user
+    final newProfile = {
+      'id': user.id,
+      'email': user.email ?? '',
+      'nom': user.userMetadata?['nom'] ?? user.userMetadata?['last_name'] ?? '',
+      'prenom': user.userMetadata?['prenom'] ?? user.userMetadata?['first_name'] ?? '',
+      'tel': user.userMetadata?['tel'] ?? user.phone ?? '',
+      'adr': user.userMetadata?['adr'] ?? user.userMetadata?['address'] ?? '',
+      'code_unique': codeUnique,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    AppLogger.info(
+      'Insertion du nouveau profil dans la base de données...',
+      tag: 'QRCode',
+    );
+
+    // Insérer dans la base de données
+    await client.from('clients').insert(newProfile);
+
+    AppLogger.info(
+      'Profil créé avec succès - Code unique: $codeUnique',
+      tag: 'QRCode',
+    );
+
+    // Mettre en cache
+    newProfile['_isCached'] = false;
+    newProfile['_isOffline'] = false;
+    newProfile['_lastUpdate'] = DateTime.now().toIso8601String();
+    await prefs.setString(_qrCacheKey, jsonEncode(newProfile));
+
+    return newProfile;
+  } catch (e) {
+    AppLogger.error(
+      'Erreur lors de la création du profil automatique',
+      tag: 'QRCode',
+      error: e,
+    );
+    
+    // ✅ Si l'insertion échoue, retourner quand même un profil temporaire
+    // pour que l'utilisateur puisse voir son QR code
+    final tempProfile = {
+      'id': user.id,
+      'email': user.email ?? '',
+      'nom': user.userMetadata?['nom'] ?? '',
+      'prenom': user.userMetadata?['prenom'] ?? '',
+      'tel': user.userMetadata?['tel'] ?? user.phone ?? '',
+      'adr': user.userMetadata?['adr'] ?? '',
+      'code_unique': null, // Pas de code unique si échec
+      '_isCached': false,
+      '_isOffline': false,
+      '_isTemporary': true, // Flag pour indiquer que c'est temporaire
+    };
+    
+    return tempProfile;
+  }
+}
 
   // Méthode pour gérer le fallback vers le cache
-  // ⚠️ IMPORTANT: Vérifie que le cache appartient à l'utilisateur actuel
+  
   Future<Map<String, dynamic>> _handleFallbackToCache(
     SharedPreferences prefs,
     String error, {
@@ -349,4 +394,10 @@ class QrcodeService {
       return null;
     }
   }
+
+  int _generateUniqueCode() {
+  // Génère un nombre entre 100000 et 999999
+  final random = DateTime.now().microsecondsSinceEpoch % 900000;
+  return 100000 + random;
+}
 }

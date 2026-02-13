@@ -36,6 +36,7 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
   final TextEditingController _addressController = TextEditingController();
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -46,6 +47,37 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
     });
   }
 
+ @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkUserChange();
+  }
+
+ void _checkUserChange() {
+    final authClient = ref.read(authClientProvider);
+    final currentUser = authClient.currentUser;
+    
+    if (currentUser != null && currentUser.id != _currentUserId) {
+      debugPrint('🔄 Changement d\'utilisateur détecté: ${currentUser.id}');
+      _currentUserId = currentUser.id;
+      _resetAndReload();
+    }
+  }
+
+  void _resetAndReload() {
+    setState(() {
+      _userData = null;
+      _isLoading = true;
+      _isEditing = false;
+      _firstNameController.clear();
+      _lastNameController.clear();
+      _emailController.clear();
+      _phoneController.clear();
+      _addressController.clear();
+    });
+    _loadUserData();
+  }
+  
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -83,9 +115,10 @@ class _ProfileScreenstate extends ConsumerState<ProfileScreen> {
         }
         return;
       }
-
+       _currentUserId = user.id;
       // Debug: Ajoutez des logs pour suivre le flux
-      debugPrint('Tentative de chargement des données utilisateur...');
+      debugPrint('📥 Chargement des données pour l\'utilisateur: ${user.id}');
+
 
       // Utiliser Supabase directement
       final supabase = Supabase.instance.client;
@@ -1154,6 +1187,7 @@ Connectivity status:
             ElevatedButton(
               onPressed: () async {
                 try {
+                  
                   await ref.read(authClientProvider).signOut();
                   Navigator.of(context).pop();
                   Navigator.pushReplacementNamed(context, '/');

@@ -342,15 +342,19 @@ class _SignupPageState extends ConsumerState<SignupPage>
           AppFormFields.buildModernTextField(
             context: context,
             controller: _phoneController,
+
             label: '${l10n?.numphone ?? 'Numéro de téléphone'} (${l10n?.optionnel ?? 'optionnel'})',
+
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(10),
             ],
+
             // Phone is optional - only validate format if provided
             validator: (value) => Validators.validatePhone(value, context),
+
           ),
 
           const SizedBox(height: 24),
@@ -359,10 +363,12 @@ class _SignupPageState extends ConsumerState<SignupPage>
           AppFormFields.buildModernTextField(
             context: context,
             controller: _addressController,
+
             label: '${l10n?.adressecomplet ?? 'Adresse complète'} (${l10n?.optionnel ?? 'optionnel'})',
             icon: Icons.location_on_outlined,
             maxLines: 2,
             // Address is optional - no validation required
+
           ),
 
           const SizedBox(height: 24),

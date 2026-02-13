@@ -864,5 +864,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get erreurDeconnexion => 'Erreur lors de la déconnexion';
 
   @override
+  String get codeencours => 'Code en cours d\'attribution';
+
+  @override
+  String get codedisponiblebientot =>
+      'Votre code unique sera disponible dans quelques instants';
   String get optionnel => 'optionnel';
 }

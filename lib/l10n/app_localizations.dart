@@ -1732,6 +1732,17 @@ abstract class AppLocalizations {
   /// **'Error during disconnection'**
   String get erreurDeconnexion;
 
+  /// No description provided for @codeencours.
+  ///
+  /// In en, this message translates to:
+  /// **'Code currently being assigned'**
+  String get codeencours;
+
+  /// No description provided for @codedisponiblebientot.
+  ///
+  /// In en, this message translates to:
+  /// **'Your unique code will be available in a few moments.'**
+  String get codedisponiblebientot;
   /// No description provided for @optionnel.
   ///
   /// In en, this message translates to:

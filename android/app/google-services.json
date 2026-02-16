@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "359054973347",
+    "project_id": "mukhliss-918c0",
+    "storage_bucket": "mukhliss-918c0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:359054973347:android:50a80a255ac79fe33b6216",
+        "android_client_info": {
+          "package_name": "com.mukhliss.prod"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM9DWAVYi0s74yqEa8ezlZ3x7BkebiJus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

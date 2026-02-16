@@ -17,6 +17,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../errors/global_error_handler.dart';
 import '../services/logo_cache_service.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 /// Variable globale pour accéder au client Supabase
 /// Évite d'appeler Supabase.instance.client partout
@@ -46,9 +47,12 @@ Future<void> init() async {
 
     // 3. Gestionnaire d'erreurs global
     _initErrorHandling();
-    
+
     // 4. Cache des logos
     await _initCacheServices();
+
+    // 5. Push Notifications (OneSignal)
+    _initOneSignal();
 
     _initialized = true;
     debugPrint('✅ All dependencies initialized successfully');
@@ -112,6 +116,24 @@ Future<void> _initCacheServices() async {
   } catch (e) {
     debugPrint('⚠️ Logo cache init failed (non-critical): $e');
     // Continue même si le cache échoue
+  }
+}
+
+/// Initialise OneSignal pour les push notifications
+void _initOneSignal() {
+  try {
+    // Activer le mode verbose en debug
+    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+
+    // Initialiser avec l'App ID OneSignal
+    OneSignal.initialize('e51ca46d-b9bf-4600-bb54-873d549d8275');
+
+    // Demander la permission pour les notifications
+    OneSignal.Notifications.requestPermission(true);
+
+    debugPrint('🔔 OneSignal initialized');
+  } catch (e) {
+    debugPrint('⚠️ OneSignal init failed (non-critical): $e');
   }
 }
 

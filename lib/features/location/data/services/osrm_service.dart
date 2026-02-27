@@ -9,14 +9,14 @@ class OSRMRoutingService {
   static const String _baseUrl =
       'https://api.openrouteservice.org/v2/directions';
   static const String _apiKey =
-      '5b3ce3597851110001cf6248bf571a9227874b15ae0e75d42bddb173';
+      'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjFhM2EwYmZjNTJlMjI1MmU0ZTU0OWViNzJhNjY0OWU2MGVlMTI1YjE4YzEzMWJjOTZlOTgwM2I2IiwiaCI6Im11cm11cjY0In0='; 
 
   String _getModeString(TransportMode mode) {
     switch (mode) {
       case TransportMode.driving:
         return 'driving-car';
       case TransportMode.walking:
-        return 'foot-walking';
+        return 'foot-hiking';
       case TransportMode.cycling:
         return 'cycling-regular';
     }
@@ -86,10 +86,10 @@ class OSRMRoutingService {
     debugPrint('[ORS] Making request for mode: $modeStr');
     debugPrint('[ORS] From: ${start.latitude},${start.longitude}');
     debugPrint('[ORS] To: ${end.latitude},${end.longitude}');
-
+    final url = '$_baseUrl/$modeStr/json';
     final response = await http
         .post(
-          Uri.parse('$_baseUrl/$modeStr'),
+          Uri.parse(url),
           headers: {
             'Authorization': _apiKey,
             'Content-Type': 'application/json; charset=utf-8',
@@ -99,13 +99,14 @@ class OSRMRoutingService {
             'coordinates': [
               [start.longitude, start.latitude],
               [end.longitude, end.latitude],
+              
             ],
             'instructions': false,
             'geometry': true,
           }),
         )
         .timeout(const Duration(seconds: 15));
-
+   debugPrint('url========== : $url');
     debugPrint('[ORS] Response status: ${response.statusCode}');
     debugPrint('[ORS] Response body: ${response.body}');
 
@@ -142,47 +143,29 @@ class OSRMRoutingService {
     return points;
   }
 
-  Future<List<LatLng>> getRouteSteps(
-    LatLng start,
-    LatLng end,
-    TransportMode mode,
-  ) async {
-    final modeStr = _getModeString(mode);
-    try {
-      final String url =
-          '$_baseUrl/$modeStr/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=polyline';
+ Future<List<LatLng>> getRouteSteps(
+  LatLng start,
+  LatLng end,
+  TransportMode mode,
+) async {
+  try {
+    // ✅ Utilise le même POST ORS que getRouteCoordinates
+    final response = await _makeOpenRouteRequest(start, end, mode);
 
-      final response = await http
-          .get(
-            Uri.parse(url),
-            headers: {
-              'User-Agent': 'Flutter App',
-              'Accept': 'application/json',
-            },
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['routes'] != null && data['routes'].isNotEmpty) {
-          final route = data['routes'][0];
-          final List<dynamic> steps = route['legs'][0]['steps'];
-
-          // Convertir explicitement en List<LatLng>
-          return steps.map<LatLng>((step) {
-            final location = step['maneuver']['location'] as List<dynamic>;
-            return LatLng(location[1], location[0]);
-          }).toList();
-        }
-      }
-
-      return []; // Retourne une liste vide explicitement typée
-    } catch (e) {
-      debugPrint('Error getting route steps: $e');
-      return []; // Retourne une liste vide explicitement typée
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final route = data['routes'][0];
+      // ORS retourne la géométrie encodée, on la décode directement
+      return _decodePolyline(route['geometry']);
+    } else {
+      debugPrint('Error getRouteSteps ${response.statusCode}: ${response.body}');
+      return [];
     }
+  } catch (e) {
+    debugPrint('Error getting route steps: $e');
+    return [];
   }
+}
 
   /// Formate la distance en texte lisible
   String formatDistance(double distanceInMeters) {
